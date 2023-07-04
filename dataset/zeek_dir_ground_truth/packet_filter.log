@@ -1,1 +1,1 @@
-{"ts": 1593351576.06894, "node": "zeek", "filter": "ip or not ip", "init": true, "success": true, "label": "malicious"}
+{"ts": 1688502659.884005, "node": "zeek", "filter": "ip or not ip", "init": true, "success": true, "label": "malicious"}
