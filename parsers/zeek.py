@@ -47,7 +47,6 @@ class ZeekParser:
                    }
                #TODO store this in the db
 
-        return fields
 
     def parse_dir(self):
         """

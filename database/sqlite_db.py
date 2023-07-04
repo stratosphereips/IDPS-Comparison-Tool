@@ -23,21 +23,20 @@ class SQLiteDB():
 
 
     @classmethod
-    def init_tables(cls):
-        """creates the tables we're gonna use"""
-        table_schema = {
-            'flows': "uid TEXT PRIMARY KEY, flow TEXT, label TEXT, profileid TEXT, twid TEXT",
-            'altflows': "uid TEXT PRIMARY KEY, flow TEXT, label TEXT, profileid TEXT, twid TEXT, flow_type TEXT"
-            }
-        for table_name, schema in table_schema.items():
-            cls.create_table(table_name, schema)
-
-    @classmethod
     def _init_db(cls):
         """
         creates the db if it doesn't exist and clears it if it exists
         """
         open(cls._flows_db,'w').close()
+
+    @classmethod
+    def init_tables(cls):
+        """creates the tables we're gonna use"""
+        table_schema = {
+            'flows': "community_id TEXT PRIMARY KEY, ground_truth TEXT, slips_label TEXT, suricata_label TEXT",
+            }
+        for table_name, schema in table_schema.items():
+            cls.create_table(table_name, schema)
 
     @classmethod
     def create_table(cls, table_name, schema):
@@ -70,7 +69,7 @@ class SQLiteDB():
 
     def get_count(self, table, condition=None):
         """
-        returns th enumber of matching rows in the given table based on a specific contioins
+        returns the number of matching rows in the given table based on a specific contioins
         """
         query = f"SELECT COUNT(*) FROM {table}"
 
