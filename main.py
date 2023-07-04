@@ -1,5 +1,6 @@
 
 from parsers.config import ConfigurationParser
+from database.sqlite_db import SQLiteDB
 from parsers.arg_parser import ArgsParser
 
 if __name__ == "__main__":
