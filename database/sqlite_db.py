@@ -44,6 +44,26 @@ class SQLiteDB():
         cls.cursor.execute(query)
         cls.conn.commit()
 
+
+    def store_flow(self, flow: dict, label_type: str):
+        """
+        :param flow: dict with community_id and label
+        :param label_type: the label can be the ground_truth , slips_label, or suricata_label
+        """
+        community_id = flow["community_id"]
+        label = flow['label']
+
+        # check if the row already exists with a label
+        exists = self.select('flows', '*', condition=f'community_id="{community_id}"')
+
+        if exists:
+            self.update('flows', f'{label_type}= "{label}"', condition=f'community_id ="{community_id}"')
+        else:
+            params = (community_id, label)
+            query = f'INSERT OR REPLACE INTO flows (community_id, {label_type}) VALUES (?, ?);'
+            self.execute(query, params=params)
+
+
     def insert(self, table_name, values):
         query = f"INSERT INTO {table_name} VALUES ({values})"
         self.execute(query)

@@ -1,5 +1,6 @@
 import os
 import json
+from database.sqlite_db import SQLiteDB
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -21,8 +22,12 @@ IGNORED_LOGS = {
     'syslog'
 }
 class ZeekParser:
-    def __init__(self, zeek_dir: str):
+    def __init__(self, zeek_dir: str, label_type:str, db: SQLiteDB):
         self.zeek_dir: str = zeek_dir
+        # available types are suricata and  ground_truth
+        self.label_type = label_type
+        self.db = db
+
 
     def extract_fields(self, filename: str):
         """
@@ -31,7 +36,7 @@ class ZeekParser:
         """
         # get the full path of the given log file
         fullpath = os.path.join(self.zeek_dir, filename)
-
+        print(f"Extracting fields from {fullpath}")
         with open(fullpath, 'r') as f:
             while line := f.readline():
 
@@ -45,7 +50,7 @@ class ZeekParser:
                    'community_id': line.get('community_id', ''),
                    'label':  line.get('label', '')
                    }
-               #TODO store this in the db
+                self.db.store_flow(fields, self.label_type)
 
 
     def parse_dir(self):
@@ -54,9 +59,6 @@ class ZeekParser:
         :return:
         """
         for file in os.listdir(self.zeek_dir):
-            if not os.path.isfile(file):
-                continue
-
             # skip ignored logs
             base_filename, ext = os.path.splitext(file)
             if base_filename in IGNORED_LOGS:
