@@ -24,6 +24,31 @@ class ZeekParser:
     def __init__(self, zeek_dir: str):
         self.zeek_dir: str = zeek_dir
 
+    def extract_fields(self, filename: str):
+        """
+        extracts the label and community id from each flow and stores them in the db
+        :param filename: the name of the logfile without the path, for example conn.log
+        """
+        # get the full path of the given log file
+        fullpath = os.path.join(self.zeek_dir, filename)
+
+        with open(fullpath, 'r') as f:
+            while line := f.readline():
+
+                try:
+                    line = json.loads(line)
+                except json.decoder.JSONDecodeError:
+                    print(f"Error loading line: \n{line}")
+
+                # extract fields
+                fields = {
+                   'community_id': line.get('community_id', ''),
+                   'label':  line.get('label', '')
+                   }
+               #TODO store this in the db
+
+        return fields
+
     def parse_dir(self):
         """
         parses each log file in self.zeek_dir
