@@ -38,10 +38,9 @@ def setup_output_dir(zeek_dir):
 if __name__ == "__main__":
     # Read the configuration file
     config = ConfigurationParser('config.ini')
-    twid_width = config.get_tw_width()
-    slips_path = config.get_slips_path()
+    twid_width: float = config.get_tw_width()
+    slips_path: str = config.get_slips_path()
     args = ArgsParser().args
-
 
     if not os.path.exists(slips_path):
         print(f"Invalid Slips path: {slips_path} in config.ini\nStopping")
@@ -56,7 +55,11 @@ if __name__ == "__main__":
 
     # this should always be a labeled zeek json dir
     ground_truth_dir: str = args.ground_truth_dir
+
     # assert os.path.exists(ground_truth_dir)
+    # hardcoding this for now #TODO remove this and make this param required in the config parser
+    ground_truth_dir = 'dataset/zeek_dir_ground_truth'
+
     print(f"Using ground truth: {ground_truth_dir}")
 
 
