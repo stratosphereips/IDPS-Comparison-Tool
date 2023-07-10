@@ -14,6 +14,11 @@ class ConfigurationParser:
             return self.conf.get(section, key)
         except:
             return default_value
+
+    def get_slips_path(self) -> str:
+        return self.conf.get('Slips', 'slips_dir')
+
+
     def get_tw_width(self) -> float:
         try:
             twid_width = self.conf.get('Params', 'time_window_width')

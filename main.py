@@ -1,8 +1,9 @@
 import os.path
-
+import sys
 from parsers.config import ConfigurationParser
 from database.sqlite_db import SQLiteDB
 from parsers.arg_parser import ArgsParser
+from parsers.slips import SlipsParser
 from parsers.zeek import ZeekParser
 from contextlib import suppress
 from shutil import rmtree
@@ -38,13 +39,16 @@ if __name__ == "__main__":
     # Read the configuration file
     config = ConfigurationParser('config.ini')
     twid_width = config.get_tw_width()
+    slips_path = config.get_slips_path()
     args = ArgsParser().args
 
+
+    if not os.path.exists(slips_path):
+        print(f"Invalid Slips path: {slips_path} in config.ini\nStopping")
+        sys.exit()
+
+
     # TODO uncomment assertions when we have some files to test with
-    # todo this tool should support starting slips
-    # TODO slips should always be given a pcap to be able to add the community id and label to it
-    zeek_dir: str = args.zeek_dir
-    # assert os.path.exists(zeek_dir)
 
     eve_file: str = args.eve_file
     # assert os.path.exists(eve_file)
@@ -55,12 +59,24 @@ if __name__ == "__main__":
     # assert os.path.exists(ground_truth_dir)
     print(f"Using ground truth: {ground_truth_dir}")
 
+
+    # slips should always be given a pcap or zeek dir only to be able to add the community id and label to it
+    slips_input_file: str = args.slips_input_file
+    # assert os.path.exists(slips_input_file)
+    print(f"Starting slips on: {slips_input_file}")
+
     output_dir = setup_output_dir(ground_truth_dir)
     print(f"Storing output in {output_dir}")
 
     db = SQLiteDB(output_dir)
 
+
+    slips = SlipsParser(slips_input_file, db)
+    slips.start()
+
     # read the ground truth and store it in the db
     ZeekParser(ground_truth_dir, 'ground_truth', db).parse_dir()
+
+
 
 
