@@ -7,6 +7,7 @@ from parsers.slips import SlipsParser
 from parsers.zeek import ZeekParser
 from contextlib import suppress
 from shutil import rmtree
+from termcolor import colored
 import datetime
 
 def setup_output_dir(zeek_dir):
@@ -22,7 +23,7 @@ def setup_output_dir(zeek_dir):
     # delete all old files in the output dir
     if os.path.exists(output_dir):
         # this will be used when -o is supported
-        print(f"Overwriting all files in {output_dir}")
+        log(f"Overwriting all files in {output_dir}",'')
         for file in os.listdir(output_dir):
             file_path = os.path.join(output_dir, file)
             with suppress(Exception):
@@ -34,6 +35,11 @@ def setup_output_dir(zeek_dir):
         os.makedirs(output_dir)
     return output_dir
 
+def log(green_txt, normal_txt):
+    normal_txt = str(normal_txt)
+    green_txt = str(green_txt)
+
+    print(colored(green_txt,'green') + normal_txt)
 
 if __name__ == "__main__":
     # Read the configuration file
@@ -43,15 +49,14 @@ if __name__ == "__main__":
     args = ArgsParser().args
 
     if not os.path.exists(slips_path):
-        print(f"Invalid Slips path: {slips_path} in config.ini\nStopping")
+        log(f"Invalid Slips path: {slips_path} in config.ini\nStopping")
         sys.exit()
-
 
     # TODO uncomment assertions when we have some files to test with
 
     eve_file: str = args.eve_file
     # assert os.path.exists(eve_file)
-    print(f"Using suricata: {eve_file}")
+    log(f"Using suricata: ",eve_file)
 
     # this should always be a labeled zeek json dir
     ground_truth_dir: str = args.ground_truth_dir
@@ -60,21 +65,21 @@ if __name__ == "__main__":
     # hardcoding this for now #TODO remove this and make this param required in the config parser
     ground_truth_dir = 'dataset/zeek_dir_ground_truth'
 
-    print(f"Using ground truth: {ground_truth_dir}")
+    log(f"Using ground truth: ", ground_truth_dir)
 
 
     # slips should always be given a pcap or zeek dir only to be able to add the community id and label to it
     slips_input_file: str = args.slips_input_file
     # assert os.path.exists(slips_input_file)
-    print(f"Starting slips on: {slips_input_file}")
+    log(f"Starting slips on: ", slips_input_file)
 
     output_dir = setup_output_dir(ground_truth_dir)
-    print(f"Storing output in {output_dir}")
+    log(f"Storing output in: ", output_dir)
 
     db = SQLiteDB(output_dir)
 
 
-    slips = SlipsParser(slips_input_file, db)
+    slips = SlipsParser(slips_path, slips_input_file, output_dir, db)
     slips.start()
 
     # read the ground truth and store it in the db
