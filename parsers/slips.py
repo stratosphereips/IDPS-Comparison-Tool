@@ -96,4 +96,3 @@ class SlipsParser:
             self.db.store_flow(flow, 'slips_label')
             self.log(f"Extracted slips label for flow: ", f"{row['community_id']}")
 
-

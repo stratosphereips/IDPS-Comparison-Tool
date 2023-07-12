@@ -5,7 +5,7 @@ from parsers.suricata import SuricataParser
 from database.sqlite_db import SQLiteDB
 from parsers.arg_parser import ArgsParser
 from parsers.slips import SlipsParser
-from parsers.zeek import ZeekParser
+from parsers.ground_truth import GroundTruthParser
 from contextlib import suppress
 from shutil import rmtree
 from termcolor import colored
@@ -61,9 +61,9 @@ def start_suricata_parser():
     # read suricata eve.json
     SuricataParser(eve_file, db).parse()
 
-def start_zeek_parser():
+def start_ground_truth_parser():
     # read the ground truth and store it in the db
-    ZeekParser(ground_truth_dir, 'ground_truth', db).parse()
+    GroundTruthParser(ground_truth_dir, db).parse()
 
 def validate_path(path):
     if not os.path.isabs(path):
@@ -93,6 +93,7 @@ if __name__ == "__main__":
     start_slips_parser()
 
     # read sthe ground truth dir
-    start_zeek_parser()
+    start_ground_truth_parser()
+    print(db.get_malicious_flows_count('ground_truth'))
 
     log(f"Done. For labels db check: ", output_dir)

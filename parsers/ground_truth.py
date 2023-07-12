@@ -22,12 +22,10 @@ IGNORED_LOGS = {
     'syslog'
 }
 
-class ZeekParser:
-    name = "ZeekParser"
-    def __init__(self, zeek_dir: str, label_type:str, db: SQLiteDB):
+class GroundTruthParser:
+    name = "GroundTruthParser"
+    def __init__(self, zeek_dir: str, db: SQLiteDB):
         self.zeek_dir: str = zeek_dir
-        # available types are suricata and  ground_truth
-        self.label_type = label_type
         self.db = db
 
     def log(self, green_txt, normal_txt):
@@ -44,7 +42,7 @@ class ZeekParser:
         """
         # get the full path of the given log file
         fullpath = os.path.join(self.zeek_dir, filename)
-        self.log(f"Extracting fields from: ", f"{fullpath}")
+        self.log(f"Extracting ground truth labels from: ", f"{fullpath}")
         with open(fullpath, 'r') as f:
             while line := f.readline():
 
@@ -58,7 +56,7 @@ class ZeekParser:
                    'community_id': line.get('community_id', ''),
                    'label':  line.get('label', '')
                    }
-                self.db.store_flow(fields, self.label_type)
+                self.db.store_flow(fields, 'ground_truth')
 
 
     def parse(self):
