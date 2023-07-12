@@ -18,6 +18,7 @@ The sqlite db created by this tool is stored in a subdir in the output/ dir
 for example
 output/zeek_dir_ground_truth-2023-07-10-14:04:16
 
-This tool starts slips and gives it the input file specified by the -s param
-Slips should only be started given a zeek dir or a pcap (for now)
+slips now stores the community id for each conn.log flow stored in the sqlite db
+the table with the community id and label in slips is called 'flows' inside the flows.sqlite db
+this toold read only this table with the labels and community id and stores the labels in it's own db stored in output/db.sqlite
 

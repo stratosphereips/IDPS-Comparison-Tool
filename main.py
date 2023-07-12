@@ -87,5 +87,4 @@ if __name__ == "__main__":
     ZeekParser(ground_truth_dir, 'ground_truth', db).parse_dir()
 
 
-
-
+    log(f"Done. For labels db check: ", output_dir)
