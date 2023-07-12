@@ -6,7 +6,7 @@ python3 main.py -s <slips_db_abs_path> -e <eve.json_abs_path> -g <ground_truth_l
 
 for testing use this command:
 
- python3 main.py -g /home/alya/Desktop/IDPS-Comparison-Tool/dataset/zeek_dir_ground_truth -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/sample_slips_db.sqlite -e /home/alya/Desktop/StratosphereLinuxIPS/dataset/test6-malicious.suricata.json
+python3 main.py -g /home/alya/Desktop/IDPS-Comparison-Tool/dataset/zeek_dir_ground_truth -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/sample_slips_db.sqlite -e /home/alya/Desktop/IDPS-Comparison-Tool  
 
 
 # requirements

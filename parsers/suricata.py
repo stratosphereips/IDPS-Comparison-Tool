@@ -15,4 +15,5 @@ class SuricataParser:
 
     def parse(self):
         """read sthe given suricata eve.json"""
-        ...
+        self.log(f"STARTING SURICATAAAAA " ,'')
+
