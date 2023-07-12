@@ -21,6 +21,7 @@ IGNORED_LOGS = {
     'sip',
     'syslog'
 }
+
 class ZeekParser:
     name = "ZeekParser"
     def __init__(self, zeek_dir: str, label_type:str, db: SQLiteDB):
@@ -60,7 +61,7 @@ class ZeekParser:
                 self.db.store_flow(fields, self.label_type)
 
 
-    def parse_dir(self):
+    def parse(self):
         """
         parses each log file in self.zeek_dir
         :return:

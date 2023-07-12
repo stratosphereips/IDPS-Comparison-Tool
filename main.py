@@ -1,6 +1,7 @@
 import os.path
 import sys
 from parsers.config import ConfigurationParser
+from parsers.suricata import SuricataParser
 from database.sqlite_db import SQLiteDB
 from parsers.arg_parser import ArgsParser
 from parsers.slips import SlipsParser
@@ -9,6 +10,7 @@ from contextlib import suppress
 from shutil import rmtree
 from termcolor import colored
 import datetime
+
 
 def setup_output_dir(zeek_dir):
     output_dir = 'output/'
@@ -51,7 +53,7 @@ if __name__ == "__main__":
     # TODO uncomment assertions when we have some files to test with
 
     eve_file: str = args.eve_file
-    # assert os.path.exists(eve_file)
+    assert os.path.exists(eve_file), f"Suricata file '{eve_file}' doesn't exist"
     log(f"Using suricata: ", eve_file)
 
     # this should always be a labeled zeek json dir
@@ -80,11 +82,13 @@ if __name__ == "__main__":
 
     log(f"Reading SLips db from: ", slips_db)
 
-    slips = SlipsParser(slips_db, db).parse_db()
+    slips = SlipsParser(slips_db, db).parse()
 
 
     # read the ground truth and store it in the db
-    ZeekParser(ground_truth_dir, 'ground_truth', db).parse_dir()
+    ZeekParser(ground_truth_dir, 'ground_truth', db).parse()
 
+    # read suricata eve.json
+    SuricataParser(eve_file, db).parse()
 
     log(f"Done. For labels db check: ", output_dir)

@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sqlite3
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
@@ -84,7 +83,7 @@ class SlipsParser:
 
 
 
-    def parse_db(self):
+    def parse(self):
         """reads the output db of slips with the labels and stores it in this tools' db"""
         # connect to the given db
         self.connect()
