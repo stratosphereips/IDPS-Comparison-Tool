@@ -2,7 +2,12 @@
 pip3 install -r requirements.txt
 
 # Usage 
-python3 main.py -s <slips input> -e <eve.json of suricata> -g <ground_truth_labeled_zeek_dir>
+python3 main.py -s <slips_db_abs_path> -e <eve.json_abs_path> -g <ground_truth_labeled_zeek_dir>
+
+for testing use this command:
+
+ python3 main.py -g /home/alya/Desktop/IDPS-Comparison-Tool/dataset/zeek_dir_ground_truth -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/sample_slips_db.sqlite -e /home/alya/Desktop/StratosphereLinuxIPS/dataset/test6-malicious.suricata.json
+
 
 # requirements
 specify the full path to slips installation dir in slips.conf
