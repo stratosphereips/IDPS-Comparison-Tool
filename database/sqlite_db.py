@@ -87,6 +87,26 @@ class SQLiteDB():
         result = self.fetchall()
         return result
 
+
+    def get_malicious_flows_count(self, type_) -> int:
+        """
+        returns all the malicious labeled flows by slips, suricata, or ground truth
+        if type_ is 'slips' returns all the flows with slips_label = 'malicious'
+
+        :param type_: can be 'slips' , 'suricata', or 'ground_truth'
+        :return:
+        """
+        # stores each  type_ param supported value along with the name of the db
+        # column that stores the label of this type_
+        map = {
+            'slips': 'slips_label',
+            'suricata': 'suricata_label',
+            'ground_truth': 'ground_truth'
+        }
+        assert type_ in map, "get_malicious_flows_count() was given an invalid type"
+        column = map[type_]
+        return self.get_count('flows', condition=f'{column}="malicious"')
+
     def get_count(self, table, condition=None):
         """
         returns the number of matching rows in the given table based on a specific contioins
