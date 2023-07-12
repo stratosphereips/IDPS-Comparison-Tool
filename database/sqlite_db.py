@@ -46,6 +46,21 @@ class SQLiteDB():
         cls.conn.commit()
 
 
+
+    def print_table(self, table_name):
+        """For debugging :D"""
+        self.execute(f"SELECT * FROM {table_name}")
+        rows = self.fetchall()
+
+        # Print the table header
+        column_names = [description[0] for description in self.cursor.description]
+        print(column_names)
+
+        # Print each row of the table
+        for row in rows:
+            print(row)
+
+
     def store_flows_count(self, type_: str, count: int):
         """
         store =s the total number of labeled flows by slips, suricata or ground_Truth

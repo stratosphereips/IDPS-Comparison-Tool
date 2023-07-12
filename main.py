@@ -92,8 +92,7 @@ if __name__ == "__main__":
 
     start_slips_parser()
 
-    # read sthe ground truth dir
     start_ground_truth_parser()
-    print(db.get_malicious_flows_count('ground_truth'))
-
+    log(f"Total flows read by parsers: ",'')
+    db.print_table('flows_count')
     log(f"Done. For labels db check: ", output_dir)
