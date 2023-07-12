@@ -1,5 +1,6 @@
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
+import json
 
 class SuricataParser:
     name = "SuricataParser"
@@ -15,5 +16,18 @@ class SuricataParser:
 
     def parse(self):
         """read sthe given suricata eve.json"""
-        self.log(f"STARTING SURICATAAAAA " ,'')
+        with open(self.eve_file, 'r') as f:
+            while line := f.readline():
+                line = json.loads(line)
+                if line['event_type'] == 'alert':
+                    #TODO see what's the key for community id
+                    flow = {
+                        'community_id' : line.get("community_id" ,''),
+                        # todo we assume all flows with event_type=alert are marked as malicious by suricata
+                        'label' : 'malicious'
+                    }
+                    self.db.store_flow(flow, 'suricata_label')
+                    self.log(f"Extracted suricata label for flow: ",  line.get("community_id" ,''))
+
+
 
