@@ -1,7 +1,7 @@
 import os
 import json
 from database.sqlite_db import SQLiteDB
-
+from termcolor import colored
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
     'capture_loss',
@@ -22,11 +22,18 @@ IGNORED_LOGS = {
     'syslog'
 }
 class ZeekParser:
+    name = "ZeekParser"
     def __init__(self, zeek_dir: str, label_type:str, db: SQLiteDB):
         self.zeek_dir: str = zeek_dir
         # available types are suricata and  ground_truth
         self.label_type = label_type
         self.db = db
+
+    def log(self, green_txt, normal_txt):
+        normal_txt = str(normal_txt)
+        green_txt = str(green_txt)
+
+        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
 
 
     def extract_fields(self, filename: str):
@@ -36,14 +43,14 @@ class ZeekParser:
         """
         # get the full path of the given log file
         fullpath = os.path.join(self.zeek_dir, filename)
-        print(f"Extracting fields from {fullpath}")
+        self.log(f"Extracting fields from: ", f"{fullpath}")
         with open(fullpath, 'r') as f:
             while line := f.readline():
 
                 try:
                     line = json.loads(line)
                 except json.decoder.JSONDecodeError:
-                    print(f"Error loading line: \n{line}")
+                    self.log(f"Error loading line: \n{line}",'')
 
                 # extract fields
                 fields = {

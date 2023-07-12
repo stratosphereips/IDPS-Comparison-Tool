@@ -39,7 +39,7 @@ def log(green_txt, normal_txt):
     normal_txt = str(normal_txt)
     green_txt = str(green_txt)
 
-    print(colored(green_txt,'green') + normal_txt)
+    print( colored("[Main] ", 'blue')+ colored(green_txt,'green') + normal_txt)
 
 if __name__ == "__main__":
     # Read the configuration file
