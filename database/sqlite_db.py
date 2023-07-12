@@ -34,7 +34,7 @@ class SQLiteDB():
         """creates the tables we're gonna use"""
         table_schema = {
             'flows': "community_id TEXT PRIMARY KEY, ground_truth TEXT, slips_label TEXT, suricata_label TEXT",
-            'flows_count': "type TEXT PRIMARY KEY, flows_count INT",
+            'flows_count': "type_ TEXT PRIMARY KEY, count INT",
             }
         for table_name, schema in table_schema.items():
             cls.create_table(table_name, schema)
@@ -44,6 +44,16 @@ class SQLiteDB():
         query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
         cls.cursor.execute(query)
         cls.conn.commit()
+
+
+    def store_flows_count(self, type_: str, count: int):
+        """
+        store =s the total number of labeled flows by slips, suricata or ground_Truth
+        :param type_:  slips, suricata or ground_truth
+        :param count: number of labeled flows
+        """
+        query = f'INSERT INTO flows_count (type_, count) VALUES (\'{type_}\', {count});'
+        self.execute(query)
 
 
     def store_flow(self, flow: dict, label_type: str):
