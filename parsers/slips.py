@@ -82,3 +82,19 @@ class SlipsParser:
                 # An error occurred during execution
                 print(f"Error executing query ({query}): {e}")
 
+
+
+    def parse_db(self):
+        """reads the output db of slips with the labels and stores it in this tools' db"""
+        # connect to the given db
+        self.connect()
+        for row in self.iterate_flows():
+            # each row is a dict
+            flow = {
+                'community_id': row['community_id'],
+                'label' : row['label']
+            }
+            self.db.store_flow(flow, 'slips_label')
+            self.log(f"Extracted slips label for flow: ", f"{row['community_id']}")
+
+
