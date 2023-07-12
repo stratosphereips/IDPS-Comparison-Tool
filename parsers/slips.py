@@ -87,7 +87,9 @@ class SlipsParser:
         """reads the output db of slips with the labels and stores it in this tools' db"""
         # connect to the given db
         self.connect()
+        flows_count = 0
         for row in self.iterate_flows():
+            flows_count += 1
             # each row is a dict
             flow = {
                 'community_id': row['community_id'],
@@ -95,4 +97,4 @@ class SlipsParser:
             }
             self.db.store_flow(flow, 'slips_label')
             self.log(f"Extracted slips label for flow: ", f"{row['community_id']}")
-
+        self.db.store_flows_count('slips', flows_count)

@@ -17,8 +17,10 @@ class SuricataParser:
     def parse(self):
         """read sthe given suricata eve.json"""
         with open(self.eve_file, 'r') as f:
+            flows = 0
             while line := f.readline():
                 line = json.loads(line)
+                flows += 1
                 if line['event_type'] == 'alert':
                     #TODO see what's the key for community id
                     flow = {
@@ -35,8 +37,7 @@ class SuricataParser:
                         'label' : 'benign'
                     }
                     self.db.store_flow(flow, 'suricata_label')
-
                 self.log(f"Extracted suricata label for flow: ",  line.get("community_id" ,''))
-
+            self.db.store_flows_count('suricata', flows)
 
 

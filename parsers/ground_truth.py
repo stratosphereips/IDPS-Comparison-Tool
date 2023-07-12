@@ -24,6 +24,8 @@ IGNORED_LOGS = {
 
 class GroundTruthParser:
     name = "GroundTruthParser"
+    flows_count = 0
+
     def __init__(self, zeek_dir: str, db: SQLiteDB):
         self.zeek_dir: str = zeek_dir
         self.db = db
@@ -45,7 +47,7 @@ class GroundTruthParser:
         self.log(f"Extracting ground truth labels from: ", f"{fullpath}")
         with open(fullpath, 'r') as f:
             while line := f.readline():
-
+                self.flows_count +=1
                 try:
                     line = json.loads(line)
                 except json.decoder.JSONDecodeError:
@@ -72,6 +74,9 @@ class GroundTruthParser:
 
             # extract fields and store them in the db
             self.extract_fields(file)
+
+        self.db.store_flows_count('ground_truth', self.flows_count)
+
 
 
 
