@@ -5,6 +5,8 @@ import json
 from typing import Tuple, List
 class Calculator:
     name = "MetricsCalculator"
+    # will save the tp, tn, fp and fn for each tool in this dict
+    metrics = {}
     def __init__(self, db: SQLiteDB):
         self.db = db
 
@@ -66,10 +68,18 @@ class Calculator:
         fp = cm[0, 1]
         fn = cm[1, 0]
 
-        print("True Positives (TP):", tp)
-        print("True Negatives (TN):", tn)
-        print("False Positives (FP):", fp)
-        print("False Negatives (FN):", fn)
+        self.log("{tool}: True Positives (TP): ", tp)
+        self.log("{tool}: True Negatives (TN): ", tn)
+        self.log("{tool}: False Positives (FP): ", fp)
+        self.log("{tool}: False Negatives (FN): ", fn)
+
+        # will use them later
+        self.metrics[tool] = {
+            'TP': tp,
+            'TN': tn,
+            'FP': fp,
+            'FN': fn
+        }
 
     def fpr(self):
         ...
