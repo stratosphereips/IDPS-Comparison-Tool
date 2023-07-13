@@ -51,7 +51,7 @@ class Calculator:
 
     def get_confusion_matrix(self, tool:str):
         """
-        returns FP, FN, TP, TN of the given tool compared with the grounf truth
+        prints the FP, FN, TP, TN of the given tool compared with the grounf truth
         :param tool: 'slips' or 'suricata'
         """
         assert tool in ['slips', 'suricata'], f'Trying to get FP rate of invalid tool: {tool}'
@@ -68,10 +68,10 @@ class Calculator:
         fp = cm[0, 1]
         fn = cm[1, 0]
 
-        self.log("{tool}: True Positives (TP): ", tp)
-        self.log("{tool}: True Negatives (TN): ", tn)
-        self.log("{tool}: False Positives (FP): ", fp)
-        self.log("{tool}: False Negatives (FN): ", fn)
+        self.log(f"{tool}: True Positives (TP): ", tp)
+        self.log(f"{tool}: True Negatives (TN): ", tn)
+        self.log(f"{tool}: False Positives (FP): ", fp)
+        self.log(f"{tool}: False Negatives (FN): ", fn)
 
         # will use them later
         self.metrics[tool] = {
@@ -81,5 +81,18 @@ class Calculator:
             'FN': fn
         }
 
-    def fpr(self):
-        ...
+
+
+    def FPR(self, tool) -> float:
+        """
+        prints the false positive rate of a given tool
+        :param tool: slips or suricata
+        :return: float
+        """
+        # make sure we have the fp and tn of this store calculated already
+        if not tool in self.metrics:
+            self.get_confusion_matrix(tool)
+
+        fpr = self.metrics[tool]['FP']/(self.metrics[tool]['FP'] + self.metrics[tool]['TN'])
+        self.log(f"{tool}: FPR: ", fpr)
+        return fpr
