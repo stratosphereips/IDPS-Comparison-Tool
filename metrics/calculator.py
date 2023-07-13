@@ -3,7 +3,6 @@ from termcolor import colored
 from sklearn.metrics import confusion_matrix
 import json
 from typing import Tuple, List
-
 class Calculator:
     name = "MetricsCalculator"
     def __init__(self, db: SQLiteDB):
@@ -36,3 +35,14 @@ class Calculator:
             elif tool =='suricata':
                 predicted.append(suricata_label)
         return (actual, predicted)
+
+    def clean_labels(self, labels: list)-> list:
+        """
+        replaces all the None values with 'benign'
+        :return: returns the given list with all the None values replaced with benign
+        """
+
+        for idx, label in enumerate(labels):
+            if label is None:
+                labels[idx] = 'benign'
+        return labels
