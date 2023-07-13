@@ -8,7 +8,13 @@ class SQLiteDB():
     _obj = None
     # used to lock each call to commit()
     cursor_lock = Lock()
-
+    # stores each  type_ param supported value along with the name of the db
+    # column that stores the label of this type_
+    labels_map = {
+        'slips': 'slips_label',
+        'suricata': 'suricata_label',
+        'ground_truth': 'ground_truth'
+    }
     def __new__(cls, output_dir):
         # To treat the db as a singelton
         if cls._obj is None or not isinstance(cls._obj, cls):
@@ -113,11 +119,9 @@ class SQLiteDB():
         result = self.fetchall()
         return result
 
-
-
     def get_flows_count(self, type_:str, label="") -> int:
         """
-        returns all the malicious labeled flows by slips, suricata, or ground truth
+        returns all the malicious/benign labeled flows by slips, suricata, or ground truth
         if type_ is 'slips' returns all the flows with slips_label = 'malicious'
 
         :param type_: can be 'slips' , 'suricata', or 'ground_truth'
@@ -126,18 +130,28 @@ class SQLiteDB():
         """
         assert label in ['benign', 'malicious'], "get_malicious_flows_count() was given an invalid label"
 
-        # stores each  type_ param supported value along with the name of the db
-        # column that stores the label of this type_
-        map = {
-            'slips': 'slips_label',
-            'suricata': 'suricata_label',
-            'ground_truth': 'ground_truth'
-        }
-        assert type_ in map, "get_malicious_flows_count() was given an invalid type"
 
-        column = map[type_]
+        assert type_ in self.labels_map, "get_malicious_flows_count() was given an invalid type"
+
+        column = self.labels_map[type_]
         return self.get_count('flows', condition=f'{column}="{label}"')
 
+    def get_labeled_flows_by(self, type_):
+        """
+        returns a list with all flows that have a label by the given tool
+         (by slips or suricata or a has a ground truth label)
+        :param type_: can be 'slips' , 'suricata', or 'ground_truth'
+        """
+        assert type_ in self.labels_map, f'Trying to get labeled flows by invalid type: {type_}'
+
+        # get the column name  of the given type
+        label = self.labels_map[type_]
+
+        query = f'SELECT * FROM flows WHERE {label} IS NOT NULL AND {label} != "";'
+        self.execute(query)
+
+        all_labeled_flows = self.fetchall()
+        return all_labeled_flows
 
 
     def get_count(self, table, condition=None):
