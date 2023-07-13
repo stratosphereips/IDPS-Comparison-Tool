@@ -154,6 +154,29 @@ class SQLiteDB():
         return all_labeled_flows
 
 
+    def get_label_of_flow(self, community_id: str, by=None):
+        """
+        given a specific flow, returns the label by the given tool
+        if by=None, returns all labels of this flow
+        if by is given, the return value will either be 'benign', 'malicious' or None
+        if not, it will be something like this
+        ('1:AI5bDcB9qLc3eAAZ2Mle9Nb+DNs=', None, 'benign', None)
+        :param by: can be 'slips' , 'suricata', or 'ground_truth'
+        :return: 'malicious' or 'benign'
+        """
+        if not by:
+            query = f'SELECT * FROM flows WHERE community_id = "{community_id}";'
+        else:
+            assert by in self.labels_map, f'trying to get the label set by an invalid tool {by}'
+            label = self.labels_map[by]
+            query = f'SELECT {label} FROM flows WHERE community_id = "{community_id}";'
+
+        self.execute(query)
+        label = self.fetchone()
+        return label
+
+
+
     def get_count(self, table, condition=None):
         """
         returns the number of matching rows in the given table based on a specific contioins
