@@ -87,12 +87,39 @@ class Calculator:
         :param tool: 'slips' or 'suricata'
         """
         # make sure we have the fp and tn of this store calculated already
-        if not tool in self.metrics:
+        if  tool not in self.metrics:
             self.get_confusion_matrix(tool)
 
+        if self.metrics[tool]['FN'] == 0:
+            self.log(f"Can't get precision of {tool} because FN of {tool} is: "," 0")
+            return "ERR"
+
+
         recall = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
+
+        self.metrics[tool].update({'recall': recall})
         self.log(f"{tool}: recall: ", recall)
         return recall
+
+
+    def precision(self, tool: str):
+        """
+        prints the recall of the given tool compared with the ground truth
+        :param tool: 'slips' or 'suricata'
+        """
+        # make sure we have the fp and tn of this store calculated already
+        if  tool not in self.metrics:
+            self.get_confusion_matrix(tool)
+
+        if self.metrics[tool]['FP'] == 0:
+            self.log(f"Can't get precision of {tool} because FP of {tool} is: "," 0")
+            return "ERR"
+
+        precision = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FP'])
+
+        self.metrics[tool].update({'precision': precision})
+        self.log(f"{tool}: precision: ", precision)
+        return precision
 
     def FPR(self, tool) -> float:
         """

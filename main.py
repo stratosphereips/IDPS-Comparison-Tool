@@ -99,16 +99,24 @@ if __name__ == "__main__":
 
     log(f"Done. For labels db check: ", output_dir)
 
+    print()
     calc = Calculator(db)
     # Print confusion matrix for slips
     calc.get_confusion_matrix('slips')
+
+    print()
     # Print confusion matrix for suricata
     calc.get_confusion_matrix('suricata')
 
-
+    print()
     calc.FPR('slips')
     calc.FPR('suricata')
 
+    print()
     calc.recall('slips')
     calc.recall('suricata')
+
+    print()
+    calc.precision('slips')
+    calc.precision('suricata')
 
