@@ -121,6 +121,23 @@ class Calculator:
         self.log(f"{tool}: precision: ", precision)
         return precision
 
+    def F1(self, tool):
+        """
+        prints the F1 of the given tool compared with the ground truth
+        :param tool: 'slips' or 'suricata'
+        """
+        if  tool not in self.metrics:
+            self.get_confusion_matrix(tool)
+
+        precision = self.metrics[tool]['precision']
+        recall = self.metrics[tool]['recall']
+        f1 = (2 * precision * recall) / (precision + recall)
+
+        self.log(f"{tool}: F1: ", f1)
+        return f1
+
+
+
     def FPR(self, tool) -> float:
         """
         prints the false positive rate of a given tool

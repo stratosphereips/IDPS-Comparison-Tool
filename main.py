@@ -120,3 +120,7 @@ if __name__ == "__main__":
     calc.precision('slips')
     calc.precision('suricata')
 
+    print()
+    calc.F1('slips')
+    calc.F1('suricata')
+
