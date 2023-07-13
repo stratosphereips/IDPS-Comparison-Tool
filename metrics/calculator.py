@@ -46,3 +46,30 @@ class Calculator:
             if label is None:
                 labels[idx] = 'benign'
         return labels
+
+    def get_confusion_matrix(self, tool:str):
+        """
+        returns FP, FN, TP, TN of the given tool compared with the grounf truth
+        :param tool: 'slips' or 'suricata'
+        """
+        assert tool in ['slips', 'suricata'], f'Trying to get FP rate of invalid tool: {tool}'
+
+        actual, predicted = self.get_labels_list(tool)
+
+        actual: list = self.clean_labels(actual)
+        predicted: list = self.clean_labels(predicted)
+
+        cm = confusion_matrix(actual, predicted)
+        # extract TP, TN, FP, FN from the confusion matrix
+        tp = cm[1, 1]
+        tn = cm[0, 0]
+        fp = cm[0, 1]
+        fn = cm[1, 0]
+
+        print("True Positives (TP):", tp)
+        print("True Negatives (TN):", tn)
+        print("False Positives (FP):", fp)
+        print("False Negatives (FN):", fn)
+
+    def fpr(self):
+        ...
