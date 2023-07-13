@@ -7,3 +7,4 @@ datetime
 json
 subprocess
 threading
+scikit-learn

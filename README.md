@@ -27,3 +27,13 @@ slips now stores the community id for each conn.log flow stored in the sqlite db
 the table with the community id and label in slips is called 'flows' inside the flows.sqlite db
 this toold read only this table with the labels and community id and stores the labels in it's own db stored in output/db.sqlite
 
+
+
+# Keep in mind
+now this tool does not give remotely accurate metrics because it needs to be tested on the same data
+here's what we need to do
+have 1 pcap
+have ground truth labels for all of tis' flows in the form of zeek tabs 
+give it to slips and get the labels
+give it to suricata and get the labels
+give the above 3 labels to this tool
