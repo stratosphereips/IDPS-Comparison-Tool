@@ -6,6 +6,7 @@ from database.sqlite_db import SQLiteDB
 from parsers.arg_parser import ArgsParser
 from parsers.slips import SlipsParser
 from parsers.ground_truth import GroundTruthParser
+from metrics.calculator import Calculator
 from contextlib import suppress
 from shutil import rmtree
 from termcolor import colored
@@ -95,4 +96,19 @@ if __name__ == "__main__":
     start_ground_truth_parser()
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
+
     log(f"Done. For labels db check: ", output_dir)
+
+    calc = Calculator(db)
+    # Print confusion matrix for slips
+    calc.get_confusion_matrix('slips')
+    # Print confusion matrix for suricata
+    calc.get_confusion_matrix('suricata')
+
+
+    calc.FPR('slips')
+    calc.FPR('suricata')
+
+    calc.recall('slips')
+    calc.recall('suricata')
+

@@ -81,7 +81,18 @@ class Calculator:
             'FN': fn
         }
 
+    def recall(self, tool: str):
+        """
+        prints the recall of the given tool compared with the ground truth
+        :param tool: 'slips' or 'suricata'
+        """
+        # make sure we have the fp and tn of this store calculated already
+        if not tool in self.metrics:
+            self.get_confusion_matrix(tool)
 
+        recall = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
+        self.log(f"{tool}: recall: ", recall)
+        return recall
 
     def FPR(self, tool) -> float:
         """
