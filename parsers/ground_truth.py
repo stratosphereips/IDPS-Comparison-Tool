@@ -28,13 +28,18 @@ class GroundTruthParser:
     name = "GroundTruthParser"
     flows_count = 0
 
-    def __init__(self, zeek_dir: str, db: SQLiteDB):
-        # zeek dir with ground truth labels
-        self.zeek_dir: str = zeek_dir
+    def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
         self.db = db
-        #check if the given zeek dir with ground truth labels is 'tab-separated' or 'json'
-        self.zeek_dir_type: str = self.check_type()
 
+        # ground_truth_type can either be 'dir' or 'file'
+        if ground_truth_type == 'dir':
+            # zeek dir with ground truth labels
+            self.gt_zeek_dir: str = ground_truth
+
+            #check if the given zeek dir with ground truth labels is 'tab-separated' or 'json'
+            self.zeek_dir_type: str = self.check_type()
+        elif ground_truth_type == 'file':
+            self.gt_zeek_file  = ground_truth
 
     def log(self, green_txt, normal_txt):
         normal_txt = str(normal_txt)
@@ -85,7 +90,7 @@ class GroundTruthParser:
 
         return fields
 
-    
+
     def parse_file(self, filename: str):
         """
         extracts the label and community id from each flow and stores them in the db
@@ -132,19 +137,21 @@ class GroundTruthParser:
         """
         parses each log file in self.zeek_dir
         """
+        if hasattr(self, 'gt_zeek_dir'):
+            for file in os.listdir(self.zeek_dir):
+                # skip ignored logs
+                base_filename, ext = os.path.splitext(file)
+                if base_filename in IGNORED_LOGS:
+                    continue
 
-        for file in os.listdir(self.zeek_dir):
-            # skip ignored logs
-            base_filename, ext = os.path.splitext(file)
-            if base_filename in IGNORED_LOGS:
-                continue
+                # extract fields and store them in the db
+                self.parse_file(file)
 
-            # extract fields and store them in the db
-            self.parse_file(file)
+
+        elif hasattr(self, 'gt_zeek_file'):
+            #TODO
+            ...
 
         self.db.store_flows_count('ground_truth', self.flows_count)
-
-
-
 
 
