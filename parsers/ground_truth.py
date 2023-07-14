@@ -3,6 +3,7 @@ import json
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from re import split
+import communityid
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -30,6 +31,7 @@ class GroundTruthParser:
 
     def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
         self.db = db
+        self.community_id = communityid.CommunityID()
         # ground_truth_type can either be 'dir' or 'file'
         if ground_truth_type == 'dir':
             # zeek dir with ground truth labels
@@ -46,6 +48,24 @@ class GroundTruthParser:
 
         print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
 
+
+     def get_community_id(self, flow):
+        """
+        calculates the flow community id based of the protocol
+        """
+        proto = flow['proto'].lower()
+        cases = {
+            'tcp': communityid.FlowTuple.make_tcp,
+            'udp': communityid.FlowTuple.make_udp,
+            'icmp': communityid.FlowTuple.make_icmp,
+        }
+        try:
+            tpl = cases[proto](flow['saddr'], flow['daddr'], flow['sport'], flow['dport'])
+            return self.community_id.calc(tpl)
+        except KeyError:
+            # proto doesn't have a community_id.FlowTuple  method
+            return ''
+
     def extract_fields(self, line: str) -> dict:
         """
         extracts the label and community id from the given line
@@ -56,14 +76,22 @@ class GroundTruthParser:
         if self.zeek_dir_type == 'json':
             try:
                 line = json.loads(line)
+                community_id = line.get('community_id')
+                if community_id:
+                    # the line doesn't have the community id calculated
+                    # we will calc it manually
+                    # first extract fields
+                    #TODO
+                    self.get_community_id(line)
             except json.decoder.JSONDecodeError:
                 self.log(f"Error loading line: \n{line}",'')
 
             # extract fields
             fields = {
-               'community_id': line.get('community_id', ''),
+               'community_id': community_id,
                'label':  line.get('label', '')
                }
+
         elif self.zeek_dir_type == 'tab-separated':
             # the data is either \t separated or space separated
             # zeek files that are space separated are either separated by 2 or 3 spaces so we can't use python's split()
@@ -80,11 +108,16 @@ class GroundTruthParser:
                 label = 'benign'
 
             # extract the community id
-            community_id = ''
             for field in line:
                 if field.startswith("1:"):
                     community_id = field
                     break
+            else:
+                # the line doesn't have the community id calculated
+                # we will calc it manually
+                # first extract fields
+                #TODO
+                ...
 
             fields = {
                'community_id': community_id,
@@ -111,7 +144,6 @@ class GroundTruthParser:
 
         with open(fullpath, 'r') as f:
             while line := f.readline():
-
                 # skip comments
                 if line.startswith('#'):
                     continue

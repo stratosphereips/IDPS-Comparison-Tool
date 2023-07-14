@@ -8,3 +8,4 @@ json
 subprocess
 threading
 scikit-learn
+communityid
