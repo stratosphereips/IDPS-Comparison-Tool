@@ -95,8 +95,14 @@ class GroundTruthParser:
         extracts the label and community id from each flow and stores them in the db
         :param filename: the name of the logfile without the path, for example conn.log
         """
-        # get the full path of the given log file
-        fullpath = os.path.join(self.zeek_dir, filename)
+        if not os.path.isabs(filename):
+            # this tool is given a zeek dir and we're now parsing 1 logfile from this dir
+            # get the full path of the given log file
+            fullpath = os.path.join(self.gt_zeek_dir, filename)
+        else:
+            # this tool is given a zeek logfile and the path of it is abs
+            fullpath = filename
+
         self.log(f"Extracting ground truth labels from: ", f"{fullpath}")
 
         with open(fullpath, 'r') as f:
@@ -111,27 +117,42 @@ class GroundTruthParser:
                 flow = self.extract_fields(line)
                 self.db.store_flow(flow, 'ground_truth')
 
+    def get_line_type(self, log_file_path: str):
+        """
+        determines whether the given file is json or tab separated by reading the first line of it
+        :param log_file_path: path of file we wanna determine the type of
+        :return: 'tab-separated' or 'json'
+        """
+        with open(log_file_path, 'r') as log_file:
+            # read the first line and determine if it's tab separated or not
+            first_line = log_file.readline()
+            if 'separator' in first_line:
+                type_ = 'tab-separated'
+            else:
+                try:
+                    json.loads(first_line)
+                    type_ = 'json'
+                except json.decoder.JSONDecodeError:
+                    type_ = 'tab-separated'
+        return type_
+
     def check_type(self) -> str:
         """
         checks if the given dir is json or tab seperated zeek dir
         :Return: 'tab-separated' or 'json'
         """
-        for f in os.listdir(self.zeek_dir):
-            full_path = os.path.join(self.zeek_dir,f)
+        if hasattr(self, 'gt_zeek_dir'):
             # open the first logfile you see in this dir
-            if os.path.isfile(full_path):
-                with open(full_path, 'r') as random_logfile:
-                    first_line = random_logfile.readline()
-                    if 'separator' in first_line:
-                        dir_type = 'tab-separated'
-                    else:
-                        try:
-                            json.loads(first_line)
-                            dir_type = 'json'
-                        except json.decoder.JSONDecodeError:
-                            dir_type = 'tab-separated'
-                break
-        return dir_type
+            for f in os.listdir(self.gt_zeek_dir):
+                if self.is_ignored(f):
+                    continue
+
+                full_path = os.path.join(self.gt_zeek_dir, f)
+                if os.path.isfile(full_path):
+                    type_ = self.get_line_type(full_path)
+                    break
+        elif hasattr(self, 'gt_zeek_file'):
+            type_ = self.get_line_type(self.gt_zeek_file)
 
         return type_
 
