@@ -31,7 +31,7 @@ class GroundTruthParser:
         self.zeek_dir: str = zeek_dir
         self.db = db
         #check if the given zeek dir with ground truth labels is 'tab-separated' or 'json'
-        self.dir_type: str = self.check_type()
+        self.zeek_dir_type: str = self.check_type()
 
 
     def log(self, green_txt, normal_txt):
@@ -40,8 +40,31 @@ class GroundTruthParser:
 
         print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
 
+    def extract_fields(self, line: str) -> dict:
+        """
+        extracts the label and community id from the given line
+        uses zeek_dir_type to extract fields based on the type of the given zeek dir
+        :param line: line as read from the zeek log file
+        :return: returns a flow dict with {'community_id': ..., 'label':...}
+        """
+        if self.zeek_dir_type == 'json':
+            try:
+                line = json.loads(line)
+            except json.decoder.JSONDecodeError:
+                self.log(f"Error loading line: \n{line}",'')
 
-    def extract_fields(self, filename: str):
+            # extract fields
+            fields = {
+               'community_id': line.get('community_id', ''),
+               'label':  line.get('label', '')
+               }
+        elif self.zeek_dir_type == 'tab-separated':
+            #TODO
+            ...
+        return fields
+
+    
+    def parse_file(self, filename: str):
         """
         extracts the label and community id from each flow and stores them in the db
         :param filename: the name of the logfile without the path, for example conn.log
@@ -52,17 +75,9 @@ class GroundTruthParser:
         with open(fullpath, 'r') as f:
             while line := f.readline():
                 self.flows_count +=1
-                try:
-                    line = json.loads(line)
-                except json.decoder.JSONDecodeError:
-                    self.log(f"Error loading line: \n{line}",'')
 
-                # extract fields
-                fields = {
-                   'community_id': line.get('community_id', ''),
-                   'label':  line.get('label', '')
-                   }
-                self.db.store_flow(fields, 'ground_truth')
+                flow = self.extract_fields(line)
+                self.db.store_flow(flow, 'ground_truth')
 
     def check_type(self) -> str:
         """
@@ -99,7 +114,7 @@ class GroundTruthParser:
                 continue
 
             # extract fields and store them in the db
-            self.extract_fields(file)
+            self.parse_file(file)
 
         self.db.store_flows_count('ground_truth', self.flows_count)
 
