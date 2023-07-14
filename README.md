@@ -8,11 +8,11 @@ for testing use this command:
 
 Example of using labeled ground truth file
 
-python3 main.py -gtd /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/ground_truth -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json
+python3 main.py -gtd $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/ -s $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json  
 
 example of using ground truth dir
 
-python3 main.py -gtf /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/conn.log.labeled -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json
+python3 main.py -gtf $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/conn.log.labeled -s $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json  
 
 
 # How it works
