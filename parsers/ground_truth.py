@@ -27,8 +27,12 @@ class GroundTruthParser:
     flows_count = 0
 
     def __init__(self, zeek_dir: str, db: SQLiteDB):
+        # zeek dir with ground truth labels
         self.zeek_dir: str = zeek_dir
         self.db = db
+        #check if the given zeek dir with ground truth labels is 'tab-separated' or 'json'
+        self.dir_type: str = self.check_type()
+
 
     def log(self, green_txt, normal_txt):
         normal_txt = str(normal_txt)
@@ -60,12 +64,34 @@ class GroundTruthParser:
                    }
                 self.db.store_flow(fields, 'ground_truth')
 
+    def check_type(self) -> str:
+        """
+        checks if the given dir is json or tab seperated zeek dir
+        :Return: 'tab-separated' or 'json'
+        """
+        for f in os.listdir(self.zeek_dir):
+            full_path = os.path.join(self.zeek_dir,f)
+            # open the first logfile you see in this dir
+            if os.path.isfile(full_path):
+                with open(full_path, 'r') as random_logfile:
+                    first_line = random_logfile.readline()
+                    if 'separator' in first_line:
+                        dir_type = 'tab-separated'
+                    else:
+                        try:
+                            json.loads(first_line)
+                            dir_type = 'json'
+                        except json.decoder.JSONDecodeError:
+                            dir_type = 'tab-separated'
+                break
+        return dir_type
+
 
     def parse(self):
         """
         parses each log file in self.zeek_dir
-        :return:
         """
+
         for file in os.listdir(self.zeek_dir):
             # skip ignored logs
             base_filename, ext = os.path.splitext(file)
