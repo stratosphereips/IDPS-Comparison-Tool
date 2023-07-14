@@ -30,16 +30,15 @@ class GroundTruthParser:
 
     def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
         self.db = db
-
         # ground_truth_type can either be 'dir' or 'file'
         if ground_truth_type == 'dir':
             # zeek dir with ground truth labels
             self.gt_zeek_dir: str = ground_truth
-
-            #check if the given zeek dir with ground truth labels is 'tab-separated' or 'json'
-            self.zeek_dir_type: str = self.check_type()
         elif ground_truth_type == 'file':
             self.gt_zeek_file  = ground_truth
+
+        # check th etype of the given zeek file/dir with ground truth labels. 'tab-separated' or 'json'?
+        self.zeek_dir_type: str = self.check_type()
 
     def log(self, green_txt, normal_txt):
         normal_txt = str(normal_txt)
@@ -99,6 +98,7 @@ class GroundTruthParser:
         # get the full path of the given log file
         fullpath = os.path.join(self.zeek_dir, filename)
         self.log(f"Extracting ground truth labels from: ", f"{fullpath}")
+
         with open(fullpath, 'r') as f:
             while line := f.readline():
 
@@ -107,6 +107,7 @@ class GroundTruthParser:
                     continue
 
                 self.flows_count +=1
+                #TODO call this in tab conn.log
                 flow = self.extract_fields(line)
                 self.db.store_flow(flow, 'ground_truth')
 
@@ -132,25 +133,32 @@ class GroundTruthParser:
                 break
         return dir_type
 
+        return type_
+
+    def is_ignored(self, log_file:str):
+        """
+        checks if the given log file path is ignored or not
+        :return:
+        """
+        base_filename, ext = os.path.splitext(log_file)
+        if base_filename in IGNORED_LOGS:
+            return True
 
     def parse(self):
         """
-        parses each log file in self.zeek_dir
+        parses the given zeek dir or zeek logfile
         """
         if hasattr(self, 'gt_zeek_dir'):
-            for file in os.listdir(self.zeek_dir):
-                # skip ignored logs
-                base_filename, ext = os.path.splitext(file)
-                if base_filename in IGNORED_LOGS:
+            for log_file in os.listdir(self.gt_zeek_dir):
+                if self.is_ignored(log_file):
                     continue
 
                 # extract fields and store them in the db
-                self.parse_file(file)
-
+                self.parse_file(log_file)
 
         elif hasattr(self, 'gt_zeek_file'):
-            #TODO
-            ...
+            # extract fields and store them in the db
+            self.parse_file(self.gt_zeek_file)
 
         self.db.store_flows_count('ground_truth', self.flows_count)
 
