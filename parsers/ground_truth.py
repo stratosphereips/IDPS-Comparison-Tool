@@ -74,6 +74,10 @@ class GroundTruthParser:
                 label = 'benign'
             elif 'malicious' in line or 'Malicious' in line:
                 label = 'malicious'
+            else:
+                # line doesn't have a label
+                # print(f"line: {line} doesn't have a label!")
+                label = 'benign'
 
             # extract the community id
             community_id = ''

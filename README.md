@@ -6,7 +6,8 @@ python3 main.py -s <slips_db_abs_path> -e <eve.json_abs_path> -g <ground_truth_l
 
 for testing use this command:
 
-python3 main.py -g /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/ground_truth -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json
+python3 main.py -gtd /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/ground_truth -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json
+python3 main.py -gtf /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/conn.log -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e /home/alya/Desktop/IDPS-Comparison-Tool/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json
 
 
 # requirements
