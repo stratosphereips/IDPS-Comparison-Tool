@@ -123,7 +123,7 @@ class Calculator:
 
     def F1(self, tool):
         """
-        prints the F1 of the given tool compared with the ground truth
+        prints the F1 of the given tool
         :param tool: 'slips' or 'suricata'
         """
         if  tool not in self.metrics:
