@@ -40,7 +40,7 @@ class GroundTruthParser:
             self.gt_zeek_file  = ground_truth
 
         # check th etype of the given zeek file/dir with ground truth labels. 'tab-separated' or 'json'?
-        self.zeek_dir_type: str = self.check_type()
+        self.zeek_file_type: str = self.check_type()
 
     def log(self, green_txt, normal_txt):
         normal_txt = str(normal_txt)
@@ -48,51 +48,88 @@ class GroundTruthParser:
 
         print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
 
-
-     def get_community_id(self, flow):
+    def get_community_id(self, flow: dict):
         """
-        calculates the flow community id based of the protocol
+        calculates the flow community id based on the protocol
         """
-        proto = flow['proto'].lower()
         cases = {
-            'tcp': communityid.FlowTuple.make_tcp,
-            'udp': communityid.FlowTuple.make_udp,
-            'icmp': communityid.FlowTuple.make_icmp,
+        'tcp': communityid.FlowTuple.make_tcp,
+        'udp': communityid.FlowTuple.make_udp,
+        'icmp': communityid.FlowTuple.make_icmp,
         }
+
         try:
+            proto = flow['proto'].lower()
             tpl = cases[proto](flow['saddr'], flow['daddr'], flow['sport'], flow['dport'])
             return self.community_id.calc(tpl)
-        except KeyError:
+        except (KeyError, TypeError):
             # proto doesn't have a community_id.FlowTuple  method
             return ''
+    
+    def get_flow(self, line):
+        """
+        given a tab or json line, extracts the src and dst addr, sport and proto from the line
+        :param line: is a str if the type of given file is tab separated, or a dict if it's json
+        :return: dict with {'saddr', 'sport':.. , 'daddr', 'proto'}
+        """
+        if self.zeek_file_type == 'json':
+            saddr = line.get('id.orig_h')
+            daddr = line.get('id.resp_h')
 
+            sport = line.get('id.orig_p')
+            dport = line.get('id.resp_p')
+
+            proto = line.get('proto')
+            for field in (saddr, daddr, sport, dport, proto):
+                if field == None:
+                    self.log(f"skipping flow. can't extract saddr, sport, daddr, dport from line:", line)
+                    # todo handle this
+                    return False
+            return {
+                'saddr':saddr,
+                'daddr': daddr,
+                'sport': sport,
+                'dport': dport,
+                'proto': proto
+            }
+        elif self.zeek_file_type == 'tab-separated':
+            #TODO
+            ...
+        
+    
     def extract_fields(self, line: str) -> dict:
         """
         extracts the label and community id from the given line
-        uses zeek_dir_type to extract fields based on the type of the given zeek dir
+        uses zeek_file_type to extract fields based on the type of the given zeek dir
         :param line: line as read from the zeek log file
         :return: returns a flow dict with {'community_id': ..., 'label':...}
         """
-        if self.zeek_dir_type == 'json':
+        if self.zeek_file_type == 'json':
             try:
                 line = json.loads(line)
-                community_id = line.get('community_id')
-                if community_id:
+                community_id: str = line.get('community_id' ,'')
+                if not community_id:
                     # the line doesn't have the community id calculated
                     # we will calc it manually
                     # first extract fields
-                    #TODO
-                    self.get_community_id(line)
+                    flow: dict = self.get_flow(line)
+                    if flow:
+                        # we managed to extract the fields needed to calc the community id
+                        community_id: str = self.get_community_id(flow)
+                    else:
+                        return False
+
             except json.decoder.JSONDecodeError:
                 self.log(f"Error loading line: \n{line}",'')
+                return False
 
             # extract fields
             fields = {
                'community_id': community_id,
-               'label':  line.get('label', '')
+               'label':  line.get('label', 'benign')
                }
 
-        elif self.zeek_dir_type == 'tab-separated':
+        elif self.zeek_file_type == 'tab-separated':
             # the data is either \t separated or space separated
             # zeek files that are space separated are either separated by 2 or 3 spaces so we can't use python's split()
             # using regex split, split line when you encounter more than 2 spaces in a row
@@ -131,6 +168,7 @@ class GroundTruthParser:
         """
         extracts the label and community id from each flow and stores them in the db
         :param filename: the name of the logfile without the path, for example conn.log
+        this can be the file given to this tool using -gtf or 1 file from the zeek dir given to this tool
         """
         if not os.path.isabs(filename):
             # this tool is given a zeek dir and we're now parsing 1 logfile from this dir
@@ -147,10 +185,13 @@ class GroundTruthParser:
                 # skip comments
                 if line.startswith('#'):
                     continue
-
                 self.flows_count +=1
-                #TODO call this in tab conn.log
+
                 flow = self.extract_fields(line)
+                if not flow:
+                    # skip the flow that doesn't have a community
+                    # id after trying to extract it and manually calc it
+                    continue
                 self.db.store_flow(flow, 'ground_truth')
 
     def get_line_type(self, log_file_path: str):
