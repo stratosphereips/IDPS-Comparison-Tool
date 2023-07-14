@@ -2,6 +2,8 @@ import os
 import json
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
+from re import split
+
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
     'capture_loss',
@@ -59,8 +61,28 @@ class GroundTruthParser:
                'label':  line.get('label', '')
                }
         elif self.zeek_dir_type == 'tab-separated':
-            #TODO
-            ...
+            # the data is either \t separated or space separated
+            # zeek files that are space separated are either separated by 2 or 3 spaces so we can't use python's split()
+            # using regex split, split line when you encounter more than 2 spaces in a row
+            line = line.split('\t') if '\t' in line else split(r'\s{2,}', line)
+
+            if 'benign' in line or 'Benign' in line:
+                label = 'benign'
+            elif 'malicious' in line or 'Malicious' in line:
+                label = 'malicious'
+
+            # extract the community id
+            community_id = ''
+            for field in line:
+                if field.startswith("1:"):
+                    community_id = field
+                    break
+
+            fields = {
+               'community_id': community_id,
+               'label':  label
+            }
+
         return fields
 
     
@@ -74,8 +96,12 @@ class GroundTruthParser:
         self.log(f"Extracting ground truth labels from: ", f"{fullpath}")
         with open(fullpath, 'r') as f:
             while line := f.readline():
-                self.flows_count +=1
 
+                # skip comments
+                if line.startswith('#'):
+                    continue
+
+                self.flows_count +=1
                 flow = self.extract_fields(line)
                 self.db.store_flow(flow, 'ground_truth')
 
