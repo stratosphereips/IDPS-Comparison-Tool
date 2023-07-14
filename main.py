@@ -13,14 +13,10 @@ from termcolor import colored
 import datetime
 
 
-def setup_output_dir(zeek_dir):
+def setup_output_dir():
     output_dir = 'output/'
-
-    zeek_dir = os.path.basename(zeek_dir)
-    output_dir = os.path.join(output_dir, zeek_dir)
-
     current_datetime = datetime.datetime.now()
-    output_dir += '-' + current_datetime.strftime('%Y-%m-%d-%H:%M:%S')
+    output_dir = os.path.join(output_dir, current_datetime.strftime('%Y-%m-%d-%H:%M:%S') + '/')
 
     # todo add support for -o
     # delete all old files in the output dir
@@ -65,10 +61,10 @@ def start_suricata_parser():
 def start_ground_truth_parser():
     if args.ground_truth_dir:
         # read the ground truth and store it in the db
-        GroundTruthParser(ground_truth_dir,'dir', db).parse()
+        GroundTruthParser(ground_truth_dir, 'dir', db).parse()
     elif args.ground_truth_file:
         # read the ground truth and store it in the db
-        GroundTruthParser(ground_truth_dir,'file', db).parse()
+        GroundTruthParser(args.ground_truth_file, 'file', db).parse()
 
 
 def validate_path(path):
@@ -91,18 +87,16 @@ if __name__ == "__main__":
         if validate_path(ground_truth_dir):
             log(f"Using ground truth dir: ", ground_truth_dir)
         assert os.path.isdir(ground_truth_dir), f"Invalid dir {ground_truth_dir}. ground truth has to be a dir"
-        output_dir = setup_output_dir(ground_truth_dir)
 
     elif args.ground_truth_file:
         ground_truth_file: str = args.ground_truth_file
         if validate_path(ground_truth_file):
             log(f"Using ground truth file: ", ground_truth_file)
-        assert os.path.isfile(args.ground_truth_file), f"Invalid file {args.ground_truth_file}. "
-        output_dir = setup_output_dir(ground_truth_file)
+        assert os.path.isfile(args.ground_truth_file), f"Invalid file given with -gtf {args.ground_truth_file}. "
     else:
         print("No ground truth file was given. stopping.")
         sys.exit()
-
+    output_dir = setup_output_dir()
 
     db = SQLiteDB(output_dir)
     #
