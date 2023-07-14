@@ -75,11 +75,10 @@ class GroundTruthParser:
         if self.zeek_file_type == 'json':
             saddr = line.get('id.orig_h')
             daddr = line.get('id.resp_h')
-
             sport = line.get('id.orig_p')
             dport = line.get('id.resp_p')
-
             proto = line.get('proto')
+
             for field in (saddr, daddr, sport, dport, proto):
                 if field == None:
                     self.log(f"skipping flow. can't extract saddr, sport, daddr, dport from line:", line)
@@ -93,9 +92,16 @@ class GroundTruthParser:
                 'proto': proto
             }
         elif self.zeek_file_type == 'tab-separated':
-            #TODO
-            ...
-        
+            try:
+                return {
+                    'saddr': line[2],
+                    'daddr':  line[4],
+                    'sport':  line[3],
+                    'dport':  line[5],
+                    'proto':  line[6],
+                }
+            except KeyError:
+                return False
     
     def extract_fields(self, line: str) -> dict:
         """
@@ -152,9 +158,13 @@ class GroundTruthParser:
             else:
                 # the line doesn't have the community id calculated
                 # we will calc it manually
-                # first extract fields
-                #TODO
-                ...
+                # first extract fields that we need to calc community id
+                flow: dict = self.get_flow(line)
+                if flow:
+                    # we managed to extract the fields needed to calc the community id
+                    community_id: str = self.get_community_id(flow)
+                else:
+                    return False
 
             fields = {
                'community_id': community_id,
@@ -186,7 +196,8 @@ class GroundTruthParser:
                 if line.startswith('#'):
                     continue
                 self.flows_count +=1
-
+                if self.flows_count % 180 == 0:
+                    self.log(f"Number of parsed flows: ", self.flows_count)
                 flow = self.extract_fields(line)
                 if not flow:
                     # skip the flow that doesn't have a community
