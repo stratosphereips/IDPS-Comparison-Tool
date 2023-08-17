@@ -78,7 +78,7 @@ def validate_path(path):
 if __name__ == "__main__":
     # Read the configuration file
     config = ConfigurationParser('config.ini')
-    twid_width: float = config.get_tw_width()
+    # twid_width: float = config.get_tw_width()
     args = ArgsParser().args
 
     # this should always be a labeled zeek json dir
@@ -94,8 +94,9 @@ if __name__ == "__main__":
             log(f"Using ground truth file: ", ground_truth_file)
         assert os.path.isfile(args.ground_truth_file), f"Invalid file given with -gtf {args.ground_truth_file}. "
     else:
-        print("No ground truth file was given. stopping.")
+        print("No ground truth file or dir was given. stopping.")
         sys.exit()
+
     output_dir = setup_output_dir()
 
     db = SQLiteDB(output_dir)
@@ -105,6 +106,8 @@ if __name__ == "__main__":
     start_slips_parser()
 
     start_ground_truth_parser()
+
+
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
     #
