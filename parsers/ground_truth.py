@@ -3,7 +3,7 @@ import json
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from re import split
-import communityid
+from .utils import get_community_id
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -31,7 +31,6 @@ class GroundTruthParser:
 
     def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
         self.db = db
-        self.community_id = communityid.CommunityID()
         # ground_truth_type can either be 'dir' or 'file'
         if ground_truth_type == 'dir':
             # zeek dir with ground truth labels
@@ -48,24 +47,6 @@ class GroundTruthParser:
 
         print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
 
-    def get_community_id(self, flow: dict):
-        """
-        calculates the flow community id based on the protocol
-        """
-        cases = {
-        'tcp': communityid.FlowTuple.make_tcp,
-        'udp': communityid.FlowTuple.make_udp,
-        'icmp': communityid.FlowTuple.make_icmp,
-        }
-
-        try:
-            proto = flow['proto'].lower()
-            tpl = cases[proto](flow['saddr'], flow['daddr'], flow['sport'], flow['dport'])
-            return self.community_id.calc(tpl)
-        except (KeyError, TypeError):
-            # proto doesn't have a community_id.FlowTuple  method
-            return ''
-    
     def get_flow(self, line):
         """
         given a tab or json line, extracts the src and dst addr, sport and proto from the line
@@ -121,7 +102,7 @@ class GroundTruthParser:
                     flow: dict = self.get_flow(line)
                     if flow:
                         # we managed to extract the fields needed to calc the community id
-                        community_id: str = self.get_community_id(flow)
+                        community_id: str = get_community_id(flow)
                     else:
                         return False
 
@@ -162,7 +143,7 @@ class GroundTruthParser:
                 flow: dict = self.get_flow(line)
                 if flow:
                     # we managed to extract the fields needed to calc the community id
-                    community_id: str = self.get_community_id(flow)
+                    community_id: str = get_community_id(flow)
                 else:
                     return False
 
