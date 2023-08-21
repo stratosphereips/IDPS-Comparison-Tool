@@ -14,8 +14,8 @@ def get_community_id(flow: dict):
     try:
         proto = flow['proto'].lower()
 
-        if 'icmp' in proto.lower():
-            tpl = cases[proto](flow['saddr'], flow['daddr'], flow['type'], flow['code'])
+        if 'icmp' in proto:
+            tpl = cases['icmp'](flow['saddr'], flow['daddr'], flow['type'], flow['code'])
         else:
             tpl = cases[proto](flow['saddr'], flow['daddr'], flow['sport'], flow['dport'])
 
