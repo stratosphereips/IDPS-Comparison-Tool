@@ -79,6 +79,9 @@ class SQLiteDB():
 
     def store_flow(self, flow: dict, label_type: str):
         """
+        updates or inserts into the flows db, the flow and label detected by the
+        label_type (which is either slips or suricata)
+
         :param flow: dict with community_id and label
         :param label_type: the label can be the ground_truth , slips_label, or suricata_label
         """
@@ -91,8 +94,8 @@ class SQLiteDB():
         if exists:
             self.update('flows', f'{label_type}= "{label}"', condition=f'community_id ="{community_id}"')
         else:
-            params = (community_id, label)
             query = f'INSERT OR REPLACE INTO flows (community_id, {label_type}) VALUES (?, ?);'
+            params = (community_id, label)
             self.execute(query, params=params)
 
 

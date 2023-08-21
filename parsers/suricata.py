@@ -2,6 +2,8 @@ from database.sqlite_db import SQLiteDB
 from termcolor import colored
 import json
 
+from .utils import get_community_id
+
 class SuricataParser:
     name = "SuricataParser"
     def __init__(self, eve_file: str, db: SQLiteDB):
@@ -21,23 +23,33 @@ class SuricataParser:
             while line := f.readline():
                 line = json.loads(line)
                 flows += 1
+                #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
+                try:
+                    cid: str = get_community_id({
+                        'saddr': line['src_ip'],
+                        'daddr': line['dest_ip'],
+                        'sport': line['src_port'],
+                        'dport': line['dest_port'],
+                        'proto': line['proto'].lower(),
+                    })
+                except KeyError:
+                    print(f"@@@@@@@@@@@@@@@@ EERRROOORR !! {line}")
+
+                print(f"@@@@@@@@@@@@@@@@ done calc cid for flow: {line} :::: {cid}")
                 if line['event_type'] == 'alert':
-                    #TODO see what's the key for community id
                     flow = {
-                        'community_id' : line.get("community_id" ,''),
+                        'community_id' : cid,
                         # todo we assume all flows with event_type=alert are marked as malicious by suricata
                         'label' : 'malicious'
                     }
-                    self.db.store_flow(flow, 'suricata_label')
                 else:
-                    #TODO see what's the key for community id
                     flow = {
-                        'community_id' : line.get("community_id" ,''),
-                        # todo we assume all flows with event_type=alert are marked as malicious by suricata
+                        'community_id' : cid,
                         'label' : 'benign'
                     }
-                    self.db.store_flow(flow, 'suricata_label')
-                self.log(f"Extracted suricata label for flow: ",  line.get("community_id" ,''))
+
+                self.db.store_flow(flow, 'suricata_label')
+                self.log(f"Extracted suricata label for flow: ",  cid )
             self.db.store_flows_count('suricata', flows)
 
 
