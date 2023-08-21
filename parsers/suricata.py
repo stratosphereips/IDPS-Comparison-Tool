@@ -23,19 +23,19 @@ class SuricataParser:
             while line := f.readline():
                 line = json.loads(line)
                 flows += 1
-                #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
-                try:
-                    cid: str = get_community_id({
-                        'saddr': line['src_ip'],
-                        'daddr': line['dest_ip'],
-                        'sport': line['src_port'],
-                        'dport': line['dest_port'],
-                        'proto': line['proto'].lower(),
-                    })
-                except KeyError:
-                    print(f"@@@@@@@@@@@@@@@@ EERRROOORR !! {line}")
 
-                print(f"@@@@@@@@@@@@@@@@ done calc cid for flow: {line} :::: {cid}")
+                if line['event_type'] == 'stats':
+                    continue
+
+                #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
+                cid: str = get_community_id({
+                'saddr': line['src_ip'],
+                'daddr': line['dest_ip'],
+                'sport': line['src_port'],
+                'dport': line['dest_port'],
+                'proto': line['proto'].lower(),
+                })
+
                 if line['event_type'] == 'alert':
                     flow = {
                         'community_id' : cid,
