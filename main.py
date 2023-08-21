@@ -102,39 +102,39 @@ if __name__ == "__main__":
     db = SQLiteDB(output_dir)
 
     start_suricata_parser()
+
+    start_slips_parser()
+
+    start_ground_truth_parser()
+
+
+    log(f"Total flows read by parsers: ",'')
+    db.print_table('flows_count')
     #
-    # start_slips_parser()
-    #
-    # start_ground_truth_parser()
-    #
-    #
-    # log(f"Total flows read by parsers: ",'')
-    # db.print_table('flows_count')
-    # #
-    # log(f"Done. For labels db check: ", output_dir)
-    #
-    # print()
-    # calc = Calculator(db)
-    # # Print confusion matrix for slips
-    # calc.get_confusion_matrix('slips')
-    #
-    # print()
-    # # Print confusion matrix for suricata
-    # calc.get_confusion_matrix('suricata')
-    #
-    # print()
-    # calc.FPR('slips')
-    # calc.FPR('suricata')
-    #
-    # print()
-    # calc.recall('slips')
-    # calc.recall('suricata')
-    #
-    # print()
-    # calc.precision('slips')
-    # calc.precision('suricata')
-    #
-    # print()
-    # calc.F1('slips')
-    # calc.F1('suricata')
-    #
+    log(f"Done. For labels db check: ", output_dir)
+
+    print()
+    calc = Calculator(db)
+    # Print confusion matrix for slips
+    calc.get_confusion_matrix('slips')
+
+    print()
+    # Print confusion matrix for suricata
+    calc.get_confusion_matrix('suricata')
+
+    print()
+    calc.FPR('slips')
+    calc.FPR('suricata')
+
+    print()
+    calc.recall('slips')
+    calc.recall('suricata')
+
+    print()
+    calc.precision('slips')
+    calc.precision('suricata')
+
+    print()
+    calc.F1('slips')
+    calc.F1('suricata')
+

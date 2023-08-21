@@ -17,6 +17,7 @@ python3 main.py -gtd $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/ -
 python3 main.py -gtf $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/conn.log.labeled -s $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json  
 
 
+
 # How it works
 
 ## comparison tool output
@@ -62,3 +63,14 @@ After this tool parses the ground truth, slips and suricata's output, it uses me
 * if any flow doesn't have a label by suricata or slips, this tool considers the flow as benign 
 
 * slips now labels conn.log flows only, just like zeek does when community_id is enabled as a plugin
+
+
+# Used cmds
+
+command for generating all zeek files in the dataset/
+ zeek -C -r <pcap>  tcp_inactivity_timeout=60mins tcp_attempt_delay=1min
+
+
+command for labeling conn.log files
+python3 netflowlabeler.py -c labels.config -f /path/to/generated/conn.log
+
