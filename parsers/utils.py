@@ -13,7 +13,12 @@ def get_community_id(flow: dict):
 
     try:
         proto = flow['proto'].lower()
-        tpl = cases[proto](flow['saddr'], flow['daddr'], flow['sport'], flow['dport'])
+
+        if 'icmp' in proto.lower():
+            tpl = cases[proto](flow['saddr'], flow['daddr'], flow['type'], flow['code'])
+        else:
+            tpl = cases[proto](flow['saddr'], flow['daddr'], flow['sport'], flow['dport'])
+
         return community_id.calc(tpl)
     except (KeyError, TypeError):
         # proto doesn't have a community_id.FlowTuple  method
