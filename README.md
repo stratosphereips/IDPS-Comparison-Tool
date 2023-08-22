@@ -16,7 +16,7 @@ python3 main.py -gtd $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/ -
 
 python3 main.py -gtf $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/conn.log.labeled -s $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json  
 
-
+python3 main.py -gtf /home/alya/Desktop/IDPS-Comparison-Tool/dataset/test7-malicious-pcap/zeek_files/conn.log.labeled -s /home/alya/Desktop/IDPS-Comparison-Tool/dataset/test7-malicious-pcap/slips/flows.sqlite -e /home/alya/Desktop/IDPS-Comparison-Tool/dataset/test7-malicious-pcap/suricata/eve.json
 
 # How it works
 
@@ -63,7 +63,6 @@ After this tool parses the ground truth, slips and suricata's output, it uses me
 * if any flow doesn't have a label by suricata or slips, this tool considers the flow as benign 
 
 * slips now labels conn.log flows only, just like zeek does when community_id is enabled as a plugin
-
 
 # Used cmds
 
