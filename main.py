@@ -110,7 +110,10 @@ if __name__ == "__main__":
 
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
-    #
+
+    # before calculating anything, fill out the missing labels with benign
+    db.fill_null_labels()
+
     log(f"Done. For labels db check: ", output_dir)
 
     print()

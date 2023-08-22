@@ -66,6 +66,30 @@ class SQLiteDB():
         for row in rows:
             print(row)
 
+    def get_column_names(self, table: str) -> list:
+        """
+        returns a list of all column names in the given table
+        """
+        query = f"PRAGMA table_info({table})"
+        self.execute(query)
+        column_names = []
+        for col in self.fetchall():
+            column_names.append(col[1])
+        return column_names
+
+
+    def fill_null_labels(self):
+        """
+        iterates through all flows in the flows table, and filles the null labels with benign
+        """
+
+        for column in self.get_column_names('flows'):
+            # fill all columns except the community id
+            if column == 'community_id':
+                continue
+
+            query = f"UPDATE flows SET {column} = 'benign' WHERE {column} IS NULL"
+            self.execute(query)
 
     def store_flows_count(self, type_: str, count: int):
         """
