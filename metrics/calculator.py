@@ -51,7 +51,7 @@ class Calculator:
 
     def get_confusion_matrix(self, tool:str):
         """
-        prints the FP, FN, TP, TN of the given tool compared with the grounf truth
+        prints the FP, FN, TP, TN of the given tool compared with the ground truth
         :param tool: 'slips' or 'suricata'
         """
         assert tool in ['slips', 'suricata'], f'Trying to get FP rate of invalid tool: {tool}'
@@ -111,11 +111,16 @@ class Calculator:
         if  tool not in self.metrics:
             self.get_confusion_matrix(tool)
 
-        if self.metrics[tool]['FP'] == 0:
-            self.log(f"Can't get precision of {tool} because FP of {tool} is: "," 0")
-            return "ERR"
+        # if self.metrics[tool]['FP']+ self.metrics[tool]['TP'] == 0:
+            # self.log(f"Can't get precision of {tool} because TP+FP of {tool} is: "," 0")
+            # return "ERR"
+            # return
 
-        precision = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FP'])
+        if self.metrics[tool]['TP'] + self.metrics[tool]['FP'] == 0:
+            precision = 0
+        else:
+            precision = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FP'])
+
 
         self.metrics[tool].update({'precision': precision})
         self.log(f"{tool}: precision: ", precision)
@@ -126,12 +131,16 @@ class Calculator:
         prints the F1 of the given tool
         :param tool: 'slips' or 'suricata'
         """
-        if  tool not in self.metrics:
+        if tool not in self.metrics:
             self.get_confusion_matrix(tool)
+
 
         precision = self.metrics[tool]['precision']
         recall = self.metrics[tool]['recall']
-        f1 = (2 * precision * recall) / (precision + recall)
+        if precision + recall == 0:
+            f1 = 0
+        else:
+            f1 = (2 * precision * recall) / (precision + recall)
 
         self.log(f"{tool}: F1: ", f1)
         return f1
