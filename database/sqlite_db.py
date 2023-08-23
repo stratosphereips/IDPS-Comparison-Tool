@@ -39,8 +39,37 @@ class SQLiteDB():
     def init_tables(cls):
         """creates the tables we're gonna use"""
         table_schema = {
-            'flows': "community_id TEXT PRIMARY KEY, ground_truth TEXT, slips_label TEXT, suricata_label TEXT",
-            'flows_count': "type_ TEXT PRIMARY KEY, count INT",
+            # this table will be used to store all the tools' labels per flow
+            'flows': "community_id TEXT PRIMARY KEY, "
+                     "ground_truth TEXT, "
+                     "slips_label TEXT, "
+                     "suricata_label TEXT",
+
+            'flows_count': "type_ TEXT PRIMARY KEY, "
+                           "count INT",
+
+            # this table will be used to store all the tools' labels per timewindow, not flow by flow
+            'labels_per_tw': "twid TEXT PRIMARY KEY, "
+                             "start_date REAL, "
+                             "end_date REAL, "
+                             "ground_truth_label TEXT, "
+                             "slips_label TEXT,  "
+                             "suricata_label TEXT  ",
+
+            # this reads the ts of all groundtruth flows, and has the cid and gt_label in common with the "flows" table
+            'ground_truth_flows': "community_id TEXT PRIMARY KEY, "
+                                  "flow_time REAL, "
+                                  "ground_truth_label TEXT,  "
+                                  "FOREIGN KEY (community_id) REFERENCES flows(community_id), "
+                                  "FOREIGN KEY (ground_truth_label) REFERENCES flows(ground_truth)",
+
+            # this reads the ts of all suricata flows, and has the cid and suricata_label in common with the "flows" table
+            'suricata_flows': "community_id TEXT PRIMARY KEY, "
+                              "flow_time REAL, "
+                              "suricata_label TEXT,  "
+                              "FOREIGN KEY (community_id) REFERENCES flows(community_id), "
+                              "FOREIGN KEY (suricata_label) REFERENCES flows(suricata_label)",
+
             }
         for table_name, schema in table_schema.items():
             cls.create_table(table_name, schema)
