@@ -58,17 +58,17 @@ class SQLiteDB():
 
             # this reads the ts of all groundtruth flows, and has the cid and gt_label in common with the "flows" table
             'ground_truth_flows': "community_id TEXT PRIMARY KEY, "
-                                  "flow_time REAL, "
-                                  "ground_truth_label TEXT,  "
+                                  "timestamp REAL, "
+                                  "label TEXT,  "
                                   "FOREIGN KEY (community_id) REFERENCES flows(community_id), "
-                                  "FOREIGN KEY (ground_truth_label) REFERENCES flows(ground_truth)",
+                                  "FOREIGN KEY (label) REFERENCES flows(ground_truth)",
 
             # this reads the ts of all suricata flows, and has the cid and suricata_label in common with the "flows" table
             'suricata_flows': "community_id TEXT PRIMARY KEY, "
-                              "flow_time REAL, "
-                              "suricata_label TEXT,  "
+                              "timestamp REAL, "
+                              "label TEXT,  "
                               "FOREIGN KEY (community_id) REFERENCES flows(community_id), "
-                              "FOREIGN KEY (suricata_label) REFERENCES flows(suricata_label)",
+                              "FOREIGN KEY (label) REFERENCES flows(suricata_label)",
 
             }
         for table_name, schema in table_schema.items():
@@ -174,6 +174,15 @@ class SQLiteDB():
         self.execute(query)
         result = self.fetchall()
         return result
+
+    def store_suricata_flow_ts(self, flow: dict):
+        """
+        fills the suricata_flows table with the suricata flow read from eve.json
+        :param flow: contains timestamp, cid and label of the flow
+        """
+        query = f'INSERT OR REPLACE INTO suricata_flows (community_id, timestamp, label) VALUES (?, ?, ?);'
+        params = (flow['community_id'], flow['timestamp'], flow['label'])
+        self.execute(query, params=params)
 
     def get_flows_count(self, type_:str, label="") -> int:
         """

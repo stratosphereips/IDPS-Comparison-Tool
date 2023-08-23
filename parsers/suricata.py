@@ -24,6 +24,7 @@ class SuricataParser:
         """
         proto = line['proto'].lower()
         flow = {
+            'timestamp': line['timestamp'],
             'saddr': line['src_ip'],
             'daddr': line['dest_ip'],
             'proto': proto,
@@ -61,7 +62,7 @@ class SuricataParser:
                     continue
 
                 flow: dict = self.extract_flow(line)
-
+                timestamp = flow['timestamp']
                 #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
                 cid: str = get_community_id(flow)
 
@@ -74,6 +75,8 @@ class SuricataParser:
                 }
 
                 self.db.store_flow(flow, 'suricata_label')
+                flow.update({'timestamp': timestamp})
+                self.db.store_suricata_flow_ts(flow)
                 self.log(f"Extracted suricata label for flow: ", cid)
 
             # store the number of flows read from the suricata logfile
