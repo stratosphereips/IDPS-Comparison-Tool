@@ -184,6 +184,16 @@ class SQLiteDB():
         params = (flow['community_id'], flow['timestamp'], flow['label'])
         self.execute(query, params=params)
 
+    def store_ground_truth_flow_ts(self, flow: dict):
+        """
+        fills the ground_truth_flows table with the suricata flow read from eve.json
+        :param flow: contains timestamp(in unix format), cid and label of the flow
+        """
+        query = f'INSERT OR REPLACE INTO ground_truth_flows (community_id, timestamp, label) VALUES (?, ?, ?);'
+        params = (flow['community_id'], flow['timestamp'], flow['label'])
+        self.execute(query, params=params)
+
+
     def get_flows_count(self, type_:str, label="") -> int:
         """
         returns all the malicious/benign labeled flows by slips, suricata, or ground truth

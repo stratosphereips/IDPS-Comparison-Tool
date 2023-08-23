@@ -112,7 +112,7 @@ class GroundTruthParser:
                 return False
 
         label =  line.get('label', 'benign')
-        return label, community_id
+        return label, community_id, line['ts']
 
     def handle_getting_community_id(self, line: list):
         # we will calc it manually
@@ -141,7 +141,7 @@ class GroundTruthParser:
             if not community_id:
                 return False
 
-        return label, community_id
+        return label, community_id, line[0]
 
     def extract_fields(self, line: str) -> dict:
         """
@@ -159,6 +159,7 @@ class GroundTruthParser:
             return {
                'label':  flow[0],
                'community_id': flow[1],
+               'timestamp': flow[2],
             }
         except TypeError:
             # unable to handle the line
@@ -194,6 +195,7 @@ class GroundTruthParser:
                     # skip the flow that doesn't have a community
                     # id after trying to extract it and manually calc it
                     continue
+                self.db.store_ground_truth_flow_ts(flow)
                 self.db.store_flow(flow, 'ground_truth')
 
     def get_line_type(self, log_file_path: str):
