@@ -73,3 +73,8 @@ command for generating all zeek files in the dataset/
 command for labeling conn.log files
 python3 netflowlabeler.py -c labels.config -f /path/to/generated/conn.log
 
+(optional) To label the rest of the Zeek files using an already labeled conn.log file (conn.log.labeled)
+zeek-files-labeler.py -l conn.log.labeled -f folder-with-zeek-log-files
+
+
+
