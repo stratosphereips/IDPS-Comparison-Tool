@@ -2,7 +2,7 @@ from database.sqlite_db import SQLiteDB
 from termcolor import colored
 import json
 
-from .utils import get_community_id
+from .utils import get_community_id, convert_iso_8601_to_unix_timestamp
 
 class SuricataParser:
     name = "SuricataParser"
@@ -62,7 +62,8 @@ class SuricataParser:
                     continue
 
                 flow: dict = self.extract_flow(line)
-                timestamp = flow['timestamp']
+                timestamp = convert_iso_8601_to_unix_timestamp(flow['timestamp'])
+
                 #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
                 cid: str = get_community_id(flow)
 
