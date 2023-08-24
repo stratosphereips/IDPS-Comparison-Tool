@@ -2,6 +2,8 @@ import os.path
 import sqlite3
 from threading import Lock
 from time import sleep
+from utils import TimewindowHandler
+
 
 class SQLiteDB():
     """Stores all the flows slips reads and handles labeling them"""
@@ -15,6 +17,8 @@ class SQLiteDB():
         'suricata': 'suricata_label',
         'ground_truth': 'ground_truth'
     }
+    # stores the ts of the first flow for each tool
+    ts_tracker = {}
     def __new__(cls, output_dir):
         # To treat the db as a singelton
         if cls._obj is None or not isinstance(cls._obj, cls):
@@ -192,6 +196,19 @@ class SQLiteDB():
         query = f'INSERT OR REPLACE INTO ground_truth_flows (community_id, timestamp, label) VALUES (?, ?, ?);'
         params = (flow['community_id'], flow['timestamp'], flow['label'])
         self.execute(query, params=params)
+
+    def get_first_ts(self, tool: str):
+        """
+        returns the least ts of the given tool
+        :param tool: suricata or ground_truth
+        :return: ts
+        """
+        query = f'select MIN(timestamp) FROM {tool}_flows ;'
+        self.execute(query)
+        row = self.fetchone()
+        return float(row[0])
+
+
 
 
     def get_flows_count(self, type_:str, label="") -> int:
