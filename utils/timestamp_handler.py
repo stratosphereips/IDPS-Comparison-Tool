@@ -37,3 +37,13 @@ class TimestampHandler():
 
         except ValueError:
             return False
+
+    def remove_milliseconds_decimals(self, ts: str) -> str:
+        """
+        remove the milliseconds from the given ts
+        :param ts: time in unix format
+        """
+        if '.' not in ts:
+            return ts
+
+        return ts.split('.')[0]

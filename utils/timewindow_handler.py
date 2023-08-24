@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from math import ceil
 
 class TimewindowHandler:
