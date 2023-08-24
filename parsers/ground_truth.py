@@ -3,7 +3,7 @@ import json
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from re import split
-from .utils import get_community_id
+from utils import get_community_id
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
