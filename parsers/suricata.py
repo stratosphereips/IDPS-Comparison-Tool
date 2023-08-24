@@ -13,10 +13,11 @@ class SuricataParser:
         self.is_first_flow = True
 
     def log(self, green_txt, normal_txt):
-        normal_txt = str(normal_txt)
         green_txt = str(green_txt)
-
-        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
+        normal_txt = str(normal_txt)
+        end = '\r' if "Extracted" in green_txt else '\n'
+        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt,
+              end=end)
 
     def extract_flow(self, line: str) -> dict:
         """
@@ -45,6 +46,24 @@ class SuricataParser:
 
         return flow
 
+    def handle_labeling_tws(self):
+        """
+        checks the label for each tw and stores the tw and the label in the db
+        """
+        last_ts = self.db.get_last_ts('suricata')
+        f = self.db.get_first_ts('suricata')
+
+        x = self.twid_handler.get_start_and_end_ts(0)
+        x = self.twid_handler.get_start_and_end_ts(1)
+
+        last_available_tw: int = self.twid_handler.get_tw_of_ts(last_ts)
+        for tw in range(last_available_tw+1):
+            if self.db.is_tw_marked_as_malicious('suricata', tw):
+                label = 'malicious'
+            else:
+                label = 'benign'
+            self.db.store_tw_label('suricata', tw, label)
+
     def parse(self):
         """reads the given suricata eve.json"""
         with open(self.eve_file, 'r') as f:
@@ -60,8 +79,8 @@ class SuricataParser:
                     continue
 
                 flow: dict = self.extract_flow(line)
-                timestamp = convert_iso_8601_to_unix_timestamp(flow['timestamp'])
 
+                timestamp = convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                 # start the tw handler and keep track of the ts of the first tw
                 if self.is_first_flow:
                     self.twid_handler = TimewindowHandler(ts_of_first_flow=timestamp)
@@ -81,7 +100,9 @@ class SuricataParser:
                 self.db.store_flow(flow, 'suricata_label')
                 flow.update({'timestamp': timestamp})
                 self.db.store_suricata_flow_ts(flow)
-                self.log(f"Extracted suricata label for flow: ", cid)
+                self.log(f"Extracted suricata label for flow: ", cid )
+
+            self.handle_labeling_tws()
 
             # store the number of flows read from the suricata logfile
             self.db.store_flows_count('suricata', flows)
