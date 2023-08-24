@@ -209,6 +209,28 @@ class SQLiteDB():
         return float(row[0])
 
 
+    def is_tw_marked_as_malicious(self, tool: str, twid: int) -> bool:
+        """
+        checks all the flows in a given twid and marks the tw as malicious if there's 1 malicious flow in this twid
+        :param tool: slips, ground_truth or suricata
+        :param twid: 1 or 2 or 3
+        :return: bool
+        """
+        # only get the first ts once
+        if tool not in self.ts_tracker:
+            self.ts_tracker[tool] = self.get_first_ts(tool)
+
+        twid_handler = TimewindowHandler(self.ts_tracker[tool])
+        tw_start, tw_end = twid_handler.get_start_and_end_ts(twid)
+
+        table_name = f"{tool}_flows"
+        query = f"SELECT * FROM {table_name} WHERE " \
+                f"timestamp >= {tw_start} " \
+                f"AND timestamp <= {tw_end} " \
+                f"AND label = 'malicious';"
+        self.execute(query)
+
+        return True if self.fetchall() else False
 
 
     def get_flows_count(self, type_:str, label="") -> int:
