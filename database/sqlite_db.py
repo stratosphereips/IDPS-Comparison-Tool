@@ -208,6 +208,17 @@ class SQLiteDB():
         row = self.fetchone()
         return float(row[0])
 
+    def get_last_ts(self, tool: str):
+        """
+        returns the max ts stored by the given tool
+        :param tool: suricata or ground_truth
+        :return: ts
+        """
+        query = f'select MAX(timestamp) FROM {tool}_flows ;'
+        self.execute(query)
+        row = self.fetchone()
+        return float(row[0])
+
 
     def store_tw_label(self, tool: str, tw: int, label: str):
         """
