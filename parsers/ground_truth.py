@@ -42,10 +42,10 @@ class GroundTruthParser:
         self.zeek_file_type: str = self.check_type()
 
     def log(self, green_txt, normal_txt):
-        normal_txt = str(normal_txt)
         green_txt = str(green_txt)
-
-        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
+        normal_txt = str(normal_txt)
+        end = '\r' if "parsed flows" in green_txt else '\n'
+        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt, end=end)
 
     def get_flow(self, line):
         """
