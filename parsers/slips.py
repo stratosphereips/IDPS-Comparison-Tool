@@ -16,10 +16,11 @@ class SlipsParser:
         self.db = db
 
     def log(self, green_txt, normal_txt):
-        normal_txt = str(normal_txt)
         green_txt = str(green_txt)
+        normal_txt = str(normal_txt)
+        end = '\r' if "Extracted" in green_txt else '\n'
+        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt, end=end)
 
-        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
 
     def connect(self):
         self.conn = sqlite3.connect(self.slips_db, check_same_thread=False)
