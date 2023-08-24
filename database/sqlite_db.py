@@ -209,13 +209,33 @@ class SQLiteDB():
         return float(row[0])
 
 
+    def store_tw_label(self, tool: str, tw: int, label: str):
+        """
+        fills the labels_per_tw table with each tw and the label of it for the given tool
+        :param label: malicious or benign
+        """
+        if tool not in ['suricata', 'ground_truth', 'slips']:
+            print("TRYING TO STORE THE LABEL FOR AN INVALID TOOL!!")
+            return False
+
+        label_col = f"{tool}_label"
+        query = f'INSERT OR REPLACE INTO labels_per_tw (twid, {label_col}) VALUES (?, ?);'
+        params = (tw, label)
+        self.execute(query, params=params)
+
+
     def is_tw_marked_as_malicious(self, tool: str, twid: int) -> bool:
         """
         checks all the flows in a given twid and marks the tw as malicious if there's 1 malicious flow in this twid
-        :param tool: slips, ground_truth or suricata
+        tool can't be slips because it doesn't have the ts and labels in slips_flows like rest
+        slips parser will handle checking the malicious tws in slips
+        :param tool: ground_truth or suricata
         :param twid: 1 or 2 or 3
         :return: bool
         """
+        if tool not in ['suricata', 'ground_truth']:
+            return False
+
         # only get the first ts once
         if tool not in self.ts_tracker:
             self.ts_tracker[tool] = self.get_first_ts(tool)
