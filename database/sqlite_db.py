@@ -2,7 +2,7 @@ import os.path
 import sqlite3
 from threading import Lock
 from time import sleep
-from utils import TimewindowHandler
+from utils.timewindow_handler import TimewindowHandler
 
 
 class SQLiteDB():

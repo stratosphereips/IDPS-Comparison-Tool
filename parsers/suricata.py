@@ -1,4 +1,5 @@
-from utils import get_community_id, convert_iso_8601_to_unix_timestamp, TimewindowHandler
+from utils.timewindow_handler import TimewindowHandler
+from utils.hash import Hash
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 import json
@@ -11,6 +12,8 @@ class SuricataParser:
         self.db = db
         # to be able to get the ts of the first flow
         self.is_first_flow = True
+        self.hash = Hash()
+        self.time = TimewindowHandler()
 
     def log(self, green_txt, normal_txt):
         green_txt = str(green_txt)
@@ -51,10 +54,6 @@ class SuricataParser:
         checks the label for each tw and stores the tw and the label in the db
         """
         last_ts = self.db.get_last_ts('suricata')
-        f = self.db.get_first_ts('suricata')
-
-        x = self.twid_handler.get_start_and_end_ts(0)
-        x = self.twid_handler.get_start_and_end_ts(1)
 
         last_available_tw: int = self.twid_handler.get_tw_of_ts(last_ts)
         for tw in range(last_available_tw+1):
@@ -80,14 +79,14 @@ class SuricataParser:
 
                 flow: dict = self.extract_flow(line)
 
-                timestamp = convert_iso_8601_to_unix_timestamp(flow['timestamp'])
+                timestamp = self.time.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                 # start the tw handler and keep track of the ts of the first tw
                 if self.is_first_flow:
                     self.twid_handler = TimewindowHandler(ts_of_first_flow=timestamp)
                     self.is_first_flow = False
 
                 #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
-                cid: str = get_community_id(flow)
+                cid: str = self.hash.get_community_id(flow)
 
                 # todo we assume all flows with event_type=alert are marked as malicious by suricata
                 label =  'malicious' if line['event_type'] == 'alert' else 'benign'

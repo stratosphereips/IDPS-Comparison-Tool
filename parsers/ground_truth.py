@@ -3,7 +3,7 @@ import json
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from re import split
-from utils import get_community_id
+from utils.hash import Hash
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -28,6 +28,7 @@ IGNORED_LOGS = {
 class GroundTruthParser:
     name = "GroundTruthParser"
     flows_count = 0
+    hash = Hash()
 
     def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
         self.db = db
@@ -119,7 +120,7 @@ class GroundTruthParser:
         # first extract fields
         if flow := self.get_flow(line):
             # we managed to extract the fields needed to calc the community id
-            return get_community_id(flow)
+            return self.hash.get_community_id(flow)
         return False
 
     def handle_zeek_tabs(self, line:str):
