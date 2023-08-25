@@ -3,7 +3,7 @@ import json
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from re import split
-from .utils import get_community_id
+from utils import get_community_id
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -54,18 +54,20 @@ class GroundTruthParser:
         :return: dict with {'saddr', 'sport':.. , 'daddr', 'proto'}
         """
         if self.zeek_file_type == 'json':
+            ts = line.get('ts')
             saddr = line.get('id.orig_h')
             daddr = line.get('id.resp_h')
             sport = line.get('id.orig_p')
             dport = line.get('id.resp_p')
             proto = line.get('proto')
 
-            for field in (saddr, daddr, sport, dport, proto):
+            for field in (saddr, daddr, sport, dport, proto, ts):
                 if field == None:
                     self.log(f"skipping flow. can't extract saddr, sport, daddr, dport from line:", line)
                     # todo handle this
                     return False
             return {
+                'ts': ts,
                 'saddr':saddr,
                 'daddr': daddr,
                 'sport': sport,
@@ -75,6 +77,7 @@ class GroundTruthParser:
         elif self.zeek_file_type == 'tab-separated':
             try:
                 return {
+                    'ts': line[0],
                     'saddr': line[2],
                     'daddr':  line[4],
                     'sport':  line[3],
@@ -83,7 +86,63 @@ class GroundTruthParser:
                 }
             except KeyError:
                 return False
-    
+
+    def extract_label_from_line(self, line:str) -> str:
+        if 'benign' in line or 'Benign' in line:
+            return 'benign'
+        elif 'malicious' in line or 'Malicious' in line:
+            return 'malicious'
+        else:
+            # line doesn't have a label
+            # print(f"line: {line} doesn't have a label!")
+            return 'benign'
+
+    def handle_zeek_json(self, line:str):
+        try:
+            line = json.loads(line)
+        except json.decoder.JSONDecodeError:
+            self.log(f"Error loading line: \n{line}",'')
+            return False
+
+        community_id: str = line.get('community_id' ,'')
+        if not community_id:
+            # the line doesn't have the community id calculated
+            community_id = self.handle_getting_community_id(line)
+            if not community_id:
+                return False
+
+        label =  line.get('label', 'benign')
+        return label, community_id, line['ts']
+
+    def handle_getting_community_id(self, line: list):
+        # we will calc it manually
+        # first extract fields
+        if flow := self.get_flow(line):
+            # we managed to extract the fields needed to calc the community id
+            return get_community_id(flow)
+        return False
+
+    def handle_zeek_tabs(self, line:str):
+        label = self.extract_label_from_line(line)
+
+        # the data is either \t separated or space separated
+        # zeek files that are space separated are either separated by 2 or 3 spaces so we can't use python's split()
+        # using regex split, split line when you encounter more than 2 spaces in a row
+        line = line.split('\t') if '\t' in line else split(r'\s{2,}', line)
+
+        # extract the community id
+        for field in line:
+            if field.startswith("1:"):
+                community_id = field
+                break
+        else:
+            # the line doesn't have the community id calculated
+            community_id = self.handle_getting_community_id(line)
+            if not community_id:
+                return False
+
+        return label, community_id, line[0]
+
     def extract_fields(self, line: str) -> dict:
         """
         extracts the label and community id from the given line
@@ -92,67 +151,19 @@ class GroundTruthParser:
         :return: returns a flow dict with {'community_id': ..., 'label':...}
         """
         if self.zeek_file_type == 'json':
-            try:
-                line = json.loads(line)
-                community_id: str = line.get('community_id' ,'')
-                if not community_id:
-                    # the line doesn't have the community id calculated
-                    # we will calc it manually
-                    # first extract fields
-                    flow: dict = self.get_flow(line)
-                    if flow:
-                        # we managed to extract the fields needed to calc the community id
-                        community_id: str = get_community_id(flow)
-                    else:
-                        return False
-
-            except json.decoder.JSONDecodeError:
-                self.log(f"Error loading line: \n{line}",'')
-                return False
-
-            # extract fields
-            fields = {
-               'community_id': community_id,
-               'label':  line.get('label', 'benign')
-               }
-
+            flow = self.handle_zeek_json(line)
         elif self.zeek_file_type == 'tab-separated':
-            # the data is either \t separated or space separated
-            # zeek files that are space separated are either separated by 2 or 3 spaces so we can't use python's split()
-            # using regex split, split line when you encounter more than 2 spaces in a row
-            line = line.split('\t') if '\t' in line else split(r'\s{2,}', line)
+            flow = self.handle_zeek_tabs(line)
 
-            if 'benign' in line or 'Benign' in line:
-                label = 'benign'
-            elif 'malicious' in line or 'Malicious' in line:
-                label = 'malicious'
-            else:
-                # line doesn't have a label
-                # print(f"line: {line} doesn't have a label!")
-                label = 'benign'
-
-            # extract the community id
-            for field in line:
-                if field.startswith("1:"):
-                    community_id = field
-                    break
-            else:
-                # the line doesn't have the community id calculated
-                # we will calc it manually
-                # first extract fields that we need to calc community id
-                flow: dict = self.get_flow(line)
-                if flow:
-                    # we managed to extract the fields needed to calc the community id
-                    community_id: str = get_community_id(flow)
-                else:
-                    return False
-
-            fields = {
-               'community_id': community_id,
-               'label':  label
+        try:
+            return {
+               'label':  flow[0],
+               'community_id': flow[1],
+               'timestamp': flow[2],
             }
-
-        return fields
+        except TypeError:
+            # unable to handle the line
+            return False
 
 
     def parse_file(self, filename: str):
@@ -184,6 +195,7 @@ class GroundTruthParser:
                     # skip the flow that doesn't have a community
                     # id after trying to extract it and manually calc it
                     continue
+                self.db.store_ground_truth_flow_ts(flow)
                 self.db.store_flow(flow, 'ground_truth')
 
     def get_line_type(self, log_file_path: str):

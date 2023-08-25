@@ -47,8 +47,7 @@ print(f"ok..  go to {output_dir}")
 
 
 
-
-
+print(f"python3 main.py -gtf {os.path.join(ground_truth_path, 'conn.log.labeled')} -s  {slips_output_path} -e {os.path.join(suricata_path, 'eve.json')} ")
 
 
 
