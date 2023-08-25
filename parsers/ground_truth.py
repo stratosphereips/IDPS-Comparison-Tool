@@ -1,9 +1,9 @@
-import os
-import json
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
-from re import split
 from utils.hash import Hash
+from re import split
+import json
+import os
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -68,7 +68,7 @@ class GroundTruthParser:
                     # todo handle this
                     return False
             return {
-                'ts': ts,
+                'timestamp': ts,
                 'saddr':saddr,
                 'daddr': daddr,
                 'sport': sport,
@@ -78,10 +78,10 @@ class GroundTruthParser:
         elif self.zeek_file_type == 'tab-separated':
             try:
                 return {
-                    'ts': line[0],
+                    'timestamp': line[0],
                     'saddr': line[2],
-                    'daddr':  line[4],
                     'sport':  line[3],
+                    'daddr':  line[4],
                     'dport':  line[5],
                     'proto':  line[6],
                 }
@@ -105,18 +105,14 @@ class GroundTruthParser:
             self.log(f"Error loading line: \n{line}",'')
             return False
 
-        aid: str = line.get('aid' ,'')
+        aid = self.handle_getting_aid(line)
         if not aid:
-            # the line doesn't have the community id calculated
-            aid = self.handle_getting_aid(line)
-            if not aid:
-                return False
+            return False
 
         label =  line.get('label', 'benign')
         return label, aid, line['ts']
 
     def handle_getting_aid(self, line: list):
-        # we will calc it manually
         # first extract fields
         if flow := self.get_flow(line):
             # we managed to extract the fields needed to calc the community id
@@ -127,20 +123,14 @@ class GroundTruthParser:
         label = self.extract_label_from_line(line)
 
         # the data is either \t separated or space separated
-        # zeek files that are space separated are either separated by 2 or 3 spaces so we can't use python's split()
+        # zeek files that are space separated are either separated by 2 or 3
+        # spaces so we can't use python's split()
         # using regex split, split line when you encounter more than 2 spaces in a row
         line = line.split('\t') if '\t' in line else split(r'\s{2,}', line)
 
-        # extract the community id
-        for field in line:
-            if field.startswith("1:"):
-                aid = field
-                break
-        else:
-            # the line doesn't have the community id calculated
-            aid = self.handle_getting_aid(line)
-            if not aid:
-                return False
+        aid = self.handle_getting_aid(line)
+        if not aid:
+            return False
 
         return label, aid, line[0]
 
