@@ -1,4 +1,5 @@
 from utils.timewindow_handler import TimewindowHandler
+from utils.timestamp_handler import TimestampHandler
 from utils.hash import Hash
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
@@ -13,7 +14,7 @@ class SuricataParser:
         # to be able to get the ts of the first flow
         self.is_first_flow = True
         self.hash = Hash()
-        self.time = TimewindowHandler()
+        self.time = TimestampHandler()
 
     def log(self, green_txt, normal_txt):
         green_txt = str(green_txt)
@@ -80,6 +81,7 @@ class SuricataParser:
                 flow: dict = self.extract_flow(line)
 
                 timestamp = self.time.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
+                flow['timestamp'] = timestamp
                 # start the tw handler and keep track of the ts of the first tw
                 if self.is_first_flow:
                     self.twid_handler = TimewindowHandler(ts_of_first_flow=timestamp)
@@ -87,17 +89,23 @@ class SuricataParser:
 
                 #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
                 cid: str = self.hash.get_community_id(flow)
-
                 # todo we assume all flows with event_type=alert are marked as malicious by suricata
                 label =  'malicious' if line['event_type'] == 'alert' else 'benign'
 
+                print(f"@@@@@@@@@@@@@@@@ cid for {flow} is {cid}")
+                print(f"@@@@@@@@@@@@@@@@ aid for {flow} is {self.hash.get_aid(flow)}")
+
+
                 flow = {
                     'community_id' : cid,
-                    'label' : label
-                }
+                    'label' : label,
+                    'timestamp': timestamp
+                    }
 
-                self.db.store_flow(flow, 'suricata_label')
-                flow.update({'timestamp': timestamp})
+                self.db.store_flow(
+                    flow,
+                    'suricata_label'
+                )
                 self.db.store_suricata_flow_ts(flow)
                 self.log(f"Extracted suricata label for flow: ", cid )
 

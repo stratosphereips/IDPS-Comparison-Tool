@@ -43,6 +43,7 @@ class TimestampHandler():
         remove the milliseconds from the given ts
         :param ts: time in unix format
         """
+        ts = str(ts)
         if '.' not in ts:
             return ts
 

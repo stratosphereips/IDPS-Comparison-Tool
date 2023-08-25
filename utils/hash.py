@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from hashlib import sha1
 from base64 import b64encode
-
 import communityid
+
 from .timestamp_handler import TimestampHandler
 
 class Hash:
