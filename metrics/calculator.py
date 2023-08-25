@@ -90,10 +90,9 @@ class Calculator:
         if  tool not in self.metrics:
             self.get_confusion_matrix(tool)
 
-        if self.metrics[tool]['FN'] == 0:
-            self.log(f"Can't get precision of {tool} because FN of {tool} is: "," 0")
+        if self.metrics[tool]['TP'] + self.metrics[tool]['FN'] == 0:
+            self.log(f"Can't get precision of {tool} because TP+FN of {tool} is: "," 0")
             return "ERR"
-
 
         recall = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
 
@@ -157,6 +156,9 @@ class Calculator:
         if not tool in self.metrics:
             self.get_confusion_matrix(tool)
 
-        fpr = self.metrics[tool]['FP']/(self.metrics[tool]['FP'] + self.metrics[tool]['TN'])
+        if self.metrics[tool]['FP'] + self.metrics[tool]['TN'] == 0:
+            fpr = 'none'
+        else:
+            fpr = self.metrics[tool]['FP']/(self.metrics[tool]['FP'] + self.metrics[tool]['TN'])
         self.log(f"{tool}: FPR: ", fpr)
         return fpr
