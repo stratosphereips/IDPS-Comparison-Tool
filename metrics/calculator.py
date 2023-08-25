@@ -29,7 +29,7 @@ class Calculator:
         for flow in self.db.get_labeled_flows_by('ground_truth'):
             # each flow looks something like this
             # ('1:Vdr6nTTZvru6dIeEb/SYh9dxtCI=', 'benign', None, None)
-            community_id, ground_truth_label, slips_label, suricata_label = flow
+            aid, ground_truth_label, slips_label, suricata_label = flow
             actual.append(ground_truth_label)
             # this is important. if any of the tools have no label for a specific flow, we consider it as benign
             if tool == 'slips':

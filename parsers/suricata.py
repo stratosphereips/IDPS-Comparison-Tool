@@ -73,8 +73,6 @@ class SuricataParser:
                 event_type = line['event_type']
                 flows += 1
 
-
-
                 if event_type == 'stats':
                     continue
 
@@ -87,17 +85,13 @@ class SuricataParser:
                     self.twid_handler = TimewindowHandler(ts_of_first_flow=timestamp)
                     self.is_first_flow = False
 
-                #TODO suricata calculates the cid in a wrong way, we'll be calculating it on the fly until they fix it
-                cid: str = self.hash.get_community_id(flow)
+                #TODO suricata calculates the aid in a wrong way, we'll be calculating it on the fly until they fix it
+                aid: str = self.hash.get_aid(flow)
                 # todo we assume all flows with event_type=alert are marked as malicious by suricata
                 label =  'malicious' if line['event_type'] == 'alert' else 'benign'
 
-                print(f"@@@@@@@@@@@@@@@@ cid for {flow} is {cid}")
-                print(f"@@@@@@@@@@@@@@@@ aid for {flow} is {self.hash.get_aid(flow)}")
-
-
                 flow = {
-                    'community_id' : cid,
+                    'aid' : aid,
                     'label' : label,
                     'timestamp': timestamp
                     }
@@ -107,7 +101,7 @@ class SuricataParser:
                     'suricata_label'
                 )
                 self.db.store_suricata_flow_ts(flow)
-                self.log(f"Extracted suricata label for flow: ", cid )
+                self.log(f"Extracted suricata label for flow: ", aid )
 
             self.handle_labeling_tws()
 

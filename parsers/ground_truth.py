@@ -105,22 +105,22 @@ class GroundTruthParser:
             self.log(f"Error loading line: \n{line}",'')
             return False
 
-        community_id: str = line.get('community_id' ,'')
-        if not community_id:
+        aid: str = line.get('aid' ,'')
+        if not aid:
             # the line doesn't have the community id calculated
-            community_id = self.handle_getting_community_id(line)
-            if not community_id:
+            aid = self.handle_getting_aid(line)
+            if not aid:
                 return False
 
         label =  line.get('label', 'benign')
-        return label, community_id, line['ts']
+        return label, aid, line['ts']
 
-    def handle_getting_community_id(self, line: list):
+    def handle_getting_aid(self, line: list):
         # we will calc it manually
         # first extract fields
         if flow := self.get_flow(line):
             # we managed to extract the fields needed to calc the community id
-            return self.hash.get_community_id(flow)
+            return self.hash.get_aid(flow)
         return False
 
     def handle_zeek_tabs(self, line:str):
@@ -134,22 +134,22 @@ class GroundTruthParser:
         # extract the community id
         for field in line:
             if field.startswith("1:"):
-                community_id = field
+                aid = field
                 break
         else:
             # the line doesn't have the community id calculated
-            community_id = self.handle_getting_community_id(line)
-            if not community_id:
+            aid = self.handle_getting_aid(line)
+            if not aid:
                 return False
 
-        return label, community_id, line[0]
+        return label, aid, line[0]
 
     def extract_fields(self, line: str) -> dict:
         """
         extracts the label and community id from the given line
         uses zeek_file_type to extract fields based on the type of the given zeek dir
         :param line: line as read from the zeek log file
-        :return: returns a flow dict with {'community_id': ..., 'label':...}
+        :return: returns a flow dict with {'aid': ..., 'label':...}
         """
         if self.zeek_file_type == 'json':
             flow = self.handle_zeek_json(line)
@@ -159,7 +159,7 @@ class GroundTruthParser:
         try:
             return {
                'label':  flow[0],
-               'community_id': flow[1],
+               'aid': flow[1],
                'timestamp': flow[2],
             }
         except TypeError:

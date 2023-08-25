@@ -44,7 +44,7 @@ class SQLiteDB():
         """creates the tables we're gonna use"""
         table_schema = {
             # this table will be used to store all the tools' labels per flow
-            'flows': "community_id TEXT PRIMARY KEY, "
+            'flows': "aid TEXT PRIMARY KEY, "
                      "ground_truth TEXT, "
                      "slips_label TEXT, "
                      "suricata_label TEXT",
@@ -60,18 +60,18 @@ class SQLiteDB():
                              "slips_label TEXT,  "
                              "suricata_label TEXT  ",
 
-            # this reads the ts of all groundtruth flows, and has the cid and gt_label in common with the "flows" table
-            'ground_truth_flows': "community_id TEXT PRIMARY KEY, "
+            # this reads the ts of all groundtruth flows, and has the aid and gt_label in common with the "flows" table
+            'ground_truth_flows': "aid TEXT PRIMARY KEY, "
                                   "timestamp REAL, "
                                   "label TEXT,  "
-                                  "FOREIGN KEY (community_id) REFERENCES flows(community_id), "
+                                  "FOREIGN KEY (aid) REFERENCES flows(aid), "
                                   "FOREIGN KEY (label) REFERENCES flows(ground_truth)",
 
-            # this reads the ts of all suricata flows, and has the cid and suricata_label in common with the "flows" table
-            'suricata_flows': "community_id TEXT PRIMARY KEY, "
+            # this reads the ts of all suricata flows, and has the aid and suricata_label in common with the "flows" table
+            'suricata_flows': "aid TEXT PRIMARY KEY, "
                               "timestamp REAL, "
                               "label TEXT,  "
-                              "FOREIGN KEY (community_id) REFERENCES flows(community_id), "
+                              "FOREIGN KEY (aid) REFERENCES flows(aid), "
                               "FOREIGN KEY (label) REFERENCES flows(suricata_label)",
 
             }
@@ -118,7 +118,7 @@ class SQLiteDB():
 
         for column in self.get_column_names('flows'):
             # fill all columns except the community id
-            if column == 'community_id':
+            if column == 'aid':
                 continue
 
             query = f"UPDATE flows SET {column} = 'benign' WHERE {column} IS NULL"
@@ -139,20 +139,20 @@ class SQLiteDB():
         updates or inserts into the flows db, the flow and label detected by the
         label_type (which is either slips or suricata)
 
-        :param flow: dict with community_id and label
+        :param flow: dict with aid and label
         :param label_type: the label can be the ground_truth , slips_label, or suricata_label
         """
-        community_id = flow["community_id"]
+        aid = flow["aid"]
         label = flow['label']
 
         # check if the row already exists with a label
-        exists = self.select('flows', '*', condition=f'community_id="{community_id}"')
+        exists = self.select('flows', '*', condition=f'aid="{aid}"')
 
         if exists:
-            self.update('flows', f'{label_type}= "{label}"', condition=f'community_id ="{community_id}"')
+            self.update('flows', f'{label_type}= "{label}"', condition=f'aid ="{aid}"')
         else:
-            query = f'INSERT OR REPLACE INTO flows (community_id, {label_type}) VALUES (?, ?);'
-            params = (community_id, label)
+            query = f'INSERT OR REPLACE INTO flows (aid, {label_type}) VALUES (?, ?);'
+            params = (aid, label)
             self.execute(query, params=params)
 
 
@@ -182,19 +182,19 @@ class SQLiteDB():
     def store_suricata_flow_ts(self, flow: dict):
         """
         fills the suricata_flows table with the suricata flow read from eve.json
-        :param flow: contains timestamp, cid and label of the flow
+        :param flow: contains timestamp, aid and label of the flow
         """
-        query = f'INSERT OR REPLACE INTO suricata_flows (community_id, timestamp, label) VALUES (?, ?, ?);'
-        params = (flow['community_id'], flow['timestamp'], flow['label'])
+        query = f'INSERT OR REPLACE INTO suricata_flows (aid, timestamp, label) VALUES (?, ?, ?);'
+        params = (flow['aid'], flow['timestamp'], flow['label'])
         self.execute(query, params=params)
 
     def store_ground_truth_flow_ts(self, flow: dict):
         """
         fills the ground_truth_flows table with the suricata flow read from eve.json
-        :param flow: contains timestamp(in unix format), cid and label of the flow
+        :param flow: contains timestamp(in unix format), aid and label of the flow
         """
-        query = f'INSERT OR REPLACE INTO ground_truth_flows (community_id, timestamp, label) VALUES (?, ?, ?);'
-        params = (flow['community_id'], flow['timestamp'], flow['label'])
+        query = f'INSERT OR REPLACE INTO ground_truth_flows (aid, timestamp, label) VALUES (?, ?, ?);'
+        params = (flow['aid'], flow['timestamp'], flow['label'])
         self.execute(query, params=params)
 
     def get_first_ts(self, tool: str):
@@ -299,7 +299,7 @@ class SQLiteDB():
         return all_labeled_flows
 
 
-    def get_label_of_flow(self, community_id: str, by=None):
+    def get_label_of_flow(self, aid: str, by=None):
         """
         given a specific flow, returns the label by the given tool
         if by=None, returns all labels of this flow
@@ -310,11 +310,11 @@ class SQLiteDB():
         :return: 'malicious' or 'benign'
         """
         if not by:
-            query = f'SELECT * FROM flows WHERE community_id = "{community_id}";'
+            query = f'SELECT * FROM flows WHERE aid = "{aid}";'
         else:
             assert by in self.labels_map, f'trying to get the label set by an invalid tool {by}'
             label = self.labels_map[by]
-            query = f'SELECT {label} FROM flows WHERE community_id = "{community_id}";'
+            query = f'SELECT {label} FROM flows WHERE aid = "{aid}";'
 
         self.execute(query)
         label = self.fetchone()
