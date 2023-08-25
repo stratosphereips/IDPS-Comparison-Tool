@@ -1,8 +1,8 @@
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from sklearn.metrics import confusion_matrix
-import json
 from typing import Tuple, List
+
 class Calculator:
     name = "MetricsCalculator"
     # will save the tp, tn, fp and fn for each tool in this dict
@@ -61,7 +61,7 @@ class Calculator:
         actual: list = self.clean_labels(actual)
         predicted: list = self.clean_labels(predicted)
 
-        cm = confusion_matrix(actual, predicted)
+        cm = confusion_matrix(actual, predicted, labels=['malicious', 'benign'])
         # extract TP, TN, FP, FN from the confusion matrix
         tp = cm[1, 1]
         tn = cm[0, 0]
