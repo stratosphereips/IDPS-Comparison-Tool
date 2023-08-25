@@ -1,11 +1,5 @@
 configparser
 argparse
-contextlib
-shutil
-os
-datetime
-json
-subprocess
-threading
+contextlib2
 scikit-learn
 communityid
