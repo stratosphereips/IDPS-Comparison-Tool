@@ -17,8 +17,8 @@ class TimewindowHandler:
     ceil((given-start) / width)) -1
 
 
-          tw0   tw1   tw2   tw3    tw4    tw5
-      0 ──────┬─────┬──────┬──────┬─────┬──────
+          tw0   tw1   tw2   tw3    tw4
+      0 ──────┬─────┬──────┬──────┬─────┬
               │     │      │      │     │
               2     4      6      8     10
 
