@@ -94,7 +94,7 @@ class SlipsParser:
         for row in self.iterate_flows():
             flows_count += 1
             print(f"@@@@@@@@@@@@@@@@ row {row}")
-            tw = int(row['timewindow'].replace("timewindow",''))
+            tw = int(row['twid'].replace("twid",''))
             if tw not in self.labeled_tws:
                 self.db.store_tw_label('slips', tw, row['label'])
                 print(f"@@@@@@@@@@@@@@@@ done labeling tw{tw} with label: {row['label']}")
