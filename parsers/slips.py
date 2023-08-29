@@ -85,6 +85,13 @@ class SlipsParser:
                 print(f"Error executing query ({query}): {e}")
 
 
+    def handle_labeling_tws(self, row):
+        print(f"@@@@@@@@@@@@@@@@ row {row}")
+        tw: int = int(row['twid'].replace("timewindow",''))
+        if tw not in self.labeled_tws:
+            self.db.store_tw_label('slips', tw, row['label'])
+            print(f"@@@@@@@@@@@@@@@@ done labeling tw{tw} with label: {row['label']}")
+            self.labeled_tws.append(tw)
 
     def parse(self):
         """reads the output db of slips with the labels and stores it in this tools' db"""
@@ -93,12 +100,8 @@ class SlipsParser:
         flows_count = 0
         for row in self.iterate_flows():
             flows_count += 1
-            print(f"@@@@@@@@@@@@@@@@ row {row}")
-            tw = int(row['twid'].replace("twid",''))
-            if tw not in self.labeled_tws:
-                self.db.store_tw_label('slips', tw, row['label'])
-                print(f"@@@@@@@@@@@@@@@@ done labeling tw{tw} with label: {row['label']}")
-                self.labeled_tws.append(tw)
+
+            self.handle_labeling_tws(row)
 
             # each row is a dict
             flow = {
