@@ -60,8 +60,8 @@ class Calculator:
 
         actual: list = self.clean_labels(actual)
         predicted: list = self.clean_labels(predicted)
-
-        cm = confusion_matrix(actual, predicted, labels=['malicious', 'benign'])
+        # the order of labels is Negative, Positive respectively.
+        cm = confusion_matrix(actual, predicted, labels=['benign', 'malicious'])
         # extract TP, TN, FP, FN from the confusion matrix
         tp = cm[1, 1]
         tn = cm[0, 0]
