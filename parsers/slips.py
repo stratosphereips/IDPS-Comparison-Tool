@@ -86,11 +86,9 @@ class SlipsParser:
 
 
     def handle_labeling_tws(self, row):
-        print(f"@@@@@@@@@@@@@@@@ row {row}")
         tw: int = int(row['twid'].replace("timewindow",''))
         if tw not in self.labeled_tws:
             self.db.store_tw_label('slips', tw, row['label'])
-            print(f"@@@@@@@@@@@@@@@@ done labeling tw{tw} with label: {row['label']}")
             self.labeled_tws.append(tw)
 
     def parse(self):
@@ -100,9 +98,7 @@ class SlipsParser:
         flows_count = 0
         for row in self.iterate_flows():
             flows_count += 1
-
             self.handle_labeling_tws(row)
-
             # each row is a dict
             flow = {
                 'aid': row['aid'],
