@@ -368,6 +368,8 @@ class SQLiteDB():
 
         try:
             self.cursor_lock.acquire(True)
+            #start a transaction
+            self.cursor.execute('BEGIN')
 
             if not params:
                 self.cursor.execute(query)
@@ -377,6 +379,9 @@ class SQLiteDB():
 
             self.cursor_lock.release()
         except sqlite3.Error as e:
+            # An error occurred during execution
+            self.conn.rollback()
+
             if "database is locked" in str(e):
                 self.cursor_lock.release()
                 # Retry after a short delay
