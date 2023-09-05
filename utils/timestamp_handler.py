@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-
+from re import findall
 
 class TimestampHandler():
     def convert_iso_8601_to_unix_timestamp(self, ts: str) -> float:
@@ -19,6 +19,27 @@ class TimestampHandler():
         seconds_since_epoch = dt.timestamp()
 
         return seconds_since_epoch
+
+    def assert_microseconds(self, ts: str):
+        """
+        adds microseconds to the given ts if not present
+        :param ts: unix ts
+        :return: ts
+        """
+        if not self.is_unix_timestamp(ts):
+            ts = self.convert_iso_8601_to_unix_timestamp(ts)
+
+        # pattern of unix ts with microseconds
+        pattern = r'\b\d+\.\d{6}\b'
+        matches = findall(pattern, ts)
+
+        if not matches:
+            # fill the missing microseconds and milliseconds with 0
+            # 6 is the decimals we need after the . in the unix ts
+            ts = ts + "0" * (6 - len(ts.split('.')[-1]))
+        return ts
+
+
 
     def is_unix_timestamp(self, s):
         try:
