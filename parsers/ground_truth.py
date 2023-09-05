@@ -27,7 +27,7 @@ IGNORED_LOGS = {
 
 class GroundTruthParser:
     name = "GroundTruthParser"
-
+    flows_count = 0
     hash = Hash()
 
     def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
@@ -180,6 +180,7 @@ class GroundTruthParser:
                 flow = self.extract_fields(line)
                 if not flow:
                     continue
+                self.flows_count += 1
                 self.db.store_ground_truth_flow_ts(flow)
                 self.db.store_flow(flow, 'ground_truth')
                 self.print_stats()
