@@ -85,6 +85,16 @@ class SQLiteDB():
         cls.conn.commit()
 
 
+    def get_flows_parsed(self, tool: str):
+        """reads the number of flows parsed so far by tool from the flows_count table"""
+        assert tool in ['suricata', 'ground_truth', 'slips']
+
+        query = f"SELECT * FROM flows_count where type_ = '{tool}';"
+        self.execute(query)
+
+        if count:= self.fetchone():
+            return count[1]
+        return 0
 
     def print_table(self, table_name):
         """For debugging :D"""
