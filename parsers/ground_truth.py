@@ -27,7 +27,6 @@ IGNORED_LOGS = {
 
 class GroundTruthParser:
     name = "GroundTruthParser"
-    flows_count = 0
     hash = Hash()
 
     def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
@@ -171,7 +170,7 @@ class GroundTruthParser:
             # this tool is given a zeek logfile and the path of it is abs
             fullpath = filename
 
-        self.log(f"Extracting ground truth labels from: ", f"{fullpath}")
+        flows_count = 0
         with open(fullpath, 'r') as f:
             while line := f.readline():
                 # skip comments
@@ -180,14 +179,12 @@ class GroundTruthParser:
                 flow = self.extract_fields(line)
                 if not flow:
                     continue
-                self.flows_count += 1
+                flows_count += 1
                 self.db.store_ground_truth_flow_ts(flow)
                 self.db.store_flow(flow, 'ground_truth')
-                self.print_stats()
+                # used for printing the stats in the main.py
+                self.db.store_flows_count('ground_truth', flows_count)
 
-    def print_stats(self):
-        if self.flows_count % 180 == 0:
-            self.log(f"Number of parsed flows: ", self.flows_count)
 
     def get_line_type(self, log_file_path: str):
         """
@@ -253,6 +250,6 @@ class GroundTruthParser:
             # extract fields and store them in the db
             self.parse_file(self.gt_zeek_file)
 
-        self.db.store_flows_count('ground_truth', self.flows_count)
+
 
 

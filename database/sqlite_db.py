@@ -130,7 +130,7 @@ class SQLiteDB():
         :param type_:  slips, suricata or ground_truth
         :param count: number of labeled flows
         """
-        query = f'INSERT INTO flows_count (type_, count) VALUES (\'{type_}\', {count});'
+        query = f'INSERT OR REPLACE INTO flows_count (type_, count) VALUES (\'{type_}\', {count});'
         self.execute(query)
 
 

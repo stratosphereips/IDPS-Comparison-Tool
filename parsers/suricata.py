@@ -57,24 +57,27 @@ class SuricataParser:
         last_ts = self.db.get_last_ts('suricata')
 
         last_available_tw: int = self.twid_handler.get_tw_of_ts(last_ts)
+        # print(f"@@@@@@@@@@@@@@@@ suricata: last_ts {last_ts} last_available_tw: {last_available_tw}")
+
         for tw in range(last_available_tw+1):
             if self.db.is_tw_marked_as_malicious('suricata', tw):
                 label = 'malicious'
             else:
                 label = 'benign'
+            # print(f"@@@@@@@@@@@@@@@@ suricata tw: {tw} is marked as {label}")
             self.db.store_tw_label('suricata', tw, label)
 
     def parse(self):
         """reads the given suricata eve.json"""
         with open(self.eve_file, 'r') as f:
-            flows = 0
+            flows_count = 0
             while line := f.readline():
                 line = json.loads(line)
                 event_type = line['event_type']
-                flows += 1
 
                 if event_type == 'stats':
                     continue
+                flows_count += 1
 
                 flow: dict = self.extract_flow(line)
 
@@ -101,11 +104,11 @@ class SuricataParser:
                     'suricata_label'
                 )
                 self.db.store_suricata_flow_ts(flow)
-                self.log(f"Extracted suricata label for flow: ", aid )
+
+                # used for printing the stats in the main.py
+                self.db.store_flows_count('suricata', flows_count)
 
             self.handle_labeling_tws()
 
-            # store the number of flows read from the suricata logfile
-            self.db.store_flows_count('suricata', flows)
 
 

@@ -105,5 +105,7 @@ class SlipsParser:
                 'label' : row['label']
             }
             self.db.store_flow(flow, 'slips_label')
-            self.log(f"Extracted slips label for flow: ", f"{row['aid']}")
-        self.db.store_flows_count('slips', flows_count)
+            # used for printing the stats in the main.py
+            self.db.store_flows_count('slips', flows_count)
+
+            # self.log(f"Extracted slips label for flow: ", f"{row['aid']}")
