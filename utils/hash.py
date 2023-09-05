@@ -18,7 +18,8 @@ class Hash:
         """
         #TODO document this
         community_id = self.get_community_id(flow)
-        ts: str = self.time_handler.remove_milliseconds_decimals(flow['timestamp'])
+        ts: str = flow['timestamp']
+        ts: str = self.time_handler.assert_microseconds(ts)
 
         aid = f"{community_id}-{ts}"
 
