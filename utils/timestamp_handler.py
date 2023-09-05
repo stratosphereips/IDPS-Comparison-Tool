@@ -29,6 +29,7 @@ class TimestampHandler():
         if not self.is_unix_timestamp(ts):
             ts = self.convert_iso_8601_to_unix_timestamp(ts)
 
+        ts = str(ts)
         # pattern of unix ts with microseconds
         pattern = r'\b\d+\.\d{6}\b'
         matches = findall(pattern, ts)
@@ -51,7 +52,7 @@ class TimestampHandler():
                 return False
 
             # Check if the string is composed of only digits and optional decimal point
-            if not s.replace(".", "").isdigit():
+            if not str(s).replace(".", "").isdigit():
                 return False
 
             return True
