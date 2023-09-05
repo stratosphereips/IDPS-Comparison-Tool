@@ -1,5 +1,6 @@
 import os.path
 import sys
+from threading import Thread
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
 from database.sqlite_db import SQLiteDB
@@ -11,6 +12,7 @@ from contextlib import suppress
 from shutil import rmtree
 from termcolor import colored
 import datetime
+from time import time
 
 
 def setup_output_dir():
@@ -76,6 +78,8 @@ def validate_path(path):
     return True
 
 if __name__ == "__main__":
+    starttime = time()
+
     # Read the configuration file
     config = ConfigurationParser('config.ini')
     # twid_width: float = config.get_tw_width()
@@ -101,11 +105,10 @@ if __name__ == "__main__":
 
     db = SQLiteDB(output_dir)
 
+    start_ground_truth_parser()
     start_suricata_parser()
-
     start_slips_parser()
 
-    start_ground_truth_parser()
 
 
     log(f"Total flows read by parsers: ",'')
@@ -140,4 +143,6 @@ if __name__ == "__main__":
     print()
     calc.F1('slips')
     calc.F1('suricata')
+    analysis_time = time() - starttime
 
+    print(f"Analysis time: {analysis_time}s")

@@ -27,7 +27,7 @@ IGNORED_LOGS = {
 
 class GroundTruthParser:
     name = "GroundTruthParser"
-    flows_count = 0
+
     hash = Hash()
 
     def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
@@ -172,22 +172,21 @@ class GroundTruthParser:
             fullpath = filename
 
         self.log(f"Extracting ground truth labels from: ", f"{fullpath}")
-
         with open(fullpath, 'r') as f:
             while line := f.readline():
                 # skip comments
                 if line.startswith('#'):
                     continue
-                self.flows_count +=1
-                if self.flows_count % 180 == 0:
-                    self.log(f"Number of parsed flows: ", self.flows_count)
                 flow = self.extract_fields(line)
                 if not flow:
-                    # skip the flow that doesn't have a community
-                    # id after trying to extract it and manually calc it
                     continue
                 self.db.store_ground_truth_flow_ts(flow)
                 self.db.store_flow(flow, 'ground_truth')
+                self.print_stats()
+
+    def print_stats(self):
+        if self.flows_count % 180 == 0:
+            self.log(f"Number of parsed flows: ", self.flows_count)
 
     def get_line_type(self, log_file_path: str):
         """
