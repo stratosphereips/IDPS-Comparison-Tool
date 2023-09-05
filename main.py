@@ -12,6 +12,7 @@ from contextlib import suppress
 from shutil import rmtree
 from termcolor import colored
 import datetime
+import multiprocessing
 from time import time
 
 
@@ -77,7 +78,25 @@ def validate_path(path):
     assert os.path.exists(path), f"Path '{path}' doesn't exist"
     return True
 
+def start_parsers():
+    """
+    runs each parser in a separate proc and returns when they're all done
+    """
+    gt_parser: multiprocessing.Process = multiprocessing.Process(target=start_ground_truth_parser)
+    suricata_parser: multiprocessing.Process = multiprocessing.Process(target=start_suricata_parser)
+    slips_parser: multiprocessing.Process = multiprocessing.Process(target=start_slips_parser)
+
+    gt_parser.start()
+    suricata_parser.start()
+    slips_parser.start()
+
+    gt_parser.join()
+    suricata_parser.join()
+    slips_parser.join()
+
+
 if __name__ == "__main__":
+
     starttime = time()
 
     # Read the configuration file
@@ -105,11 +124,7 @@ if __name__ == "__main__":
 
     db = SQLiteDB(output_dir)
 
-    start_ground_truth_parser()
-    start_suricata_parser()
-    start_slips_parser()
-
-
+    start_parsers()
 
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
@@ -145,4 +160,4 @@ if __name__ == "__main__":
     calc.F1('suricata')
     analysis_time = time() - starttime
 
-    print(f"Analysis time: {analysis_time}s")
+    print(f"Analysis time: {analysis_time/60} mins")
