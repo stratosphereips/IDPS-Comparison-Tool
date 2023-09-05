@@ -13,7 +13,9 @@ from shutil import rmtree
 from termcolor import colored
 import datetime
 import multiprocessing
-from time import time
+from time import time, sleep
+
+stop_stats_thread = False
 
 
 def setup_output_dir():
@@ -87,12 +89,35 @@ def start_parsers():
     slips_parser: multiprocessing.Process = multiprocessing.Process(target=start_slips_parser)
 
     gt_parser.start()
+    log(f"New process started for parsing: ", 'Ground Truth')
+
     suricata_parser.start()
+    log(f"New process started for parsing: ", 'Suricata')
+
     slips_parser.start()
+    log(f"New process started for parsing: ", 'Slips')
 
     gt_parser.join()
     suricata_parser.join()
     slips_parser.join()
+
+
+def print_stats(db):
+    """
+    thread that prints the total parsed flows by all parsers every once in a while
+    :param db:
+    :return:
+    """
+    # return
+    global stop_stats_thread
+    while not stop_stats_thread:
+        sleep(5)
+        current_datetime = datetime.datetime.now()
+        now = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
+        print(f"{now} - Total parsed flows by "
+              f"slips: {db.get_flows_parsed('slips')} "
+              f"suricata: {db.get_flows_parsed('suricata')} "
+              f"ground_truth: {db.get_flows_parsed('ground_truth')}", end='\r')
 
 
 if __name__ == "__main__":
@@ -124,7 +149,13 @@ if __name__ == "__main__":
 
     db = SQLiteDB(output_dir)
 
+    stats_thread = Thread(target=print_stats, args=(db,), daemon=True)
+    stats_thread.start()
+
     start_parsers()
+    # now that the parses ended don't print more stats
+    stop_stats_thread = True
+    stats_thread.join()
 
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
