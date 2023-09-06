@@ -80,6 +80,10 @@ class Calculator:
             'FP': fp,
             'FN': fn
         }
+        self.db.store_confusion_matrix(tool, self.metrics[tool])
+
+
+
 
     def recall(self, tool: str):
         """
@@ -92,9 +96,9 @@ class Calculator:
 
         if self.metrics[tool]['TP'] + self.metrics[tool]['FN'] == 0:
             self.log(f"Can't get precision of {tool} because TP+FN of {tool} is: "," 0")
-            return "ERR"
-
-        recall = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
+            return 0
+        else:
+            recall = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
 
         self.metrics[tool].update({'recall': recall})
         self.log(f"{tool}: recall: ", recall)
@@ -109,11 +113,6 @@ class Calculator:
         # make sure we have the fp and tn of this store calculated already
         if  tool not in self.metrics:
             self.get_confusion_matrix(tool)
-
-        # if self.metrics[tool]['FP']+ self.metrics[tool]['TP'] == 0:
-            # self.log(f"Can't get precision of {tool} because TP+FP of {tool} is: "," 0")
-            # return "ERR"
-            # return
 
         if self.metrics[tool]['TP'] + self.metrics[tool]['FP'] == 0:
             precision = 0
