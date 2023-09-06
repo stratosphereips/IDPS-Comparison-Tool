@@ -1,0 +1,6 @@
+Slips version: 1.0.6
+File: /home/alya/Desktop/IDPS-Comparison-Tool/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/2023-02-25-00-01-53-192.168.1.109.pcap
+Branch: alya/create_many_sqlite_conns_instead_of_1
+Commit: 0f8e88da2c69e8f2deb3eb2a0d47e965b22ea35b
+Slips start date: 2023/09/06 18:34:53.348052
+Slips end date: 2023/09/06 18:41:29.429609

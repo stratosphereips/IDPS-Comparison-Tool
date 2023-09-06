@@ -73,6 +73,11 @@ class SQLiteDB():
                               "label TEXT,  "
                               "FOREIGN KEY (aid) REFERENCES flows(aid), "
                               "FOREIGN KEY (label) REFERENCES flows(suricata_label)",
+            'performance_errors': "tool TEXT PRIMARY KEY, "
+                                  "TP INT, "
+                                  "FP INT, "
+                                  "TN INT, "
+                                  "FN INT",
 
             }
         for table_name, schema in table_schema.items():
@@ -84,6 +89,15 @@ class SQLiteDB():
         cls.cursor.execute(query)
         cls.conn.commit()
 
+    def store_confusion_matrix(self, tool, metrics: dict):
+        """
+        stores the confusion matrix of each tool in performance_errors table
+        :param tool: slips or suricata
+        :param metrics: dict with 'FP', 'FN', "TN", "TP"
+        """
+        query = f"INSERT OR REPLACE INTO performance_errors (FP, FN, TN, TP) VALUES (?, ?, ?, ?); "
+        params = (metrics['FP'], metrics['FN'], metrics['TN'], metrics['TP'])
+        self.execute(query, params)
 
     def get_flows_parsed(self, tool: str):
         """reads the number of flows parsed so far by tool from the flows_count table"""

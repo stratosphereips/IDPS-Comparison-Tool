@@ -1,0 +1,6 @@
+Slips version: 1.0.6
+File: /opt/Malware-Project/BigDataset/HoneypotScenarios/CTU-SME-11/CTU-SME-11/Experiment-VM-Linux-Ubuntu2204-1/2023-02-20/raw/2023-02-20-00-00-03-192.168.1.109.pcap
+Branch: None
+Commit: None
+Slips start date: 2023/09/06 17:29:54.973003
+Slips end date: 2023/09/06 17:42:52.067183
