@@ -176,7 +176,7 @@ if __name__ == "__main__":
     log(f"Done. For labels db check: ", output_dir)
 
     print()
-    calc = Calculator(db)
+    calc = Calculator(output_dir)
     # Print confusion matrix for slips
     calc.get_confusion_matrix('slips')
 

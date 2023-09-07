@@ -1,7 +1,7 @@
 from multiprocessing import Process
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 class Parser:
     name = ''
@@ -22,6 +22,9 @@ class Parser:
         """
 
     def log(self, green_txt, normal_txt):
+        """
+        logs the txt to stdout
+        """
         print(f"{colored(f'[{self.name}] ', 'blue')} "
               f"{colored(green_txt, 'green')} "
               f"{normal_txt}",

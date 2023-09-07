@@ -7,8 +7,8 @@ class Calculator:
     name = "MetricsCalculator"
     # will save the tp, tn, fp and fn for each tool in this dict
     metrics = {}
-    def __init__(self, db: SQLiteDB):
-        self.db = db
+    def __init__(self, output_dir: str):
+        self.db = SQLiteDB(output_dir)
 
     def log(self, green_txt, normal_txt):
         normal_txt = str(normal_txt)
