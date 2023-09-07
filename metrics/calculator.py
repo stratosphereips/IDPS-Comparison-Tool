@@ -95,8 +95,8 @@ class Calculator:
             self.get_confusion_matrix(tool)
 
         if self.metrics[tool]['TP'] + self.metrics[tool]['FN'] == 0:
-            self.log(f"Can't get precision of {tool} because TP+FN of {tool} is: "," 0")
-            return 0
+            self.log(f"Can't get recall of {tool} because TP+FN of {tool} is: "," 0")
+            recall = 0
         else:
             recall = self.metrics[tool]['TP']/(self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
 
