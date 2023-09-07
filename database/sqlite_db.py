@@ -73,11 +73,11 @@ class SQLiteDB():
                               "label TEXT,  "
                               "FOREIGN KEY (aid) REFERENCES flows(aid), "
                               "FOREIGN KEY (label) REFERENCES flows(suricata_label)",
-            'performance_errors': "tool TEXT PRIMARY KEY, "
-                                  "TP INT, "
-                                  "FP INT, "
-                                  "TN INT, "
-                                  "FN INT",
+            'performance_errors': "tool TEXT, "
+                                  "TP INTEGER, "
+                                  "FP INTEGER, "
+                                  "TN INTEGER, "
+                                  "FN INTEGER",
 
             }
         for table_name, schema in table_schema.items():
@@ -95,9 +95,9 @@ class SQLiteDB():
         :param tool: slips or suricata
         :param metrics: dict with 'FP', 'FN', "TN", "TP"
         """
-        query = f"INSERT OR REPLACE INTO performance_errors (FP, FN, TN, TP) VALUES (?, ?, ?, ?); "
-        params = (metrics['FP'], metrics['FN'], metrics['TN'], metrics['TP'])
-        self.execute(query, params)
+        query = f'INSERT OR REPLACE INTO performance_errors (tool, TP, FP, TN, FN) VALUES (?, ?, ?, ?, ?);'
+        params = (tool, int(metrics['TP']),int(metrics['FP']), int(metrics['TN']), int(metrics['FN']))
+        self.execute(query, params=params)
 
     def get_flows_parsed(self, tool: str):
         """reads the number of flows parsed so far by tool from the flows_count table"""
@@ -399,6 +399,7 @@ class SQLiteDB():
                 self.cursor.execute(query)
             else:
                 self.cursor.execute(query, params)
+
             self.conn.commit()
 
             self.cursor_lock.release()
