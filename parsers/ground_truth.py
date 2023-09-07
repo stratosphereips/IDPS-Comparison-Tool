@@ -1,6 +1,7 @@
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from utils.hash import Hash
+from abstracts.abstracts import Parser
 from re import split
 import json
 import os
@@ -25,12 +26,13 @@ IGNORED_LOGS = {
     'syslog'
 }
 
-class GroundTruthParser:
+class GroundTruthParser(Parser):
     name = "GroundTruthParser"
     hash = Hash()
 
-    def __init__(self, ground_truth: str, ground_truth_type:str, output_dir: str):
-        self.db = SQLiteDB(output_dir)
+    def init(self,
+             ground_truth=None,
+             ground_truth_type=None):
         # ground_truth_type can either be 'dir' or 'file'
         if ground_truth_type == 'dir':
             # zeek dir with ground truth labels
@@ -41,11 +43,6 @@ class GroundTruthParser:
         # check th etype of the given zeek file/dir with ground truth labels. 'tab-separated' or 'json'?
         self.zeek_file_type: str = self.check_type()
 
-    def log(self, green_txt, normal_txt):
-        green_txt = str(green_txt)
-        normal_txt = str(normal_txt)
-        end = '\r' if "parsed flows" in green_txt else '\n'
-        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt, end=end)
 
     def get_flow(self, line):
         """

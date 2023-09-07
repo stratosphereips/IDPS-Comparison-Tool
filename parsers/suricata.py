@@ -1,27 +1,21 @@
 from utils.timewindow_handler import TimewindowHandler
 from utils.timestamp_handler import TimestampHandler
 from utils.hash import Hash
+from abstracts.abstracts import Parser
 from database.sqlite_db import SQLiteDB
-from termcolor import colored
+
 import json
 
 
-class SuricataParser:
+class SuricataParser(Parser):
     name = "SuricataParser"
-    def __init__(self, eve_file: str, output_dir: str):
+    def init(self,
+             eve_file=None):
         self.eve_file: str = eve_file
-        self.db = SQLiteDB(output_dir)
         # to be able to get the ts of the first flow
         self.is_first_flow = True
         self.hash = Hash()
         self.time = TimestampHandler()
-
-    def log(self, green_txt, normal_txt):
-        green_txt = str(green_txt)
-        normal_txt = str(normal_txt)
-        end = '\r' if "Extracted" in green_txt else '\n'
-        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt,
-              end=end)
 
     def extract_flow(self, line: str) -> dict:
         """

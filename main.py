@@ -53,7 +53,7 @@ def start_slips_parser(output_dir):
     if validate_path(slips_db):
         log(f"Reading SLips db from: ", slips_db)
     assert os.path.isfile(slips_db), f"Slips DB should be a file, not a dir"
-    SlipsParser(slips_db, output_dir).parse()
+    SlipsParser(output_dir, slips_db=slips_db).parse()
 
 def start_suricata_parser(output_dir):
     eve_file: str = args.eve_file
@@ -61,15 +61,24 @@ def start_suricata_parser(output_dir):
         log(f"Using suricata: ", eve_file)
     assert os.path.isfile(eve_file), f"Suricata eve.json should be a file, not a dir"
     # read suricata eve.json
-    SuricataParser(eve_file, output_dir).parse()
+    SuricataParser(output_dir, eve_file=eve_file).parse()
 
 def start_ground_truth_parser(output_dir):
     if args.ground_truth_dir:
         # read the ground truth and store it in the db
-        GroundTruthParser(ground_truth_dir, 'dir', output_dir).parse()
+        GroundTruthParser(
+            output_dir,
+            ground_truth=ground_truth_dir,
+            ground_truth_type='dir',
+            ).parse()
+
     elif args.ground_truth_file:
         # read the ground truth and store it in the db
-        GroundTruthParser(args.ground_truth_file, 'file', output_dir).parse()
+        GroundTruthParser(
+            output_dir,
+            ground_truth=args.ground_truth_file,
+            ground_truth_type='file',
+            ).parse()
 
 
 def validate_path(path):
