@@ -2,19 +2,24 @@ from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from sklearn.metrics import confusion_matrix
 from typing import Tuple, List
-
+from os import path
 class Calculator:
     name = "MetricsCalculator"
     # will save the tp, tn, fp and fn for each tool in this dict
     metrics = {}
     def __init__(self, output_dir: str):
         self.db = SQLiteDB(output_dir)
+        self.results_file = path.join(output_dir, 'results.txt')
 
     def log(self, green_txt, normal_txt):
         normal_txt = str(normal_txt)
         green_txt = str(green_txt)
 
         print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
+
+        with open(self.results_file, 'a') as results:
+            results.write(f"[{self.name}] {green_txt} {normal_txt}\n")
+
 
     def get_labels_list(self, tool) -> Tuple[List, List]:
         """
