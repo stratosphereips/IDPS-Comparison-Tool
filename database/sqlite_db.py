@@ -19,28 +19,37 @@ class SQLiteDB():
     }
     # stores the ts of the first flow for each tool
     ts_tracker = {}
-    def __new__(cls, output_dir):
-        # To treat the db as a singelton
-        if cls._obj is None or not isinstance(cls._obj, cls):
-            cls._obj = super(SQLiteDB, cls).__new__(SQLiteDB)
-            # db for storing the current labels
-            cls._flows_db = os.path.join(output_dir, 'db.sqlite')
-            cls._init_db()
-            cls.conn = sqlite3.connect(cls._flows_db, check_same_thread=False)
-            cls.cursor = cls.conn.cursor()
-            cls.init_tables()
-        return cls._obj
+
+    def __init__(self, output_dir):
+        super(SQLiteDB, self).__new__(SQLiteDB)
+        self._flows_db = os.path.join(output_dir, 'db.sqlite')
+        self.connect()
+
+    def connect(self):
+        """
+        Creates the db if it doesn't exist and connects to it
+        """
+        db_newly_created = False
+        if not os.path.exists(self._flows_db):
+            # db not created, mark it as first time accessing it so we can init tables once we connect
+            db_newly_created = True
+            self._init_db()
+
+        self.conn = sqlite3.connect(self._flows_db, check_same_thread=False)
+
+        self.cursor = self.conn.cursor()
+        if db_newly_created:
+            # only init tables if the db is newly created
+            self.init_tables()
 
 
-    @classmethod
-    def _init_db(cls):
+    def _init_db(self):
         """
         creates the db if it doesn't exist and clears it if it exists
         """
-        open(cls._flows_db,'w').close()
+        open(self._flows_db,'w').close()
 
-    @classmethod
-    def init_tables(cls):
+    def init_tables(self):
         """creates the tables we're gonna use"""
         table_schema = {
             # this table will be used to store all the tools' labels per flow
@@ -81,13 +90,12 @@ class SQLiteDB():
 
             }
         for table_name, schema in table_schema.items():
-            cls.create_table(table_name, schema)
+            self.create_table(table_name, schema)
 
-    @classmethod
-    def create_table(cls, table_name, schema):
+    def create_table(self, table_name, schema):
         query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
-        cls.cursor.execute(query)
-        cls.conn.commit()
+        self.cursor.execute(query)
+        self.conn.commit()
 
     def store_confusion_matrix(self, tool, metrics: dict):
         """

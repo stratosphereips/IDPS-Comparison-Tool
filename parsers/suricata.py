@@ -8,9 +8,9 @@ import json
 
 class SuricataParser:
     name = "SuricataParser"
-    def __init__(self, eve_file: str, db: SQLiteDB):
+    def __init__(self, eve_file: str, output_dir: str):
         self.eve_file: str = eve_file
-        self.db = db
+        self.db = SQLiteDB(output_dir)
         # to be able to get the ts of the first flow
         self.is_first_flow = True
         self.hash = Hash()

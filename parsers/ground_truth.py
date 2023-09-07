@@ -29,8 +29,8 @@ class GroundTruthParser:
     name = "GroundTruthParser"
     hash = Hash()
 
-    def __init__(self, ground_truth: str, ground_truth_type:str, db: SQLiteDB):
-        self.db = db
+    def __init__(self, ground_truth: str, ground_truth_type:str, output_dir: str):
+        self.db = SQLiteDB(output_dir)
         # ground_truth_type can either be 'dir' or 'file'
         if ground_truth_type == 'dir':
             # zeek dir with ground truth labels
