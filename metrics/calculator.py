@@ -166,3 +166,6 @@ class Calculator:
             fpr = self.metrics[tool]['FP']/(self.metrics[tool]['FP'] + self.metrics[tool]['TN'])
         self.log(f"{tool}: FPR: ", fpr)
         return fpr
+
+    def __del__(self):
+        self.db.close()

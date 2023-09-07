@@ -33,3 +33,6 @@ class Parser:
     @abstractmethod
     def parse(self):
         """main method of each parser"""
+
+    def __del__(self):
+        self.db.close()
