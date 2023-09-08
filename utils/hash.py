@@ -25,8 +25,8 @@ class Hash:
 
         # convert the input string to bytes (since hashlib works with bytes)
         aid: str = sha1(aid.encode('utf-8')).hexdigest()
-
-        return str(b64encode(aid.encode('utf-8')))
+        aid: str = b64encode(aid.encode()).decode()
+        return aid
 
 
     def get_community_id(self, flow: dict):
