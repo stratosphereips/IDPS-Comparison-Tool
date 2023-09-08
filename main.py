@@ -130,15 +130,28 @@ def print_stats(output_dir):
               f"ground_truth: {db.get_flows_parsed('ground_truth')}", end='\r')
 
 
-if __name__ == "__main__":
-
-    starttime = time()
-
+def add_metadata(output_dir, args):
+    """
+    Adds tool versions and files used
+    to metadata.txt in the outupt dir
+    """
+    metadata_file = os.path.join(output_dir, 'metadata.txt')
+    log("Storing metadata in: ", metadata_file)
     # Read the configuration file
     config = ConfigurationParser('config.yaml')
     slips_version = config.get('Slips','version')
     suricata_version = config.get('Suricata','version')
+    with open(metadata_file, 'w') as metadata:
+        metadata.write(f"Slips version: {slips_version} \n"
+                       f"Suricata version: {suricata_version}\n\n"
+                       f"Ground truth: "
+                       f"{args.ground_truth_dir or args.ground_truth_file}\n"
+                       f"Slips DB: {args.slips_db}\n"
+                       f"Suricata file: {args.eve_file}\n")
 
+if __name__ == "__main__":
+
+    starttime = time()
     args = ArgsParser().args
 
     # this should always be a labeled zeek json dir
@@ -158,6 +171,8 @@ if __name__ == "__main__":
         sys.exit()
 
     output_dir = setup_output_dir()
+
+    add_metadata(output_dir, args)
 
     db = SQLiteDB(output_dir)
 
