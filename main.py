@@ -139,8 +139,9 @@ def add_metadata(output_dir, args):
     log("Storing metadata in: ", metadata_file)
     # Read the configuration file
     config = ConfigurationParser('config.yaml')
-    slips_version = config.get('Slips','version')
-    suricata_version = config.get('Suricata','version')
+    slips_version = config.slips_version()
+    suricata_version = config.suricata_version()
+
     with open(metadata_file, 'w') as metadata:
         metadata.write(f"Slips version: {slips_version} \n"
                        f"Suricata version: {suricata_version}\n\n"

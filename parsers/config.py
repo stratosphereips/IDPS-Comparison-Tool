@@ -16,3 +16,8 @@ class ConfigurationParser:
             return default_value
 
 
+    def slips_version(self):
+        return self.get("Slips",'version')
+
+    def suricata_version(self):
+        return self.get("Suricata",'version')

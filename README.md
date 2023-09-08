@@ -16,9 +16,9 @@ python3 main.py -gtd $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/ -
 
 python3 main.py -gtf $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/conn.log.labeled -s $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json  
 
- python3 main.py -s $(pwd)/IDPS-Comparison-Tool/dataset/2023-02-20/2023-02-20/slips/flows.sqlite -e $(pwd)/IDPS-Comparison-Tool/dataset/2023-02-20/2023-02-20/suricata/eve.json -gtf $(pwd)/IDPS-Comparison-Tool/dataset/2023-02-20/2023-02-20/zeek_labeled/conn.log.labeled 
+python3 main.py -s $(pwd)/dataset/2023-02-20/2023-02-20/slips/flows.sqlite -e $(pwd)/dataset/2023-02-20/2023-02-20/suricata/eve.json -gtf $(pwd)/dataset/2023-02-20/2023-02-20/zeek_labeled/conn.log.labeled 
 
-python3 main.py -s $(pwd)/IDPS-Comparison-Tool/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/slips/flows.sqlite -e $(pwd)/IDPS-Comparison-Tool/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/suricata/eve.json -gtf $(pwd)/IDPS-Comparison-Tool/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/ground_truth/conn.log.labeled 
+python3 main.py -s $(pwd)/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/slips/flows.sqlite -e $(pwd)/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/suricata/eve.json -gtf $(pwd)/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/ground_truth/conn.log.labeled 
 
 python3 main.py -e $(pwd)/dataset/Experiment-VM-Microsoft-Windows7AD-1-2023-02-26/suricata/eve.json -s $(pwd)/dataset/Experiment-VM-Microsoft-Windows7AD-1-2023-02-26/slips/flows.sqlite -gtf $(pwd)/dataset/Experiment-VM-Microsoft-Windows7AD-1-2023-02-26/zeek_labeled/conn.log.labeled
 
