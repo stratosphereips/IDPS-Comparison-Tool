@@ -4,3 +4,10 @@ Slips:
 Suricata:
   version: 7.0.0 RELEASE
 
+
+Params:
+  # in seconds
+  # 1h = 3600
+  # 2h = 7200
+  # 30min = 1800
+  timewindow_width: 3600

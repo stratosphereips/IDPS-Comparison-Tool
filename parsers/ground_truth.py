@@ -1,5 +1,6 @@
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
+from parsers.config import ConfigurationParser
 from utils.hash import Hash
 from abstracts.abstracts import Parser
 from re import split
@@ -42,7 +43,11 @@ class GroundTruthParser(Parser):
 
         # check th etype of the given zeek file/dir with ground truth labels. 'tab-separated' or 'json'?
         self.zeek_file_type: str = self.check_type()
+        self.read_config()
 
+    def read_config(self):
+        config = ConfigurationParser('config.yaml')
+        self.twid_width = config.timewindow_width()
 
     def get_flow(self, line):
         """

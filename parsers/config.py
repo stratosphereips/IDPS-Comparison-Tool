@@ -21,3 +21,6 @@ class ConfigurationParser:
 
     def suricata_version(self):
         return self.get("Suricata",'version')
+
+    def timewindow_width(self):
+        return self.get("Params", 'timewindow_width', 3600)
