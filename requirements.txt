@@ -3,3 +3,4 @@ argparse
 contextlib2
 scikit-learn
 communityid
+PyYAML

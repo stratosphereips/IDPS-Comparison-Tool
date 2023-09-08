@@ -135,8 +135,10 @@ if __name__ == "__main__":
     starttime = time()
 
     # Read the configuration file
-    config = ConfigurationParser('config.ini')
-    # twid_width: float = config.get_tw_width()
+    config = ConfigurationParser('config.yaml')
+    slips_version = config.get('Slips','version')
+    suricata_version = config.get('Suricata','version')
+
     args = ArgsParser().args
 
     # this should always be a labeled zeek json dir
