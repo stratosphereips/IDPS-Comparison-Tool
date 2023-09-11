@@ -25,7 +25,7 @@ class SuricataParser(Parser):
         """
         proto = line['proto'].lower()
         flow = {
-            'timestamp': line['timestamp'],
+            'timestamp':  line['flow']['start'],
             'saddr': line['src_ip'],
             'daddr': line['dest_ip'],
             'proto': proto,
@@ -71,6 +71,7 @@ class SuricataParser(Parser):
 
                 if event_type == 'stats':
                     continue
+
                 flows_count += 1
 
                 flow: dict = self.extract_flow(line)
