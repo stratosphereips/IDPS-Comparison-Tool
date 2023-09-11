@@ -150,6 +150,22 @@ def add_metadata(output_dir, args):
                        f"Slips DB: {args.slips_db}\n"
                        f"Suricata file: {args.eve_file}\n")
 
+def print_flows_parsed_vs_discarded(tool: str, db):
+    """
+    print the flows parsed, discarded and actual
+    flows taken into consideration in the calculations by the given
+    tool
+    :param tool: slips or suricata
+    """
+    parsed_flows: int = db.get_flows_parsed(tool)
+    discarded_flows: int = db.get_discarded_flows(tool)
+    used_flows: int =  parsed_flows - discarded_flows
+    if not discarded_flows:
+        used_flows = parsed_flows
+
+    log(f"Total read flows by {tool}: {parsed_flows}  -- Discarded flows: {discarded_flows} -- Flows used after discarding:"
+        f" {used_flows}", '')
+
 if __name__ == "__main__":
 
     starttime = time()
@@ -185,8 +201,13 @@ if __name__ == "__main__":
     stop_stats_thread = True
     stats_thread.join()
 
+    print()
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
+
+    print()
+    print_flows_parsed_vs_discarded('slips', db)
+    print_flows_parsed_vs_discarded('suricata', db)
 
     # before calculating anything, fill out the missing labels with benign
     db.fill_null_labels()

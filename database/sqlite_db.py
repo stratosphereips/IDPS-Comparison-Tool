@@ -127,6 +127,14 @@ class SQLiteDB():
             return count[1]
         return 0
 
+    def get_discarded_flows(self, tool: str):
+        query = f"SELECT * FROM discarded_flows where tool = '{tool}';"
+        self.execute(query)
+
+        if count:= self.fetchone():
+            return count[1]
+        return 0
+
     def print_table(self, table_name):
         """For debugging :D"""
         self.execute(f"SELECT * FROM {table_name}")
@@ -216,9 +224,7 @@ class SQLiteDB():
                 self.execute(query)
 
             else:
-                self.ctr[label_type] += 1
                 tool = label_type.replace("_label",'')
-
                 self.increase_discarded_flows(tool)
                 return
 
@@ -386,7 +392,6 @@ class SQLiteDB():
         self.execute(query)
         label = self.fetchone()
         return label
-
 
 
     def get_count(self, table, condition=None):
