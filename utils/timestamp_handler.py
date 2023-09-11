@@ -2,18 +2,21 @@ from datetime import datetime, timezone
 from re import findall
 
 class TimestampHandler():
-    def convert_iso_8601_to_unix_timestamp(self, ts: str) -> float:
+    def convert_iso_8601_to_unix_timestamp(self, ts: str, tz=False) -> float:
         """
         converts iso 8601 format to unix timestamp
         expected format: %Y-%m-%dT%H:%M:%S.%f%z
         :param ts: ts in expected format
+        :param tz: if true, we set the tz to utc
         :return: the given ts in unix format
         """
         dt = datetime.strptime(ts, '%Y-%m-%dT%H:%M:%S.%f%z')
 
-        # convert datetime to time-aware timezone at UTC
-        # so correct timestamp is returned
-        dt = dt.replace(tzinfo=timezone.utc)
+        if tz:
+            # convert datetime to time-aware timezone at UTC
+            # so correct timestamp is returned
+            dt = dt.replace(tzinfo=timezone.utc)
+
 
         # Return the time in seconds since the epoch
         seconds_since_epoch = dt.timestamp()
