@@ -87,15 +87,24 @@ class SQLiteDB():
                                   "FP INTEGER, "
                                   "TN INTEGER, "
                                   "FN INTEGER",
-
+            'discarded_flows': "tool TEXT, "
+                               "count INTEGER DEFAULT 0 "
             }
         for table_name, schema in table_schema.items():
             self.create_table(table_name, schema)
+        self.init_discarded_flows_table()
+
 
     def create_table(self, table_name, schema):
         query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
         self.cursor.execute(query)
         self.conn.commit()
+
+    def init_discarded_flows_table(self):
+        # init the count of discarded_flows
+        self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('slips', 0)")
+        self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('suricata', 0)")
+
 
     def store_confusion_matrix(self, tool, metrics: dict):
         """
@@ -156,6 +165,14 @@ class SQLiteDB():
             query = f"UPDATE flows SET {column} = 'benign' WHERE {column} IS NULL"
             self.execute(query)
 
+    def increase_discarded_flows(self, tool: str):
+        """
+        increments the number of discarded flows by a tool by 1
+        flows are discarded when they're found in a tool but not in the ground truth
+        """
+        query = f"UPDATE discarded_flows SET count = count + 1 WHERE tool = '{tool}';"
+        self.execute(query)
+
     def store_flows_count(self, type_: str, count: int):
         """
         store =s the total number of labeled flows by slips, suricata or ground_Truth
@@ -197,8 +214,12 @@ class SQLiteDB():
             if exists:
                 query = f"UPDATE flows SET {label_type} = \"{label}\" WHERE aid = \"{aid}\";"
                 self.execute(query)
+
             else:
                 self.ctr[label_type] += 1
+                tool = label_type.replace("_label",'')
+
+                self.increase_discarded_flows(tool)
                 return
 
 
