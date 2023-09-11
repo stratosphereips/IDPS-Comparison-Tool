@@ -179,13 +179,27 @@ class SQLiteDB():
 
         # check if the row already exists with a label
         exists = self.select('flows', '*', condition=f'aid="{aid}"')
-
-        if exists:
-            self.update('flows', f'{label_type}= "{label}"', condition=f'aid ="{aid}"')
+        if label_type == 'ground_truth':
+            if exists:
+                # aid collision in gt, replace the old flow
+                # #TODO handle this
+                print(f"[Warning] Found collision in ground truth. 2 flows have the same aid."
+                      f" flow: {flow}. label_type: {label_type} .. "
+                      f"discarded the first flow and stored the last one only.")
+                self.update('flows', f'{label_type}= "{label}"', condition=f'aid ="{aid}"')
+            else:
+                query = f'INSERT INTO flows (aid, {label_type}) VALUES (?, ?);'
+                params = (aid, label)
+                self.execute(query, params=params)
         else:
-            query = f'INSERT OR REPLACE INTO flows (aid, {label_type}) VALUES (?, ?);'
-            params = (aid, label)
-            self.execute(query, params=params)
+            # this flow is read by a tool, not the gt
+            # if the gt doesn't have the aid of this flow, we discard it
+            if exists:
+                query = f"UPDATE flows SET {label_type} = \"{label}\" WHERE aid = \"{aid}\";"
+                self.execute(query)
+            else:
+                self.ctr[label_type] += 1
+                return
 
 
     def insert(self, table_name, values):
