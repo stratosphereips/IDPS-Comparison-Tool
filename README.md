@@ -69,6 +69,10 @@ After this tool parses the ground truth, slips and suricata's output, it uses me
 
 * slips now labels conn.log flows only, just like zeek does when community_id is enabled as a plugin
 
+* all flows read by a tool, tat don't have a matching flow in the ground truth file, are discarded. the number if discarded flow sis written in the cli
+
+* we only read even_type= "flow" or "alert" in suricata eve.json files
+
 # Used cmds
 
 command for generating all zeek files in the dataset/
