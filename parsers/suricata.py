@@ -69,7 +69,8 @@ class SuricataParser(Parser):
                 line = json.loads(line)
                 event_type = line['event_type']
 
-                if event_type == 'stats':
+                if event_type not in ('flow', 'alert'):
+                    # only read benign flows and alert events
                     continue
 
                 flows_count += 1
