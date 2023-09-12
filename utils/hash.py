@@ -34,9 +34,9 @@ class Hash:
         calculates the flow community id of the given flow
         """
         cases = {
-        'tcp': communityid.FlowTuple.make_tcp,
-        'udp': communityid.FlowTuple.make_udp,
-        'icmp': communityid.FlowTuple.make_icmp,
+            'tcp': communityid.FlowTuple.make_tcp,
+            'udp': communityid.FlowTuple.make_udp,
+            'icmp': communityid.FlowTuple.make_icmp,
         }
 
         try:

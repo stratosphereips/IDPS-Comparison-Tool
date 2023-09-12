@@ -30,7 +30,6 @@ IGNORED_LOGS = {
 class GroundTruthParser(Parser):
     name = "GroundTruthParser"
     hash = Hash()
-
     def init(self,
              ground_truth=None,
              ground_truth_type=None):
@@ -49,6 +48,57 @@ class GroundTruthParser(Parser):
         config = ConfigurationParser('config.yaml')
         self.twid_width = config.timewindow_width()
 
+    def extract_tab_fields(self, line):
+        try:
+            return {
+                'timestamp': line[0],
+                'saddr': line[2],
+                'sport':  line[3],
+                'daddr':  line[4],
+                'dport':  line[5],
+                'proto':  line[6],
+            }
+        except KeyError:
+            return False
+
+
+    def extract_json_fields(self, line):
+        ts = line.get('ts')
+        saddr = line.get('id.orig_h')
+        daddr = line.get('id.resp_h')
+        sport = line.get('id.orig_p')
+        dport = line.get('id.resp_p')
+        proto = line.get('proto')
+
+        for field in (saddr, daddr, sport, dport, proto, ts):
+            if field == None:
+                self.log(f"skipping flow. can't extract saddr, sport, daddr, dport from line:", line)
+                # todo handle this
+                return False
+
+        return {
+            'timestamp': ts,
+            'saddr':saddr,
+            'daddr': daddr,
+            'sport': sport,
+            'dport': dport,
+            'proto': proto
+        }
+
+
+    def handle_icmp(self, flow: dict) -> dict:
+        """
+        zeek sets the type of icmp to the sport field, and the code to the dport field, handle that
+        :return: same flow with the type and code fields
+        """
+        if flow['proto'].lower() != 'icmp':
+            return flow
+
+        flow['type'] = flow['sport']
+        flow['code'] = flow['dport']
+
+        return flow
+
     def get_flow(self, line):
         """
         given a tab or json line, extracts the src and dst addr, sport and proto from the line
@@ -56,38 +106,17 @@ class GroundTruthParser(Parser):
         :return: dict with {'saddr', 'sport':.. , 'daddr', 'proto'}
         """
         if self.zeek_file_type == 'json':
-            ts = line.get('ts')
-            saddr = line.get('id.orig_h')
-            daddr = line.get('id.resp_h')
-            sport = line.get('id.orig_p')
-            dport = line.get('id.resp_p')
-            proto = line.get('proto')
-
-            for field in (saddr, daddr, sport, dport, proto, ts):
-                if field == None:
-                    self.log(f"skipping flow. can't extract saddr, sport, daddr, dport from line:", line)
-                    # todo handle this
-                    return False
-            return {
-                'timestamp': ts,
-                'saddr':saddr,
-                'daddr': daddr,
-                'sport': sport,
-                'dport': dport,
-                'proto': proto
-            }
+            flow: dict = self.extract_json_fields(line)
         elif self.zeek_file_type == 'tab-separated':
-            try:
-                return {
-                    'timestamp': line[0],
-                    'saddr': line[2],
-                    'sport':  line[3],
-                    'daddr':  line[4],
-                    'dport':  line[5],
-                    'proto':  line[6],
-                }
-            except KeyError:
-                return False
+            flow: dict = self.extract_tab_fields(line)
+
+        if not flow:
+            return False
+
+        flow = self.handle_icmp(flow)
+
+        return flow
+
 
     def extract_label_from_line(self, line:str) -> str:
         if 'benign' in line or 'Benign' in line:
