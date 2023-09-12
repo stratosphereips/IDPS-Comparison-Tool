@@ -73,6 +73,8 @@ After this tool parses the ground truth, slips and suricata's output, it uses me
 
 * we only read even_type= "flow" or "alert" in suricata eve.json files
 
+* the flows read by suricata, slips and the gt don't have to be the same, aka the final flows count don't have to match because each tool reads the pcap differently
+
 # Used cmds
 
 command for generating all zeek files in the dataset/
