@@ -25,10 +25,11 @@ class Parser:
         """
         logs the txt to stdout
         """
+        end = '\r' if 'Parsed' in green_txt else '\n'
         print(f"{colored(f'[{self.name}] ', 'blue')} "
               f"{colored(green_txt, 'green')} "
               f"{normal_txt}",
-              end='\n')
+              end=end)
 
     @abstractmethod
     def parse(self):

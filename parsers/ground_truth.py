@@ -186,6 +186,8 @@ class GroundTruthParser(Parser):
                 self.db.store_flow(flow, 'ground_truth')
                 # used for printing the stats in the main.py
                 self.db.store_flows_count('ground_truth', flows_count)
+                if flows_count % 180 == 0:
+                    self.log("Parsed ground truth flows: ", flows_count)
 
 
     def get_line_type(self, log_file_path: str):
