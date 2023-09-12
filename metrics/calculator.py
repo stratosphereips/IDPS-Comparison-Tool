@@ -167,5 +167,24 @@ class Calculator:
         self.log(f"{tool}: FPR: ", fpr)
         return fpr
 
+    def accuracy(self, tool):
+        """
+        :param tool: slips or suricata
+        :return: float
+        """
+        numerator = self.metrics[tool]['TP'] + \
+                    self.metrics[tool]['TN']
+
+        denominator = self.metrics[tool]['TP'] + \
+                      self.metrics[tool]['TN'] + \
+                      self.metrics[tool]['FP'] + \
+                      self.metrics[tool]['FN']
+        if denominator == 0:
+            acc = 'none'
+        else:
+            acc = numerator / denominator
+        self.log(f"{tool}: Accuracy: ", acc)
+        return acc
+
     def __del__(self):
         self.db.close()

@@ -247,6 +247,11 @@ if __name__ == "__main__":
     print()
     calc.F1('slips')
     calc.F1('suricata')
+
+    print()
+    calc.accuracy('slips')
+    calc.accuracy('suricata')
+
     analysis_time = time() - starttime
 
     print(f"Analysis time: {analysis_time/60} mins")
