@@ -89,9 +89,11 @@ def validate_path(path):
     assert os.path.exists(path), f"Path '{path}' doesn't exist"
     return True
 
-def start_parsers(output_dir):
+def start_parsers(output_dir, print_stats_event):
     """
     runs each parser in a separate proc and returns when they're all done
+    :param print_stats_event: the thread will set this event when it's done reading the ground truth flows and
+    started reading slips and suricata flows so the print_stats thread can start printing
     """
     gt_parser: multiprocessing.Process = multiprocessing.Process(target=start_ground_truth_parser, args=(output_dir, ))
     suricata_parser: multiprocessing.Process = multiprocessing.Process(target=start_suricata_parser, args=(output_dir, ))
@@ -99,24 +101,29 @@ def start_parsers(output_dir):
 
     gt_parser.start()
     log(f"New process started for parsing: ", 'Ground Truth')
+    gt_parser.join()
 
+    # since we discard slips and suricata's flows based on the ground truth flows,
+    # we need to make sure we're done  reading them first
     suricata_parser.start()
     log(f"New process started for parsing: ", 'Suricata')
 
     slips_parser.start()
     log(f"New process started for parsing: ", 'Slips')
 
-    gt_parser.join()
+    print_stats_event.set()
+
     suricata_parser.join()
     slips_parser.join()
 
 
-def print_stats(output_dir):
+def print_stats(output_dir, print_stats_event):
     """
     thread that prints the total parsed flows by all parsers every once in a while
     :param db:
     :return:
     """
+    print_stats_event.wait()
     db = SQLiteDB(output_dir)
 
     global stop_stats_thread
@@ -126,8 +133,7 @@ def print_stats(output_dir):
         now = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
         print(f"{now} - Total parsed flows by "
               f"slips: {db.get_flows_parsed('slips')} "
-              f"suricata: {db.get_flows_parsed('suricata')} "
-              f"ground_truth: {db.get_flows_parsed('ground_truth')}", end='\r')
+              f"suricata: {db.get_flows_parsed('suricata')} ", end='\r')
 
 
 def add_metadata(output_dir, args):
@@ -193,10 +199,13 @@ if __name__ == "__main__":
 
     db = SQLiteDB(output_dir)
 
-    stats_thread = Thread(target=print_stats, args=(output_dir,), daemon=True)
+    # used to tell the print_stats thread to start
+    print_stats_event = multiprocessing.Event()
+
+    stats_thread = Thread(target=print_stats, args=(output_dir, print_stats_event,), daemon=True)
     stats_thread.start()
 
-    start_parsers(output_dir)
+    start_parsers(output_dir, print_stats_event)
     # now that the parses ended don't print more stats
     stop_stats_thread = True
     stats_thread.join()
