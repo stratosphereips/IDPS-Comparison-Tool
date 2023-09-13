@@ -217,6 +217,9 @@ class GroundTruthParser(Parser):
                 self.db.store_flows_count('ground_truth', flows_count)
                 if flows_count % 180 == 0:
                     self.log("Parsed ground truth flows: ", flows_count)
+        self.log("Total aid collisions (discarded flows) found in ground truth: ",
+                 self.db.get_aid_collisions())
+
 
 
     def get_line_type(self, log_file_path: str):
