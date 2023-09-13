@@ -19,6 +19,7 @@ class SQLiteDB():
     }
     # stores the ts of the first flow for each tool
     ts_tracker = {}
+    aid_collisions = 0
 
     def __init__(self, output_dir):
         super(SQLiteDB, self).__new__(SQLiteDB)
@@ -211,6 +212,7 @@ class SQLiteDB():
                 print(f"[Warning] Found collision in ground truth. 2 flows have the same aid."
                       f" flow: {flow}. label_type: {label_type} .. "
                       f"discarded the first flow and stored the last one only.")
+                self.aid_collisions += 1
                 self.update('flows', f'{label_type}= "{label}"', condition=f'aid ="{aid}"')
             else:
                 query = f'INSERT INTO flows (aid, {label_type}) VALUES (?, ?);'
@@ -228,6 +230,8 @@ class SQLiteDB():
                 self.increase_discarded_flows(tool)
                 return
 
+    def get_aid_collisions(self):
+        return self.aid_collisions
 
     def insert(self, table_name, values):
         query = f"INSERT INTO {table_name} VALUES ({values})"

@@ -218,6 +218,8 @@ if __name__ == "__main__":
     print_flows_parsed_vs_discarded('slips', db)
     print_flows_parsed_vs_discarded('suricata', db)
 
+    log("Total aid collisions (discarded flows) found in ground truth: ", db.get_aid_collisions())
+
     # before calculating anything, fill out the missing labels with benign
     db.fill_null_labels()
 
@@ -254,6 +256,6 @@ if __name__ == "__main__":
 
     analysis_time = time() - starttime
 
-    print(f"Analysis time: {analysis_time/60} mins")
+    log(f"Analysis time: ","{analysis_time/60} mins")
 
     db.close()
