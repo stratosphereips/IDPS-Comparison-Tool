@@ -27,6 +27,11 @@ class SQLiteDB():
         super(SQLiteDB, self).__new__(SQLiteDB)
         self._flows_db = os.path.join(output_dir, 'db.sqlite')
         self.connect()
+        self.read_config()
+
+    def read_config(self):
+        config = ConfigurationParser('config.yaml')
+        self.twid_width = config.timewindow_width()
 
     def connect(self):
         """
@@ -90,7 +95,11 @@ class SQLiteDB():
                                   "TN INTEGER, "
                                   "FN INTEGER",
             'discarded_flows': "tool TEXT, "
-                               "count INTEGER DEFAULT 0 "
+                               "count INTEGER DEFAULT 0 ",
+
+            'timewindow_details': "timewindow INTEGER PRIMARY KEY, "
+                                  "start_time REAL, "
+                                  "end_time REAL, "
             }
         for table_name, schema in table_schema.items():
             self.create_table(table_name, schema)
@@ -106,7 +115,6 @@ class SQLiteDB():
         # init the count of discarded_flows
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('slips', 0)")
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('suricata', 0)")
-
 
     def store_confusion_matrix(self, tool, metrics: dict):
         """
@@ -298,6 +306,21 @@ class SQLiteDB():
         return float(row[0])
 
 
+    def set_ts_of_tw(self, tw: int, tw_start_ts: float) -> float:
+        """
+        calculates the end ts of the given timewindow
+        and fills the timewindow_details table with the start and end time of it
+        :param tw_start_ts: malicious or benign
+        :param tw: number of the tw to set the timestamps to
+        :return: the timestamp of the end of this timewindow
+        """
+        tw_end_ts = tw_start_ts + self.twid_width
+        query = f'INSERT INTO timewindow_details (timewindow, start_time, end_time) VALUES (?, ?, ?);'
+        params = (tw, tw_start_ts, tw_end_ts)
+        self.execute(query, params=params)
+        print(f"@@@@@@@@@@@@@@@@ created the twid {tw} with "
+              f"starttime: {tw_start_ts} , end: {tw_end_ts}")
+        return tw_end_ts
 
     def store_tw_label(self, ip: str, tool: str, tw: int, label: str):
         """
