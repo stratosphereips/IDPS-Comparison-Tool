@@ -61,7 +61,7 @@ class SuricataParser(Parser):
             else:
                 label = 'benign'
             # print(f"@@@@@@@@@@@@@@@@ suricata tw: {tw} is marked as {label}")
-            self.db.store_tw_label('suricata', tw, label)
+            # self.db.store_tw_label('suricata', tw, label)
 
     def parse(self):
         """reads the given suricata eve.json"""
@@ -113,7 +113,7 @@ class SuricataParser(Parser):
 
             self.log(f"Total malicious labels: ", self.malicious_labels)
             self.log(f"Total benign labels: ", self.benign_labels )
-
+            print()
             self.handle_labeling_tws()
 
 

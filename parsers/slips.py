@@ -81,10 +81,12 @@ class SlipsParser(Parser):
 
 
     def handle_labeling_tws(self, row):
-        tw: int = int(row['twid'].replace("timewindow",''))
-        if tw not in self.labeled_tws:
-            self.db.store_tw_label('slips', tw, row['label'])
-            self.labeled_tws.append(tw)
+        return
+        #TODO
+        # tw: int = int(row['twid'].replace("timewindow",''))
+        # if tw not in self.labeled_tws:
+        #     self.db.store_tw_label('slips', tw, row['label'])
+        #     self.labeled_tws.append(tw)
 
     def parse(self):
         """reads the output db of slips with the labels and stores it in this tools' db"""
@@ -111,3 +113,4 @@ class SlipsParser(Parser):
         print()
         self.log(f"Total malicious labels: ", self.malicious_labels)
         self.log(f"Total benign labels: ", self.benign_labels )
+        print()

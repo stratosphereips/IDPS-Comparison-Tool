@@ -1,8 +1,10 @@
+from utils.timewindow_handler import TimewindowHandler
+from parsers.config import ConfigurationParser
 import os.path
 import sqlite3
 from threading import Lock
 from time import sleep
-from utils.timewindow_handler import TimewindowHandler
+
 
 
 class SQLiteDB():
@@ -62,10 +64,9 @@ class SQLiteDB():
             'flows_count': "type_ TEXT PRIMARY KEY, "
                            "count INT",
 
-            # this table will be used to store all the tools' labels per timewindow, not flow by flow
-            'labels_per_tw': "twid TEXT PRIMARY KEY, "
-                             "start_date REAL, "
-                             "end_date REAL, "
+            # this table will be used to store all the tools' labels per IP per timewindow, not flow by flow
+            'labels_per_tw': "IP TEXT PRIMARY KEY, "
+                             "timewindow TEXT"
                              "ground_truth_label TEXT, "
                              "slips_label TEXT,  "
                              "suricata_label TEXT  ",
@@ -297,7 +298,8 @@ class SQLiteDB():
         return float(row[0])
 
 
-    def store_tw_label(self, tool: str, tw: int, label: str):
+
+    def store_tw_label(self, ip: str, tool: str, tw: int, label: str):
         """
         fills the labels_per_tw table with each tw and the label of it for the given tool
         :param label: malicious or benign
@@ -307,8 +309,8 @@ class SQLiteDB():
             return False
 
         label_col = f"{tool}_label"
-        query = f'INSERT OR REPLACE INTO labels_per_tw (twid, {label_col}) VALUES (?, ?);'
-        params = (tw, label)
+        query = f'INSERT OR REPLACE INTO labels_per_tw (IP, twid, {label_col}) VALUES (?, ?, ?);'
+        params = (ip, tw, label)
         self.execute(query, params=params)
 
 
