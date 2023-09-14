@@ -9,6 +9,8 @@ import json
 
 class SuricataParser(Parser):
     name = "SuricataParser"
+    malicious_labels = 0
+    benign_labels = 0
     def init(self,
              eve_file=None):
         self.eve_file: str = eve_file
@@ -95,6 +97,11 @@ class SuricataParser(Parser):
                     'timestamp': timestamp
                     }
 
+                if 'malicious' in label.lower():
+                    self.malicious_labels += 1
+                else:
+                    self.benign_labels += 1
+
                 self.db.store_flow(
                     flow,
                     'suricata_label'
@@ -104,7 +111,11 @@ class SuricataParser(Parser):
                 # used for printing the stats in the main.py
                 self.db.store_flows_count('suricata', flows_count)
 
+            self.log(f"Total malicious labels: ", self.malicious_labels)
+            self.log(f"Total benign labels: ", self.benign_labels )
+
             self.handle_labeling_tws()
+
 
 
 

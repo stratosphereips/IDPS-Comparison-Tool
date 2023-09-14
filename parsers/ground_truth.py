@@ -119,7 +119,6 @@ class GroundTruthParser(Parser):
             return False
 
         flow = self.handle_icmp(flow)
-
         return flow
 
 
@@ -184,6 +183,7 @@ class GroundTruthParser(Parser):
         :return: returns a flow dict with {'aid': ..., 'label':...}
         """
         if self.zeek_file_type == 'json':
+            #TODO this wasn't tested before ok?
             flow = self.handle_zeek_json(line)
         elif self.zeek_file_type == 'tab-separated':
             flow = self.handle_zeek_tabs(line)
@@ -213,7 +213,7 @@ class GroundTruthParser(Parser):
             # this tool is given a zeek logfile and the path of it is abs
             fullpath = filename
 
-        flows_count = 0
+        self.total_flows_read = 0
         with open(fullpath, 'r') as f:
             while line := f.readline():
                 # skip comments
@@ -222,20 +222,21 @@ class GroundTruthParser(Parser):
                 flow = self.extract_fields(line)
                 if not flow:
                     continue
-                flows_count += 1
+                self.total_flows_read += 1
+
                 self.db.store_ground_truth_flow_ts(flow)
                 self.db.store_flow(flow, 'ground_truth')
                 # used for printing the stats in the main.py
-                self.db.store_flows_count('ground_truth', flows_count)
-                if flows_count % 180 == 0:
-                    self.log("Parsed ground truth flows: ", flows_count)
+                self.db.store_flows_count('ground_truth', self.total_flows_read)
+                if self.total_flows_read % 180 == 0:
+                    self.log("Parsed ground truth flows: ", self.total_flows_read)
 
-        self.log_stats()
+
 
     def log_stats(self):
         self.log("Total aid collisions (discarded flows) found in ground truth: ",
                  self.db.get_aid_collisions())
-
+        self.log("Total flows read: ", self.total_flows_read)
         self.log(f"Total malicious labels: ", self.malicious_labels)
         self.log(f"Total benign labels: ", self.benign_labels )
         self.log(f"Total unknown labels: ", self.unknown_labels)
@@ -297,7 +298,6 @@ class GroundTruthParser(Parser):
             for log_file in os.listdir(self.gt_zeek_dir):
                 if self.is_ignored(log_file):
                     continue
-
                 # extract fields and store them in the db
                 self.parse_file(log_file)
 
@@ -305,6 +305,7 @@ class GroundTruthParser(Parser):
             # extract fields and store them in the db
             self.parse_file(self.gt_zeek_file)
 
+        self.log_stats()
 
 
 
