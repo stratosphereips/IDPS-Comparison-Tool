@@ -1,5 +1,6 @@
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
+from re import findall
 from parsers.config import ConfigurationParser
 from utils.hash import Hash
 from abstracts.abstracts import Parser
@@ -119,14 +120,18 @@ class GroundTruthParser(Parser):
 
 
     def extract_label_from_line(self, line:str) -> str:
-        if 'benign' in line or 'Benign' in line:
-            return 'benign'
-        elif 'malicious' in line or 'Malicious' in line:
+
+        pattern = r"Malicious[\s\t]+"
+        matches = findall(pattern, line)
+        if matches:
             return 'malicious'
-        else:
-            # line doesn't have a label
-            # print(f"line: {line} doesn't have a label!")
+
+        pattern = r"Benign[\s\t]+"
+        matches = findall(pattern, line)
+        if matches:
             return 'benign'
+
+        return 'unknown'
 
     def handle_zeek_json(self, line:str):
         try:
@@ -139,7 +144,7 @@ class GroundTruthParser(Parser):
         if not aid:
             return False
 
-        label =  line.get('label', 'benign')
+        label =  line.get('label', '')
         return label, aid, line['ts']
 
     def handle_getting_aid(self, line: list):
@@ -217,8 +222,13 @@ class GroundTruthParser(Parser):
                 self.db.store_flows_count('ground_truth', flows_count)
                 if flows_count % 180 == 0:
                     self.log("Parsed ground truth flows: ", flows_count)
+
+        self.log_stats()
+
+    def log_stats(self):
         self.log("Total aid collisions (discarded flows) found in ground truth: ",
                  self.db.get_aid_collisions())
+
 
 
 
