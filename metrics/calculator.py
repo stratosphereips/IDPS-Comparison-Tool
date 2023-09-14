@@ -80,7 +80,7 @@ class Calculator:
         self.log(f"{tool}: True Negatives (TN): ", tn)
         self.log(f"{tool}: False Positives (FP): ", fp)
         self.log(f"{tool}: False Negatives (FN): ", fn)
-
+        print()
         # will use them later
         self.metrics[tool] = {
             'TP': tp,
@@ -174,10 +174,11 @@ class Calculator:
 
 
 
-    def FPR(self, tool) -> float:
+    def FPR(self, tool, log=True) -> float:
         """
         prints the false positive rate of a given tool
         :param tool: slips or suricata
+        :param log: logs the output to cli if set to true, we set it to false when we're using this function inside another one
         :return: float
         """
         # make sure we have the fp and tn of this store calculated already
@@ -188,21 +189,26 @@ class Calculator:
             fpr = 'none'
         else:
             fpr = self.metrics[tool]['FP']/(self.metrics[tool]['FP'] + self.metrics[tool]['TN'])
-        self.log(f"{tool}: FPR: ", fpr)
+
+        if log:
+            self.log(f"{tool}: FPR: ", fpr)
+
         return fpr
 
-    def TPR(self, tool):
+    def TPR(self, tool, log=True):
         """
         TPR = TP / (TP + FN)
         prints the true positive rate of a given tool
         :param tool: slips or suricata
+        :param log: logs the output to cli if set to true, we set it to false when we're using this function inside another one
         :return: float
         """
         if self.metrics[tool]['TP'] + self.metrics[tool]['FN'] == 0:
             tpr = 0
         else:
             tpr = self.metrics[tool]['TP'] / (self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
-        self.log(f"{tool}: TPR: ", tpr)
+        if log:
+            self.log(f"{tool}: TPR: ", tpr)
         return tpr
 
     def FNR(self, tool):
@@ -212,19 +218,21 @@ class Calculator:
         :param tool: slips or suricata
         :return: float
         """
-        fnr = 1 - self.TPR(tool)
+        fnr = 1 - self.TPR(tool, log=False)
         self.log(f"{tool}: FNR: ", fnr)
         return fnr
 
-    def TNR(self, tool):
+    def TNR(self, tool, log=True):
         """
         FNR = 1 − FPR
         prints the true negative rate of a given tool
         :param tool: slips or suricata
+        :param log: logs the output to cli if set to true, we set it to false when we're using this function inside another one
         :return: float
         """
-        tnr = 1 - self.FPR(tool)
-        self.log(f"{tool}: TNR: ", tnr)
+        tnr = 1 - self.FPR(tool, log=False)
+        if log:
+            self.log(f"{tool}: TNR: ", tnr)
         return tnr
 
 
