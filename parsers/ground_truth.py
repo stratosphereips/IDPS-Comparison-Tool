@@ -31,6 +31,10 @@ IGNORED_LOGS = {
 class GroundTruthParser(Parser):
     name = "GroundTruthParser"
     hash = Hash()
+    unknown_labels = 0
+    benign_labels = 0
+    malicious_labels = 0
+
     def init(self,
              ground_truth=None,
              ground_truth_type=None):
@@ -124,13 +128,16 @@ class GroundTruthParser(Parser):
         pattern = r"Malicious[\s\t]+"
         matches = findall(pattern, line)
         if matches:
+            self.malicious_labels += 1
             return 'malicious'
 
         pattern = r"Benign[\s\t]+"
         matches = findall(pattern, line)
         if matches:
+            self.benign_labels +=1
             return 'benign'
 
+        self.unknown_labels += 1
         return 'unknown'
 
     def handle_zeek_json(self, line:str):
@@ -229,7 +236,9 @@ class GroundTruthParser(Parser):
         self.log("Total aid collisions (discarded flows) found in ground truth: ",
                  self.db.get_aid_collisions())
 
-
+        self.log(f"Total malicious labels: ", self.malicious_labels)
+        self.log(f"Total benign labels: ", self.benign_labels )
+        self.log(f"Total unknown labels: ", self.unknown_labels)
 
 
     def get_line_type(self, log_file_path: str):
