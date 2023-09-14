@@ -238,6 +238,18 @@ if __name__ == "__main__":
     calc.FPR('suricata')
 
     print()
+    calc.FNR('slips')
+    calc.FNR('suricata')
+
+    print()
+    calc.TPR('slips')
+    calc.TPR('suricata')
+
+    print()
+    calc.TNR('slips')
+    calc.TNR('suricata')
+
+    print()
     calc.recall('slips')
     calc.recall('suricata')
 
@@ -252,6 +264,10 @@ if __name__ == "__main__":
     print()
     calc.accuracy('slips')
     calc.accuracy('suricata')
+
+    print()
+    calc.MCC('slips')
+    calc.MCC('suricata')
 
     analysis_time = time() - starttime
 

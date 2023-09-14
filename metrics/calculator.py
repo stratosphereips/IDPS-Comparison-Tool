@@ -3,6 +3,8 @@ from termcolor import colored
 from sklearn.metrics import confusion_matrix
 from typing import Tuple, List
 from os import path
+from math import sqrt
+
 class Calculator:
     name = "MetricsCalculator"
     # will save the tp, tn, fp and fn for each tool in this dict
@@ -65,6 +67,7 @@ class Calculator:
 
         actual: list = self.clean_labels(actual)
         predicted: list = self.clean_labels(predicted)
+
         # the order of labels is Negative, Positive respectively.
         cm = confusion_matrix(actual, predicted, labels=['benign', 'malicious'])
         # extract TP, TN, FP, FN from the confusion matrix
@@ -87,6 +90,27 @@ class Calculator:
         }
         self.db.store_confusion_matrix(tool, self.metrics[tool])
 
+    def MCC(self, tool: str):
+        """
+        Calculates the Matthews correlation coefficient (MCC) for a given tool
+        :param tool: 'slips' or 'suricata'
+        """
+        numerator = self.metrics[tool]['TP'] * self.metrics[tool]['TN'] \
+                    - self.metrics[tool]['FP'] * self.metrics[tool]['FN']
+
+        denominator = sqrt(
+            (self.metrics[tool]['TP'] + self.metrics[tool]['FP'])
+            * (self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
+            * (self.metrics[tool]['TN'] + self.metrics[tool]['FP'])
+            * (self.metrics[tool]['TN'] + self.metrics[tool]['FN'])
+        )
+
+        if denominator == 0:
+            mcc = 'none'
+        else:
+            mcc = numerator / denominator
+
+        return  mcc
 
 
 
@@ -112,7 +136,7 @@ class Calculator:
 
     def precision(self, tool: str):
         """
-        prints the recall of the given tool compared with the ground truth
+        prints the precision of the given tool compared with the ground truth
         :param tool: 'slips' or 'suricata'
         """
         # make sure we have the fp and tn of this store calculated already
@@ -166,6 +190,44 @@ class Calculator:
             fpr = self.metrics[tool]['FP']/(self.metrics[tool]['FP'] + self.metrics[tool]['TN'])
         self.log(f"{tool}: FPR: ", fpr)
         return fpr
+
+    def TPR(self, tool):
+        """
+        TPR = TP / (TP + FN)
+        prints the true positive rate of a given tool
+        :param tool: slips or suricata
+        :return: float
+        """
+        if self.metrics[tool]['TP'] + self.metrics[tool]['FN'] == 0:
+            tpr = 0
+        else:
+            tpr = self.metrics[tool]['TP'] / (self.metrics[tool]['TP'] + self.metrics[tool]['FN'])
+        self.log(f"{tool}: TPR: ", tpr)
+        return tpr
+
+    def FNR(self, tool):
+        """
+        FNR = 1- TPR
+        prints the false negative rate of a given tool
+        :param tool: slips or suricata
+        :return: float
+        """
+        fnr = 1 - self.TPR(tool)
+        self.log(f"{tool}: FNR: ", fnr)
+        return fnr
+
+    def TNR(self, tool):
+        """
+        FNR = 1 − FPR
+        prints the true negative rate of a given tool
+        :param tool: slips or suricata
+        :return: float
+        """
+        tnr = 1 - self.FPR(tool)
+        self.log(f"{tool}: TNR: ", tnr)
+        return tnr
+
+
 
     def accuracy(self, tool):
         """
