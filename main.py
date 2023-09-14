@@ -172,11 +172,7 @@ def print_flows_parsed_vs_discarded(tool: str, db):
     log(f"Total read flows by {tool}: {parsed_flows}  -- Discarded flows: {discarded_flows} -- Flows used after discarding:"
         f" {used_flows}", '')
 
-if __name__ == "__main__":
-
-    starttime = time()
-    args = ArgsParser().args
-
+def validate_gt(args):
     # this should always be a labeled zeek json dir
     if args.ground_truth_dir:
         ground_truth_dir: str = args.ground_truth_dir
@@ -192,6 +188,13 @@ if __name__ == "__main__":
     else:
         print("No ground truth file or dir was given. stopping.")
         sys.exit()
+
+if __name__ == "__main__":
+
+    starttime = time()
+    args = ArgsParser().args
+
+    validate_gt(args)
 
     output_dir = setup_output_dir()
 
@@ -214,9 +217,11 @@ if __name__ == "__main__":
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
 
+    supported_tools = ('slips', 'suricata')
+
     print()
-    print_flows_parsed_vs_discarded('slips', db)
-    print_flows_parsed_vs_discarded('suricata', db)
+    for tool in supported_tools:
+        print_flows_parsed_vs_discarded(tool, db)
 
 
     # before calculating anything, fill out the missing labels with benign
@@ -226,51 +231,29 @@ if __name__ == "__main__":
 
     print()
     calc = Calculator(output_dir)
-    # Print confusion matrix for slips
-    calc.get_confusion_matrix('slips')
 
-    print()
-    # Print confusion matrix for suricata
-    calc.get_confusion_matrix('suricata')
+    calc_functions = (
+        calc.get_confusion_matrix,
+        calc.FPR,
+        calc.FNR,
+        calc.TPR,
+        calc.TNR,
+        calc.recall,
+        calc.precision,
+        calc.F1,
+        calc.accuracy,
+        calc.MCC,
 
-    print()
-    calc.FPR('slips')
-    calc.FPR('suricata')
+    )
 
-    print()
-    calc.FNR('slips')
-    calc.FNR('suricata')
+    for fun in calc_functions:
+        for tool in supported_tools:
+            fun(tool)
+        print()
 
-    print()
-    calc.TPR('slips')
-    calc.TPR('suricata')
-
-    print()
-    calc.TNR('slips')
-    calc.TNR('suricata')
-
-    print()
-    calc.recall('slips')
-    calc.recall('suricata')
-
-    print()
-    calc.precision('slips')
-    calc.precision('suricata')
-
-    print()
-    calc.F1('slips')
-    calc.F1('suricata')
-
-    print()
-    calc.accuracy('slips')
-    calc.accuracy('suricata')
-
-    print()
-    calc.MCC('slips')
-    calc.MCC('suricata')
-
-    analysis_time = time() - starttime
-
-    log(f"Analysis time: ",f"{analysis_time/60} mins")
 
     db.close()
+
+    analysis_time = time() - starttime
+    log(f"Analysis time: ",f"{analysis_time/60} mins")
+
