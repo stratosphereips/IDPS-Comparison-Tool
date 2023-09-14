@@ -322,6 +322,21 @@ class SQLiteDB():
               f"starttime: {tw_start_ts} , end: {tw_end_ts}")
         return tw_end_ts
 
+
+    def get_timewindow_of_ts(self, ts: float) -> int:
+        """
+        returns the timewindow in which the given timestamp belongs to
+        :param ts: float unix timestamp
+        :return: the timewindow number
+        """
+
+        self.select('timewindow_details', 'timewindow', condition=f"{ts} >= start_time AND {ts} <= end_time ")
+        if tw := self.fetchone():
+            return tw[0]
+
+        # handle not found tw!
+        #TODO
+
     def store_tw_label(self, ip: str, tool: str, tw: int, label: str):
         """
         fills the labels_per_tw table with each tw and the label of it for the given tool
