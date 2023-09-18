@@ -68,7 +68,7 @@ def start_ground_truth_parser(output_dir):
         # read the ground truth and store it in the db
         GroundTruthParser(
             output_dir,
-            ground_truth=ground_truth_dir,
+            ground_truth=args.ground_truth_dir,
             ground_truth_type='dir',
             ).parse()
 
@@ -143,6 +143,7 @@ def add_metadata(output_dir, args):
     """
     metadata_file = os.path.join(output_dir, 'metadata.txt')
     log("Storing metadata in: ", metadata_file)
+
     # Read the configuration file
     config = ConfigurationParser('config.yaml')
     slips_version = config.slips_version()
@@ -172,7 +173,7 @@ def print_flows_parsed_vs_discarded(tool: str, db):
     log(f"Total read flows by {tool}: {parsed_flows}  -- Discarded flows: {discarded_flows} -- Flows used after discarding:"
         f" {used_flows}", '')
 
-def validate_gt(args):
+def validate_gt():
     # this should always be a labeled zeek json dir
     if args.ground_truth_dir:
         ground_truth_dir: str = args.ground_truth_dir
@@ -194,7 +195,7 @@ if __name__ == "__main__":
     starttime = time()
     args = ArgsParser().args
 
-    validate_gt(args)
+    validate_gt()
 
     output_dir = setup_output_dir()
 

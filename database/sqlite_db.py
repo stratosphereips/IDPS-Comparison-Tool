@@ -69,13 +69,6 @@ class SQLiteDB():
             'flows_count': "type_ TEXT PRIMARY KEY, "
                            "count INT",
 
-            # this table will be used to store all the tools' labels per IP per timewindow, not flow by flow
-            'labels_per_tw': "IP TEXT PRIMARY KEY, "
-                             "timewindow TEXT"
-                             "ground_truth_label TEXT, "
-                             "slips_label TEXT,  "
-                             "suricata_label TEXT  ",
-
             # this reads the ts of all groundtruth flows, and has the aid and gt_label in common with the "flows" table
             'ground_truth_flows': "aid TEXT PRIMARY KEY, "
                                   "timestamp REAL, "
@@ -99,7 +92,17 @@ class SQLiteDB():
 
             'timewindow_details': "timewindow INTEGER PRIMARY KEY, "
                                   "start_time REAL, "
-                                  "end_time REAL, "
+                                  "end_time REAL ",
+
+            # this table will be used to store all the tools' labels per IP per timewindow, not flow by flow
+            # the combination of these 2 cols (IP, timewindow) are the primary key, they have to be unique combined
+            'labels_per_tw': "IP TEXT NOT NULL, "
+                             "timewindow TEXT NOT NULL, "
+                             "ground_truth_label TEXT, "
+                             "slips_label TEXT,  "
+                             "suricata_label TEXT,"
+                             "CONSTRAINT PK_interval PRIMARY KEY (IP, timewindow)",
+
             }
         for table_name, schema in table_schema.items():
             self.create_table(table_name, schema)
