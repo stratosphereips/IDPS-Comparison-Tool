@@ -2,6 +2,11 @@ from datetime import datetime, timezone
 from re import findall
 
 class TimestampHandler():
+
+    def convert_to_human_readable(self, unix_ts):
+        datetime_obj = datetime.datetime.fromtimestamp(unix_ts)
+        return datetime_obj.strftime('%Y-%m-%d %H:%M:%S')
+
     def convert_iso_8601_to_unix_timestamp(self, ts: str, tz=False) -> float:
         """
         converts iso 8601 format to unix timestamp
