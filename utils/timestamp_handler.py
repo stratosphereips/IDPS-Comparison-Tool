@@ -63,7 +63,7 @@ class TimestampHandler():
         except ValueError:
             return False
 
-    def remove_milliseconds(self, ts: str) -> str:
+    def remove_milliseconds(self, ts) -> str:
         """
         remove the milliseconds from the given ts
         :param ts: time in unix format
@@ -74,7 +74,11 @@ class TimestampHandler():
 
         return ts.split('.')[0]
 
-    def remove_microseconds(self, ts:str) -> str:
+    def remove_microseconds(self, ts) -> str:
+        """
+        remove the microsecinds from the given ts
+        :param ts: time in unix format
+        """
         ts = str(ts)
         if '.' not in ts:
             return ts

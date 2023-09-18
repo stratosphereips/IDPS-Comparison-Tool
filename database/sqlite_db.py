@@ -319,7 +319,6 @@ class SQLiteDB():
         """
 
         tw_end_ts = tw_start_ts + self.twid_width
-
         query = f'INSERT INTO timewindow_details (timewindow, start_time, end_time) VALUES (?, ?, ?);'
         params = (tw, tw_start_ts, tw_end_ts)
         self.execute(query, params=params)
@@ -333,15 +332,16 @@ class SQLiteDB():
         :param ts: float unix timestamp
         :return: the timewindow number
         """
+        #todo convert all the select queries to methdod
 
-        self.select('timewindow_details', 'timewindow', condition=f"{ts} >= start_time AND {ts} <= end_time ")
-        if tw := self.fetchone():
-            return tw[0]
+        results: list = self.select('timewindow_details', 'timewindow', condition=f"{ts} >= start_time AND {ts} <= end_time ")
+        if results:
+            return results[0][0]
 
         # handle not found tw!
         #TODO
 
-    def store_tw_label(self, ip: str, tool: str, tw: int, label: str):
+    def set_tw_label(self, ip: str, tool: str, tw: int, label: str):
         """
         fills the labels_per_tw table with each tw and the label of it for the given tool
         :param label: malicious or benign
@@ -351,7 +351,7 @@ class SQLiteDB():
             return False
 
         label_col = f"{tool}_label"
-        query = f'INSERT OR REPLACE INTO labels_per_tw (IP, twid, {label_col}) VALUES (?, ?, ?);'
+        query = f'INSERT OR REPLACE INTO labels_per_tw (IP, timewindow, {label_col}) VALUES (?, ?, ?);'
         params = (ip, tw, label)
         self.execute(query, params=params)
 
