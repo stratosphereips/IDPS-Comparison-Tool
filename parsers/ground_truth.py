@@ -34,6 +34,7 @@ class GroundTruthParser(Parser):
     unknown_labels = 0
     benign_labels = 0
     malicious_labels = 0
+    is_first_flow = True
 
     def init(self,
              ground_truth=None,
@@ -51,7 +52,7 @@ class GroundTruthParser(Parser):
 
     def read_config(self):
         config = ConfigurationParser('config.yaml')
-        self.twid_width = config.timewindow_width()
+        self.twid_width = float(config.timewindow_width())
 
     def extract_tab_fields(self, line):
         try:
@@ -198,6 +199,18 @@ class GroundTruthParser(Parser):
             # unable to handle the line
             return False
 
+    def set_timestamp_of_cur_timewindow(self, tw_number: int, tw_starttime: float):
+        """
+        sets the start time of the current timewindow in the db
+         and updates the current tw start and end vars
+        :param tw_number: number of twid to set the start to
+        :param tw_starttime: start time of this timewindow
+        """
+        self.current_tw_start: float = tw_starttime
+        self.tw_number = tw_number
+        self.current_tw_end: float = self.db.set_ts_of_tw(tw_number, tw_starttime)
+        # this one will change as soon aswe meet a malicious label in this tw #TODO do this
+        self.label_for_this_tw = 'benign'
 
     def parse_file(self, filename: str):
         """
@@ -219,9 +232,25 @@ class GroundTruthParser(Parser):
                 # skip comments
                 if line.startswith('#'):
                     continue
+
                 flow = self.extract_fields(line)
                 if not flow:
                     continue
+
+                ts = float(flow['timestamp'])
+
+                if self.is_first_flow:
+                    self.is_first_flow = False
+                    self.set_timestamp_of_cur_timewindow(0, ts)
+                else:
+                    # are we still in the same tw?
+                    if ts > self.current_tw_end:
+                        # register next twid
+                        self.set_timestamp_of_cur_timewindow(
+                            self.tw_number + 1,
+                            ts
+                        )
+
                 self.total_flows_read += 1
 
                 self.db.store_ground_truth_flow_ts(flow)
@@ -234,13 +263,14 @@ class GroundTruthParser(Parser):
 
 
     def log_stats(self):
+        print('\n\n')
         self.log("Total aid collisions (discarded flows) found in ground truth: ",
                  self.db.get_aid_collisions())
         self.log("Total flows read: ", self.total_flows_read)
         self.log(f"Total malicious labels: ", self.malicious_labels)
         self.log(f"Total benign labels: ", self.benign_labels )
         self.log(f"Total unknown labels: ", self.unknown_labels)
-
+        print()
 
     def get_line_type(self, log_file_path: str):
         """

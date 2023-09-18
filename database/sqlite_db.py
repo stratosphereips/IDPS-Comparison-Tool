@@ -313,16 +313,17 @@ class SQLiteDB():
         """
         calculates the end ts of the given timewindow
         and fills the timewindow_details table with the start and end time of it
-        :param tw_start_ts: malicious or benign
+        :param tw_start_ts: the timestamp of the start of the given timewindow
         :param tw: number of the tw to set the timestamps to
         :return: the timestamp of the end of this timewindow
         """
+
         tw_end_ts = tw_start_ts + self.twid_width
+
         query = f'INSERT INTO timewindow_details (timewindow, start_time, end_time) VALUES (?, ?, ?);'
         params = (tw, tw_start_ts, tw_end_ts)
         self.execute(query, params=params)
-        print(f"@@@@@@@@@@@@@@@@ created the twid {tw} with "
-              f"starttime: {tw_start_ts} , end: {tw_end_ts}")
+
         return tw_end_ts
 
 
