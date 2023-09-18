@@ -325,6 +325,29 @@ class SQLiteDB():
 
         return tw_end_ts
 
+    def get_first_row(self, table: str):
+        query = f'SELECT * FROM {table} LIMIT 1'
+        self.execute(query)
+        return dict(self.fetchone())
+
+    def get_last_row(self, table: str):
+        query = f'SELECT * FROM {table} ORDER BY ROWID DESC LIMIT 1'
+        self.execute(query)
+        return dict(self.fetchone())
+
+    def get_timewindows_limit(self):
+        """
+        returns the period of time that the ground truth knows about and has flows and labels for
+        :return: (the start timestamp of the first timewindow,  the end timestamp of the last timewindow)
+        """
+        twid: dict = self.get_first_row('timewindow_details')
+        start_time = twid['start_time']
+
+        twid: dict = self.get_last_row('timewindow_details')
+        end_time = twid['end_time']
+
+        return (start_time, end_time)
+
 
     def get_timewindow_of_ts(self, ts: float) -> int:
         """
