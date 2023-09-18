@@ -80,7 +80,12 @@ class SlipsParser(Parser):
                 print(f"Error executing query ({query}): {e}")
 
 
-    def handle_labeling_tws(self, row):
+    def handle_labeling_tws(self, row: dict):
+        """
+        gets the timewindow that corresponds to this slips tw and marks it as malicious
+        :param row:  dict with
+        :return:
+        """
         return
         #TODO
         # tw: int = int(row['twid'].replace("timewindow",''))
@@ -88,14 +93,20 @@ class SlipsParser(Parser):
         #     self.db.store_tw_label('slips', tw, row['label'])
         #     self.labeled_tws.append(tw)
 
-    def parse(self):
-        """reads the output db of slips with the labels and stores it in this tools' db"""
-        # connect to the given db
-        self.connect()
+    def parse_alerts_table(self):
+        """
+        parses the labels set by slips for each timewindow
+        """
+        ...
+
+    def parse_flow_by_flow_labels(self):
+        """
+        parses the labels set by slips flow by flow
+        :return:
+        """
         flows_count = 0
         for row in self.iterate_flows():
             flows_count += 1
-            self.handle_labeling_tws(row)
             # each row is a dict
             flow = {
                 'aid': row['aid'],
@@ -103,6 +114,7 @@ class SlipsParser(Parser):
             }
             if 'malicious' in row['label'].lower():
                 self.malicious_labels += 1
+                self.handle_labeling_tws(row)
             else:
                 self.benign_labels += 1
 
@@ -114,3 +126,12 @@ class SlipsParser(Parser):
         self.log(f"Total malicious labels: ", self.malicious_labels)
         self.log(f"Total benign labels: ", self.benign_labels )
         print()
+
+
+    def parse(self):
+        """reads the output db of slips with the labels and stores it in this tools' db"""
+        # connect to the given db
+        self.connect()
+        self.parse_flow_by_flow_labels()
+
+        self.parse_alerts_table()
