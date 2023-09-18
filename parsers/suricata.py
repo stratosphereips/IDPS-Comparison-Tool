@@ -46,6 +46,19 @@ class SuricataParser(Parser):
 
         return flow
 
+    def label_malicious_tw(self, ts, srcip):
+        """
+        sets the label of the twid where the given ts exists as malicious by suricata
+        :param ts: current flow timestamp
+        :param srcip: src ip marked as malicious
+        :return:
+        """
+        # if 1 flow is malicious, mark the whole tw as malicious by suricata
+        # map this suricata flow to one of the existing(gt) timewindows
+        if tw := self.db.get_timewindow_of_ts(ts):
+            self.db.set_tw_label(srcip, 'suricata', tw, 'malicious')
+            return True
+
 
     def parse(self):
         """reads the given suricata eve.json"""
@@ -65,24 +78,23 @@ class SuricataParser(Parser):
 
                 timestamp = self.time.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                 flow['timestamp'] = timestamp
-                # start the tw handler and keep track of the ts of the first tw
-                if self.is_first_flow:
-                    self.twid_handler = TimewindowHandler(ts_of_first_flow=timestamp)
-                    self.is_first_flow = False
 
                 #TODO suricata calculates the aid in a wrong way, we'll be calculating it on the fly until they fix it
                 aid: str = self.hash.get_aid(flow)
                 # todo we assume all flows with event_type=alert are marked as malicious by suricata
                 label =  'malicious' if line['event_type'] == 'alert' else 'benign'
-
                 flow = {
                     'aid' : aid,
                     'label' : label,
                     'timestamp': timestamp
                     }
 
+
                 if 'malicious' in label.lower():
                     self.malicious_labels += 1
+                    self.label_malicious_tw(flow['timestamp'], line['src_ip'])
+                    # todo handle unable to map ts to tw
+
                 else:
                     self.benign_labels += 1
 
