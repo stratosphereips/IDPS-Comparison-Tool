@@ -46,22 +46,6 @@ class SuricataParser(Parser):
 
         return flow
 
-    def handle_labeling_tws(self):
-        """
-        checks the label for each tw and stores the tw and the label in the db
-        """
-        last_ts = self.db.get_last_ts('suricata')
-
-        last_available_tw: int = self.twid_handler.get_tw_of_ts(last_ts)
-        # print(f"@@@@@@@@@@@@@@@@ suricata: last_ts {last_ts} last_available_tw: {last_available_tw}")
-
-        for tw in range(last_available_tw+1):
-            if self.db.is_tw_marked_as_malicious('suricata', tw):
-                label = 'malicious'
-            else:
-                label = 'benign'
-            # print(f"@@@@@@@@@@@@@@@@ suricata tw: {tw} is marked as {label}")
-            # self.db.store_tw_label('suricata', tw, label)
 
     def parse(self):
         """reads the given suricata eve.json"""
@@ -114,7 +98,6 @@ class SuricataParser(Parser):
             self.log(f"Total malicious labels: ", self.malicious_labels)
             self.log(f"Total benign labels: ", self.benign_labels )
             print()
-            self.handle_labeling_tws()
 
 
 
