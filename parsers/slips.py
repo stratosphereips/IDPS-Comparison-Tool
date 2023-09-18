@@ -25,12 +25,16 @@ class SlipsParser(Parser):
 
         self.cursor = self.conn.cursor()
 
-    def iterate_flows(self):
-        """returns an iterator for all rows in the flows table in slips db"""
+
+    def iterate(self, table: str):
+        """
+        returns an iterator for all rows in the flows table in slips db
+        :param table: table to iterate in slips db
+        """
         # generator function to iterate over the rows
         def row_generator():
             # select all flows and altflows
-            self.execute('SELECT * FROM flows;')
+            self.execute(f'SELECT * FROM {table};')
 
             while True:
                 row = self.fetchone()
@@ -40,7 +44,6 @@ class SlipsParser(Parser):
 
         # Return the combined iterator
         return iter(row_generator())
-
 
     def fetchone(self):
         """
@@ -95,9 +98,33 @@ class SlipsParser(Parser):
 
     def parse_alerts_table(self):
         """
-        parses the labels set by slips for each timewindow
+        parses the labels set by slips for each timewindow, and marks them as malicious in this tools' db
         """
-        ...
+        def mark_tw_as_malicious(ts: str, ip: str):
+            """
+            marks the tw of the given ts as malicious by slips in the db
+            :param ts: timestamp of the start or end of a malicious alert
+            :param ip: the source ip that was marked as malicious by slips
+            """
+
+            ts = float(ts)
+            ip = ip.replace("profile_","")
+            tw_number: int = self.db.get_timewindow_of_ts(ts)
+            self.db.set_tw_label(ip, 'slips', tw_number, 'malicious')
+
+        for alert in self.iterate('alerts'):
+            # what we're doing here is marking tw 1 and 2 as malicious if a slips alert exists in parts of both
+            #                      1:30                           2:30
+            #                      │          slips alert          │
+            #                      ├───────────────────────────────┤
+            # 1:00                                 2:00                                  3:00
+            # ├────────────────────────────────────┼─────────────────────────────────────┤
+            # │             tw 1                   │            tw 2                     │
+
+            mark_tw_as_malicious(alert['tw_start'], alert['ip_alerted'])
+            mark_tw_as_malicious(alert['tw_end'], alert['ip_alerted'])
+
+
 
     def parse_flow_by_flow_labels(self):
         """
@@ -105,7 +132,7 @@ class SlipsParser(Parser):
         :return:
         """
         flows_count = 0
-        for row in self.iterate_flows():
+        for row in self.iterate('flows'):
             flows_count += 1
             # each row is a dict
             flow = {
@@ -133,5 +160,4 @@ class SlipsParser(Parser):
         # connect to the given db
         self.connect()
         self.parse_flow_by_flow_labels()
-
         self.parse_alerts_table()
