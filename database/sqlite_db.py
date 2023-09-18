@@ -336,7 +336,7 @@ class SQLiteDB():
 
         results: list = self.select('timewindow_details', 'timewindow', condition=f"{ts} >= start_time AND {ts} <= end_time ")
         if results:
-            return results[0][0]
+            return int(results[0][0])
 
         # handle not found tw!
         #TODO
@@ -510,6 +510,6 @@ class SQLiteDB():
                 self.execute(query, params=params)
             else:
                 # An error occurred during execution
-                print(f"Error executing query ({query}): {e}")
+                print(f"Error executing query ({query}): {e} - params: {params}")
 
 
