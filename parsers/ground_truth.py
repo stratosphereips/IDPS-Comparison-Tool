@@ -1,3 +1,4 @@
+import utils.timestamp_handler
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from re import findall
@@ -49,6 +50,7 @@ class GroundTruthParser(Parser):
         # check th etype of the given zeek file/dir with ground truth labels. 'tab-separated' or 'json'?
         self.zeek_file_type: str = self.check_type()
         self.read_config()
+        self.timestamp_handler = utils.timestamp_handler.TimestampHandler()
 
     def read_config(self):
         config = ConfigurationParser('config.yaml')
@@ -206,9 +208,11 @@ class GroundTruthParser(Parser):
         :param tw_number: number of twid to set the start to
         :param tw_starttime: start time of this timewindow
         """
-        self.current_tw_start: float = tw_starttime
         self.tw_number = tw_number
-        self.current_tw_end: float = self.db.set_ts_of_tw(tw_number, tw_starttime)
+
+        self.current_tw_start: float = float(self.timestamp_handler.remove_microseconds(tw_starttime))
+        self.current_tw_end: float = self.db.set_ts_of_tw(tw_number, self.current_tw_start)
+
         # this one will change as soon aswe meet a malicious label in this tw #TODO do this
         self.label_for_this_tw = 'benign'
 
