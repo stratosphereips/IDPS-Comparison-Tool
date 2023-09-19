@@ -126,21 +126,33 @@ class GroundTruthParser(Parser):
 
 
     def extract_label_from_line(self, line:str) -> str:
-
+        """
+        :param line: a zeek tab separated line
+        :return: malicious, benign or unknown
+        """
         pattern = r"Malicious[\s\t]+"
         matches = findall(pattern, line)
         if matches:
-            self.malicious_labels += 1
             return 'malicious'
 
         pattern = r"Benign[\s\t]+"
         matches = findall(pattern, line)
         if matches:
-            self.benign_labels +=1
             return 'benign'
 
-        self.unknown_labels += 1
         return 'unknown'
+
+    def update_labels_ctr(self, label: str):
+        """
+        update the malicious, benign and unknown labels ctr
+        :param label: malicious, benign, unknown
+        """
+        if label == 'malicious':
+            self.malicious_labels += 1
+        elif label == 'benign':
+            self.benign_labels += 1
+        else:
+            self.unknown_labels += 1
 
     def handle_zeek_json(self, line:str):
         try:
@@ -154,6 +166,8 @@ class GroundTruthParser(Parser):
             return False
 
         label =  line.get('label', '')
+        self.update_labels_ctr(label)
+
         return label, aid, line['ts']
 
     def handle_getting_aid(self, line: list):
@@ -165,6 +179,7 @@ class GroundTruthParser(Parser):
 
     def handle_zeek_tabs(self, line:str):
         label = self.extract_label_from_line(line)
+        self.update_labels_ctr(label)
 
         # the data is either \t separated or space separated
         # zeek files that are space separated are either separated by 2 or 3
