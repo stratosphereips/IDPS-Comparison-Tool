@@ -1,6 +1,7 @@
 import utils.timestamp_handler
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
+from typing import Tuple, List
 from re import findall
 from parsers.config import ConfigurationParser
 from utils.hash import Hash
@@ -154,7 +155,11 @@ class GroundTruthParser(Parser):
         else:
             self.unknown_labels += 1
 
-    def handle_zeek_json(self, line:str):
+    def handle_zeek_json(self, line:str) -> Tuple[str,str,str,str]:
+        """
+        :param line: json line as read from the zeek file
+        :return: returns a tuple of label, aid ts and srcip
+        """
         try:
             line = json.loads(line)
         except json.decoder.JSONDecodeError:
@@ -168,7 +173,7 @@ class GroundTruthParser(Parser):
         label =  line.get('label', '')
         self.update_labels_ctr(label)
 
-        return label, aid, line['ts']
+        return label, aid, line['ts'], line['id.orig_h']
 
     def handle_getting_aid(self, line: list):
         # first extract fields
@@ -177,7 +182,11 @@ class GroundTruthParser(Parser):
             return self.hash.get_aid(flow)
         return False
 
-    def handle_zeek_tabs(self, line:str):
+    def handle_zeek_tabs(self, line:str) -> Tuple[str,str,str,str]:
+        """
+        :param line: tab separated line as read from the zeek file
+        :return: returns a tuple of label, aid ts and srcip
+        """
         label = self.extract_label_from_line(line)
         self.update_labels_ctr(label)
 
@@ -191,7 +200,7 @@ class GroundTruthParser(Parser):
         if not aid:
             return False
 
-        return label, aid, line[0]
+        return label, aid, line[0], line[2]
 
     def extract_fields(self, line: str) -> dict:
         """
@@ -211,12 +220,13 @@ class GroundTruthParser(Parser):
                'label':  flow[0],
                'aid': flow[1],
                'timestamp': flow[2],
+               'srcip': flow[3],
             }
-        except TypeError:
-            # unable to handle the line
+        except IndexError:
+            # one of the above 2 methods returned an invalid line!
             return False
 
-    def set_timestamp_of_cur_timewindow(self, tw_number: int, tw_starttime: float):
+    def update_timewindow_limits(self, tw_number: int, tw_starttime: float):
         """
         sets the start time of the current timewindow in the db
          and updates the current tw start and end vars
@@ -224,12 +234,8 @@ class GroundTruthParser(Parser):
         :param tw_starttime: start time of this timewindow
         """
         self.tw_number = tw_number
-
         self.current_tw_start: float = float(self.timestamp_handler.remove_microseconds(tw_starttime))
         self.current_tw_end: float = self.db.set_ts_of_tw(tw_number, self.current_tw_start)
-
-        # this one will change as soon aswe meet a malicious label in this tw #TODO do this
-        self.label_for_this_tw = 'benign'
 
 
     def register_timewindow(self, ts):
@@ -241,11 +247,11 @@ class GroundTruthParser(Parser):
 
         if self.is_first_flow:
             self.is_first_flow = False
-            self.set_timestamp_of_cur_timewindow(0, ts)
+            self.update_timewindow_limits(0, ts)
         elif ts > self.current_tw_end:
             # we are done with the current timewindow
             # register next twid
-            self.set_timestamp_of_cur_timewindow(
+            self.update_timewindow_limits(
                 self.tw_number + 1,
                 ts
             )
@@ -284,9 +290,17 @@ class GroundTruthParser(Parser):
 
                 self.register_timewindow(flow['timestamp'])
 
+                if flow['label'] == 'malicious':
+                    self.db.set_tw_label(
+                        flow['srcip'],
+                        'ground_truth',
+                        self.tw_number,
+                        'malicious')
+
+
                 self.total_flows_read += 1
 
-                self.db.store_ground_truth_flow_ts(flow)
+                self.db.store_ground_truth_flow(flow)
                 self.db.store_flow(flow, 'ground_truth')
                 # used for printing the stats in the main.py
                 self.db.store_flows_count('ground_truth', self.total_flows_read)

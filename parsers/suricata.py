@@ -120,7 +120,7 @@ class SuricataParser(Parser):
                     flow,
                     'suricata_label'
                 )
-                self.db.store_suricata_flow_ts(flow)
+                self.db.store_suricata_flow(flow)
 
                 # used for printing the stats in the main.py
                 self.db.store_flows_count('suricata', flows_count)

@@ -268,7 +268,7 @@ class SQLiteDB():
         result = self.fetchall()
         return result
 
-    def store_suricata_flow_ts(self, flow: dict):
+    def store_suricata_flow(self, flow: dict):
         """
         fills the suricata_flows table with the suricata flow read from eve.json
         :param flow: contains timestamp, aid and label of the flow
@@ -277,9 +277,9 @@ class SQLiteDB():
         params = (flow['aid'], flow['timestamp'], flow['label'])
         self.execute(query, params=params)
 
-    def store_ground_truth_flow_ts(self, flow: dict):
+    def store_ground_truth_flow(self, flow: dict):
         """
-        fills the ground_truth_flows table with the suricata flow read from eve.json
+        fills the ground_truth_flows table with the gt flow read from the zeek log
         :param flow: contains timestamp(in unix format), aid and label of the flow
         """
         query = f'INSERT OR REPLACE INTO ground_truth_flows (aid, timestamp, label) VALUES (?, ?, ?);'
