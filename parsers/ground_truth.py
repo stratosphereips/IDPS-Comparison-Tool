@@ -231,19 +231,45 @@ class GroundTruthParser(Parser):
         # this one will change as soon aswe meet a malicious label in this tw #TODO do this
         self.label_for_this_tw = 'benign'
 
+
+    def register_timewindow(self, ts):
+        """
+        registers a new timewindow if the ts doesn't belong t an existing one
+        :param ts: unix ts of the flow being parsed
+        """
+        ts = float(ts)
+
+        if self.is_first_flow:
+            self.is_first_flow = False
+            self.set_timestamp_of_cur_timewindow(0, ts)
+        elif ts > self.current_tw_end:
+            # we are done with the current timewindow
+            # register next twid
+            self.set_timestamp_of_cur_timewindow(
+                self.tw_number + 1,
+                ts
+            )
+
+    def get_full_path(self, filename: str) -> str:
+        """
+        returns the full path of a given filename
+        """
+        if not os.path.isabs(filename):
+            # this tool is given a zeek dir and we're now parsing 1 logfile from this dir
+            # get the full path of the given log file
+            return os.path.join(self.gt_zeek_dir, filename)
+
+        # this tool is given a zeek logfile and the path of it is abs
+        return filename
+
     def parse_file(self, filename: str):
         """
         extracts the label and community id from each flow and stores them in the db
         :param filename: the name of the logfile without the path, for example conn.log
         this can be the file given to this tool using -gtf or 1 file from the zeek dir given to this tool
         """
-        if not os.path.isabs(filename):
-            # this tool is given a zeek dir and we're now parsing 1 logfile from this dir
-            # get the full path of the given log file
-            fullpath = os.path.join(self.gt_zeek_dir, filename)
-        else:
-            # this tool is given a zeek logfile and the path of it is abs
-            fullpath = filename
+
+        fullpath = self.get_full_path(filename)
 
         self.total_flows_read = 0
         with open(fullpath, 'r') as f:
@@ -256,19 +282,7 @@ class GroundTruthParser(Parser):
                 if not flow:
                     continue
 
-                ts = float(flow['timestamp'])
-
-                if self.is_first_flow:
-                    self.is_first_flow = False
-                    self.set_timestamp_of_cur_timewindow(0, ts)
-                else:
-                    # are we still in the same tw?
-                    if ts > self.current_tw_end:
-                        # register next twid
-                        self.set_timestamp_of_cur_timewindow(
-                            self.tw_number + 1,
-                            ts
-                        )
+                self.register_timewindow(flow['timestamp'])
 
                 self.total_flows_read += 1
 
@@ -276,6 +290,7 @@ class GroundTruthParser(Parser):
                 self.db.store_flow(flow, 'ground_truth')
                 # used for printing the stats in the main.py
                 self.db.store_flows_count('ground_truth', self.total_flows_read)
+
                 if self.total_flows_read % 180 == 0:
                     self.log("Parsed ground truth flows: ", self.total_flows_read)
 
