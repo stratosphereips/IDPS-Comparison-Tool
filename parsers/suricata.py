@@ -11,13 +11,15 @@ class SuricataParser(Parser):
     name = "SuricataParser"
     malicious_labels = 0
     benign_labels = 0
+
     def init(self,
              eve_file=None):
         self.eve_file: str = eve_file
         # to be able to get the ts of the first flow
         self.is_first_flow = True
         self.hash = Hash()
-        self.time = TimestampHandler()
+        self.timestamp_handler = TimestampHandler()
+        self.discarded_tw_labels = 0
 
     def extract_flow(self, line: str) -> dict:
         """
@@ -59,6 +61,23 @@ class SuricataParser(Parser):
             self.db.set_tw_label(srcip, 'suricata', tw, 'malicious')
             return True
 
+    def warn_about_discarded_alert(self, ts):
+        """
+        prints a warning when the tool is discarding an alert detected by suricata
+        :param ts: ts of the alert found
+        """
+        self.discarded_tw_labels += 1
+        gt_start_time, gt_end_time = self.db.get_timewindows_limit()
+
+        gt_start_time = self.timestamp_handler.convert_to_human_readable(gt_start_time)
+        gt_end_time = self.timestamp_handler.convert_to_human_readable(gt_end_time)
+        ts = self.timestamp_handler.convert_to_human_readable(ts)
+
+        self.log(f"Problem marking malicious tw: "
+                 f"Suricata marked a flow at {ts} as malicious, "
+                 f"this flow doesn't belong to any registered timewindow by the ground truth. "
+                 f"timewindows in gt start at: {gt_start_time} and end at: {gt_end_time}. ",
+                 "discarding alert.")
 
     def parse(self):
         """reads the given suricata eve.json"""
@@ -76,7 +95,7 @@ class SuricataParser(Parser):
 
                 flow: dict = self.extract_flow(line)
 
-                timestamp = self.time.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
+                timestamp = self.timestamp_handler.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                 flow['timestamp'] = timestamp
 
                 #TODO suricata calculates the aid in a wrong way, we'll be calculating it on the fly until they fix it
@@ -92,9 +111,8 @@ class SuricataParser(Parser):
 
                 if 'malicious' in label.lower():
                     self.malicious_labels += 1
-                    self.label_malicious_tw(flow['timestamp'], line['src_ip'])
-                    # todo handle unable to map ts to tw
-
+                    if not self.label_malicious_tw(timestamp, line['src_ip']):
+                        self.warn_about_discarded_alert(timestamp)
                 else:
                     self.benign_labels += 1
 
@@ -109,6 +127,8 @@ class SuricataParser(Parser):
 
             self.log(f"Total malicious labels: ", self.malicious_labels)
             self.log(f"Total benign labels: ", self.benign_labels )
+            self.log(f"Total Suricata discarded timewindow labels (due to inability to map the ts to an existing current tw): ",
+                     self.discarded_tw_labels )
             print()
 
 
