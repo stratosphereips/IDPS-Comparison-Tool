@@ -177,14 +177,14 @@ class SQLiteDB():
         """
         iterates through all flows in the flows table, and filles the null labels with benign
         """
+        for table in ('flows', 'labels_per_tw'):
+            for column in self.get_column_names(table):
+                # fill all columns except the community id
+                if column in ('aid', 'IP', 'timewindow', ''):
+                    continue
 
-        for column in self.get_column_names('flows'):
-            # fill all columns except the community id
-            if column == 'aid':
-                continue
-
-            query = f"UPDATE flows SET {column} = 'benign' WHERE {column} IS NULL"
-            self.execute(query)
+                query = f"UPDATE {table} SET {column} = 'benign' WHERE {column} IS NULL"
+                self.execute(query)
 
     def increase_discarded_flows(self, tool: str):
         """
