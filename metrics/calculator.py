@@ -89,7 +89,7 @@ class Calculator:
         )
 
         if denominator == 0:
-            mcc = 'none'
+            mcc = 0
         else:
             mcc = numerator / denominator
 
@@ -163,7 +163,7 @@ class Calculator:
             self.get_confusion_matrix()
 
         if self.metrics[self.tool]['FP'] + self.metrics[self.tool]['TN'] == 0:
-            fpr = 'none'
+            fpr = 0
         else:
             fpr = self.metrics[self.tool]['FP']/(self.metrics[self.tool]['FP'] + self.metrics[self.tool]['TN'])
 
@@ -221,9 +221,10 @@ class Calculator:
                       self.metrics[self.tool]['FP'] + \
                       self.metrics[self.tool]['FN']
         if denominator == 0:
-            acc = 'none'
+            acc = 0
         else:
             acc = numerator / denominator
+
         self.log(f"{self.tool}: Accuracy: ", acc)
         return acc
 

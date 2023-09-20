@@ -5,6 +5,7 @@ class FlowByFlow:
     """
     responsible for grouping helper methods used for flow by flow comparison of tools
     """
+    name = "Flow By Flow"
     def __init__(self, output_dir):
         self.db = SQLiteDB(output_dir)
 
