@@ -369,6 +369,16 @@ class SQLiteDB():
         params = (ip, tw, label)
         self.execute(query, params=params)
 
+    def get_last_registered_timewindow(self) -> int:
+        """
+        returns the last timewindow read by the ground truth from the labels_per_tw table
+        :return: timewindow number
+        """
+        tw = self.select('MAX(timewindow)', 'labels_per_tw', fetch='one')
+        return int(tw)
+
+
+
 
     def is_tw_marked_as_malicious(self, tool: str, twid: int) -> bool:
         """
