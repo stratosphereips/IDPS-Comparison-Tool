@@ -377,18 +377,25 @@ class SQLiteDB():
         tw = self.select('labels_per_tw', 'MAX(timewindow)', fetch='one')
         return int(tw[0])
 
-    def get_labels_per_tw(self, by='all'):
+    def get_labels_per_tw(self, tw: int, by='all'):
         """
         returns all ground truth and tools' labels per tw for all ips
+        :param tw: timewindow number to get all the labels in
         :param by: do we want the labels for all tools? slips only? or suricata only?
         """
+        condition = f'timewindow = {tw}'
+
+
         if by == 'all':
-            res = self.select('labels_per_tw', '*')
+            cols = '*'
         elif by == 'slips':
-            res = self.select('labels_per_tw', 'IP, timewindow, ground_truth_label, slips_label')
+            cols = 'IP, timewindow, ground_truth_label, slips_label'
         elif by == 'suricata':
-            res = self.select('labels_per_tw', 'IP, timewindow, ground_truth_label, suricata_label')
-        return res
+            cols =  'IP, timewindow, ground_truth_label, suricata_label'
+
+        return self.select('labels_per_tw',
+                           cols,
+                           condition=condition)
 
 
 
