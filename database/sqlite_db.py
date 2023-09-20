@@ -377,6 +377,18 @@ class SQLiteDB():
         tw = self.select('MAX(timewindow)', 'labels_per_tw', fetch='one')
         return int(tw)
 
+    def get_labels_per_tw(self, by='all'):
+        """
+        returns all ground truth and tools' labels per tw for all ips
+        :param by: do we want the labels for all tools? slips only? or suricata only?
+        """
+        if by == 'all':
+            res = self.select('labels_per_tw', '*')
+        elif by == 'slips':
+            res = self.select('labels_per_tw', 'IP, timewindow, ground_truth_label, slips_label')
+        elif by == 'suricata':
+            res = self.select('labels_per_tw', 'IP, timewindow, ground_truth_label, suricata_label')
+        return res
 
 
 
