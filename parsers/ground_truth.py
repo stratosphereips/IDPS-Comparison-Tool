@@ -36,6 +36,8 @@ class GroundTruthParser(Parser):
     unknown_labels = 0
     benign_labels = 0
     malicious_labels = 0
+    last_registered_tw = -1
+
     is_first_flow = True
 
     def init(self,
@@ -268,6 +270,35 @@ class GroundTruthParser(Parser):
         # this tool is given a zeek logfile and the path of it is abs
         return filename
 
+    def update_existing_label(self, flow: dict) -> bool:
+        """
+        update existing label f the tw is already registered (as benign by default)
+         but a flow was found in it with malicious label
+        """
+        return self.tw_number == self.last_registered_tw and flow['label'] == 'malicious'
+
+    def label_tw(self, flow: dict):
+        """ labels gt by TW in the db"""
+
+        # register a tw as soon as it is encountered as benign,
+        # re-register it as malicious if one malicious flow was found in an already registered tw
+        if (
+                self.tw_number > self.last_registered_tw
+                or
+                self.update_existing_label(flow)
+        ):
+
+            # update last registered tw
+            self.last_registered_tw = self.tw_number
+
+            self.db.set_tw_label(
+                flow['srcip'],
+                'ground_truth',
+                self.tw_number,
+                flow['label']
+            )
+
+
     def parse_file(self, filename: str):
         """
         extracts the label and community id from each flow and stores them in the db
@@ -289,14 +320,7 @@ class GroundTruthParser(Parser):
                     continue
 
                 self.register_timewindow(flow['timestamp'])
-
-                if flow['label'] == 'malicious':
-                    self.db.set_tw_label(
-                        flow['srcip'],
-                        'ground_truth',
-                        self.tw_number,
-                        'malicious')
-
+                self.label_tw(flow)
 
                 self.total_flows_read += 1
 

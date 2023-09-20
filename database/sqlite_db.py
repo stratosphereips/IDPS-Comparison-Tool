@@ -171,7 +171,7 @@ class SQLiteDB():
 
     def fill_null_labels(self):
         """
-        iterates through all flows in the flows table, and filles the null labels with benign
+        iterates through all flows in the flows table, and fills the null labels with benign
         """
         for table in ('flows', 'labels_per_tw'):
             for column in self.get_column_names(table):
@@ -374,8 +374,8 @@ class SQLiteDB():
         returns the last timewindow read by the ground truth from the labels_per_tw table
         :return: timewindow number
         """
-        tw = self.select('MAX(timewindow)', 'labels_per_tw', fetch='one')
-        return int(tw)
+        tw = self.select('labels_per_tw', 'MAX(timewindow)', fetch='one')
+        return int(tw[0])
 
     def get_labels_per_tw(self, by='all'):
         """
