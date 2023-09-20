@@ -8,6 +8,7 @@ from database.sqlite_db import SQLiteDB
 from parsers.arg_parser import ArgsParser
 from parsers.slips import SlipsParser
 from parsers.ground_truth import GroundTruthParser
+from comparisons.flow_by_flow import FlowByFlow
 from metrics.calculator import Calculator
 from contextlib import suppress
 from shutil import rmtree
@@ -192,30 +193,6 @@ def validate_gt():
         sys.exit()
 
 
-def get_flow_by_flow_labels_list(tool: str) -> Tuple[List, List]:
-    """
-    parses the labels from the db and returns actual and predicted labels list
-    :return: a tuple with 2 lists, first is actual, second is predicted
-    """
-    actual = []
-    predicted = []
-
-    # get all the ground truth labels
-    for flow in db.get_labeled_flows_by('ground_truth'):
-
-        # each flow looks something like this
-        # ('1:Vdr6nTTZvru6dIeEb/SYh9dxtCI=', 'benign', None, None)
-        aid, ground_truth_label, slips_label, suricata_label = flow
-
-        actual.append(ground_truth_label)
-
-        # this is important. if any of the tools have no label for a specific flow, we consider it as benign
-        if tool == 'slips':
-            predicted.append(slips_label)
-        elif tool =='suricata':
-            predicted.append(suricata_label)
-
-    return (actual, predicted)
 
 
 if __name__ == "__main__":
@@ -259,8 +236,11 @@ if __name__ == "__main__":
     log(f"Done. For labels db check: ", output_dir)
 
     print()
+
+    flow_by_flow = FlowByFlow(output_dir)
+
     for tool in supported_tools:
-        actual, predicted = get_flow_by_flow_labels_list(tool)
+        actual, predicted = flow_by_flow.get_labels_lists(tool)
         calc = Calculator(tool, actual, predicted, output_dir)
 
         for metric in (
