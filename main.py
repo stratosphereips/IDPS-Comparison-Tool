@@ -1,6 +1,7 @@
 import os.path
 import sys
 from threading import Thread
+from typing import Tuple, List
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
 from database.sqlite_db import SQLiteDB
@@ -190,6 +191,33 @@ def validate_gt():
         print("No ground truth file or dir was given. stopping.")
         sys.exit()
 
+
+def get_flow_by_flow_labels_list(tool: str) -> Tuple[List, List]:
+    """
+    parses the labels from the db and returns actual and predicted labels list
+    :return: a tuple with 2 lists, first is actual, second is predicted
+    """
+    actual = []
+    predicted = []
+
+    # get all the ground truth labels
+    for flow in db.get_labeled_flows_by('ground_truth'):
+
+        # each flow looks something like this
+        # ('1:Vdr6nTTZvru6dIeEb/SYh9dxtCI=', 'benign', None, None)
+        aid, ground_truth_label, slips_label, suricata_label = flow
+
+        actual.append(ground_truth_label)
+
+        # this is important. if any of the tools have no label for a specific flow, we consider it as benign
+        if tool == 'slips':
+            predicted.append(slips_label)
+        elif tool =='suricata':
+            predicted.append(suricata_label)
+
+    return (actual, predicted)
+
+
 if __name__ == "__main__":
 
     starttime = time()
@@ -231,25 +259,24 @@ if __name__ == "__main__":
     log(f"Done. For labels db check: ", output_dir)
 
     print()
-    calc = Calculator(output_dir)
+    for tool in supported_tools:
+        actual, predicted = get_flow_by_flow_labels_list(tool)
+        calc = Calculator(tool, actual, predicted, output_dir)
 
-    calc_functions = (
-        calc.get_confusion_matrix,
-        calc.FPR,
-        calc.FNR,
-        calc.TPR,
-        calc.TNR,
-        calc.recall,
-        calc.precision,
-        calc.F1,
-        calc.accuracy,
-        calc.MCC,
+        for metric in (
+            calc.get_confusion_matrix,
+            calc.FPR,
+            calc.FNR,
+            calc.TPR,
+            calc.TNR,
+            calc.recall,
+            calc.precision,
+            calc.F1,
+            calc.accuracy,
+            calc.MCC,
 
-    )
-
-    for fun in calc_functions:
-        for tool in supported_tools:
-            fun(tool)
+        ):
+            metric()
         print()
 
 
