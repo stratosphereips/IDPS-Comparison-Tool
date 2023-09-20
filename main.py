@@ -9,6 +9,7 @@ from parsers.arg_parser import ArgsParser
 from parsers.slips import SlipsParser
 from parsers.ground_truth import GroundTruthParser
 from comparisons.flow_by_flow import FlowByFlow
+from comparisons.per_timewindow import PerTimewindow
 from metrics.calculator import Calculator
 from contextlib import suppress
 from shutil import rmtree
@@ -117,6 +118,7 @@ def start_parsers(output_dir, print_stats_event):
 
     suricata_parser.join()
     slips_parser.join()
+    print('-' * 30)
 
 
 def print_stats(output_dir, print_stats_event):
@@ -220,6 +222,7 @@ if __name__ == "__main__":
     stats_thread.join()
 
     print()
+    print("-" * 30)
     log(f"Total flows read by parsers: ",'')
     db.print_table('flows_count')
 
@@ -235,29 +238,40 @@ if __name__ == "__main__":
 
     log(f"Done. For labels db check: ", output_dir)
 
+
     print()
 
-    flow_by_flow = FlowByFlow(output_dir)
+    supported_comparison_methods = (FlowByFlow, PerTimewindow)
+    for comparison_method in supported_comparison_methods:
+        # create an obj of the helper class sresponsible for handling this type of comparison
+        comparer = comparison_method(output_dir)
 
-    for tool in supported_tools:
-        actual, predicted = flow_by_flow.get_labels_lists(tool)
-        calc = Calculator(tool, actual, predicted, output_dir)
-
-        for metric in (
-            calc.get_confusion_matrix,
-            calc.FPR,
-            calc.FNR,
-            calc.TPR,
-            calc.TNR,
-            calc.recall,
-            calc.precision,
-            calc.F1,
-            calc.accuracy,
-            calc.MCC,
-
-        ):
-            metric()
+        print('-' * 30)
+        log("Comparison type: ", comparer.name)
         print()
+
+        # now apply this method to all supported tools
+        for tool in supported_tools:
+            # get the actual and predicted labels by the tool using the
+            # comparison method above
+            actual, predicted = comparer.get_labels_lists(tool)
+            calc = Calculator(tool, actual, predicted, output_dir)
+
+            for metric in (
+                calc.get_confusion_matrix,
+                calc.FPR,
+                calc.FNR,
+                calc.TPR,
+                calc.TNR,
+                calc.recall,
+                calc.precision,
+                calc.F1,
+                calc.accuracy,
+                calc.MCC,
+
+            ):
+                metric()
+            print()
 
 
     db.close()
