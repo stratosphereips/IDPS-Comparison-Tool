@@ -1,13 +1,18 @@
 from typing import Tuple, List
 from database.sqlite_db import SQLiteDB
+from abstracts.abstracts import ComparisonMethod
 
-class PerTimewindow:
+
+class PerTimewindow(ComparisonMethod):
     """
     responsible for grouping helper methods used for timewindow comparison of tools
     """
     name = "Per Timewindow"
-    def __init__(self, output_dir):
-        self.db = SQLiteDB(output_dir)
+    def init(self):
+        self.print_stats()
+
+    def print_stats(self):
+        ...
 
     def get_labels_lists(self, tool: str) -> Tuple[List, List]:
         """
