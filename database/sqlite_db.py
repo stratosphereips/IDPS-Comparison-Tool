@@ -43,7 +43,9 @@ class SQLiteDB():
             db_newly_created = True
             self._init_db()
 
-        self.conn = sqlite3.connect(self._flows_db, check_same_thread=False)
+        self.conn = sqlite3.connect(
+            self._flows_db,
+            check_same_thread=False)
 
         self.cursor = self.conn.cursor()
         if db_newly_created:
@@ -133,31 +135,25 @@ class SQLiteDB():
         """reads the number of flows parsed so far by tool from the flows_count table"""
         assert tool in ['suricata', 'ground_truth', 'slips']
 
-        query = f"SELECT * FROM flows_count where type_ = '{tool}';"
-        self.execute(query)
-
-        if count:= self.fetchone():
-            return count[1]
+        res = self.select('flows_count', '*', condition=f"type_ = '{tool}';", fetch='one')
+        if res:
+            return res[1]
         return 0
 
     def get_discarded_flows(self, tool: str):
-        query = f"SELECT * FROM discarded_flows where tool = '{tool}';"
-        self.execute(query)
-
-        if count:= self.fetchone():
+        count = self.select('discarded_flows', '*',f" tool = '{tool}';", fetch='one')
+        if count:
             return count[1]
         return 0
 
     def print_table(self, table_name):
         """For debugging :D"""
-        self.execute(f"SELECT * FROM {table_name}")
-        rows = self.fetchall()
+        rows = self.select(table_name, '*')
 
         # Print the table header
         column_names = [description[0] for description in self.cursor.description]
         print(column_names)
 
-        # Print each row of the table
         for row in rows:
             print(row)
 
@@ -260,12 +256,15 @@ class SQLiteDB():
         self.execute(query)
 
 
-    def select(self, table_name, columns="*", condition=None):
+    def select(self, table_name, columns="*", condition=None, fetch='all'):
         query = f"SELECT {columns} FROM {table_name}"
         if condition:
             query += f" WHERE {condition}"
         self.execute(query)
-        result = self.fetchall()
+        if fetch == 'all':
+            result = self.fetchall()
+        else:
+            result = self.fetchone()
         return result
 
     def store_suricata_flow(self, flow: dict):
@@ -292,10 +291,9 @@ class SQLiteDB():
         :param tool: suricata or ground_truth
         :return: ts
         """
-        query = f'select MIN(timestamp) FROM {tool}_flows ;'
-        self.execute(query)
-        row = self.fetchone()
+        row = self.select('MIN(timestamp)', f"{tool}_flows", fetch='one')
         return float(row[0])
+
 
     def get_last_ts(self, tool: str):
         """
@@ -303,9 +301,7 @@ class SQLiteDB():
         :param tool: suricata or ground_truth
         :return: ts
         """
-        query = f'select MAX(timestamp) FROM {tool}_flows ;'
-        self.execute(query)
-        row = self.fetchone()
+        row = self.select('MAX(timestamp)', f"{tool}_flows", fetch='one')
         return float(row[0])
 
 
@@ -352,8 +348,6 @@ class SQLiteDB():
         :param ts: float unix timestamp
         :return: the timewindow number
         """
-        #todo convert all the select queries to methdod
-
         results: list = self.select('timewindow_details', 'timewindow', condition=f"{ts} >= start_time AND {ts} <= end_time ")
         if results:
             return int(results[0][0])
@@ -396,13 +390,12 @@ class SQLiteDB():
         tw_start, tw_end = twid_handler.get_start_and_end_ts(twid)
 
         table_name = f"{tool}_flows"
-        query = f"SELECT * FROM {table_name} WHERE " \
-                f"timestamp >= {tw_start} " \
-                f"AND timestamp <= {tw_end} " \
-                f"AND label = 'malicious';"
-        self.execute(query)
-
-        return True if self.fetchall() else False
+        res = self.select(table_name,
+                    '*',
+                    f"timestamp >= {tw_start} "
+                    f"AND timestamp <= {tw_end} "
+                    f"AND label = 'malicious';")
+        return True if res else False
 
 
     def get_flows_count(self, type_:str, label="") -> int:
@@ -433,10 +426,7 @@ class SQLiteDB():
         # get the column name  of the given type
         label = self.labels_map[type_]
 
-        query = f'SELECT * FROM flows WHERE {label} IS NOT NULL AND {label} != "";'
-        self.execute(query)
-
-        all_labeled_flows = self.fetchall()
+        all_labeled_flows = self.select('flows', '*', condition=f' {label} IS NOT NULL AND {label} != "";')
         return all_labeled_flows
 
 
@@ -451,28 +441,19 @@ class SQLiteDB():
         :return: 'malicious' or 'benign'
         """
         if not by:
-            query = f'SELECT * FROM flows WHERE aid = "{aid}";'
-        else:
-            assert by in self.labels_map, f'trying to get the label set by an invalid tool {by}'
-            label = self.labels_map[by]
-            query = f'SELECT {label} FROM flows WHERE aid = "{aid}";'
+            return self.select('flows', '*', condition=f' aid = "{aid}";', fetch='one')
 
-        self.execute(query)
-        label = self.fetchone()
-        return label
+        assert by in self.labels_map, f'trying to get the label set by an invalid tool {by}'
+        label = self.labels_map[by]
+        return self.select('flows', label, condition=f' aid = "{aid}";', fetch='one')
 
 
     def get_count(self, table, condition=None):
         """
         returns the number of matching rows in the given table based on a specific contioins
         """
-        query = f"SELECT COUNT(*) FROM {table}"
-
-        if condition:
-            query += f" WHERE {condition}"
-
-        self.execute(query)
-        return self.fetchone()[0]
+        res = self.select(table, 'COUNT(*)', condition=condition, fetch='one')
+        return res[0]
 
 
     def close(self):
