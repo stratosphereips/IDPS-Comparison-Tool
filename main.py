@@ -4,6 +4,7 @@ from threading import Thread
 from typing import Tuple, List
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
+from parsers.cm_db import ConfusionMatrixDBParser
 from database.sqlite_db import SQLiteDB
 from parsers.arg_parser import ArgsParser
 from parsers.slips import SlipsParser
@@ -195,6 +196,14 @@ def validate_gt():
         sys.exit()
 
 
+def read_cm_db(cm_db: str):
+    """
+    starts the confusion matrix db parser
+    :param cm_db: confusion matrix db as read from the args (-cm)
+    """
+    log("Consusion matrix database parser started using:", cm_db)
+    ConfusionMatrixDBParser(output_dir, db_path=cm_db).parse()
+
 
 
 if __name__ == "__main__":
@@ -202,13 +211,24 @@ if __name__ == "__main__":
     starttime = time()
     args = ArgsParser().args
 
-    validate_gt()
 
     output_dir = setup_output_dir()
 
     add_metadata(output_dir, args)
 
+
     db = SQLiteDB(output_dir)
+
+
+    if args.confusion_matrix_db:
+        """
+        given a db with precalculated TP, tN FP, FN for each tool
+        continue analysis from here
+        """
+        read_cm_db(args.confusion_matrix_db)
+        # tODO add a main function
+
+    validate_gt()
 
     # used to tell the print_stats thread to start
     print_stats_event = multiprocessing.Event()
