@@ -1,34 +1,34 @@
-from abstracts.abstracts import Parser
+from abstracts.parsers import Parser
+from abstracts.dbs import IDB
 import sqlite3
 from os import path
-class ConfusionMatrixDBParser(Parser):
+
+class ConfusionMatrixDBParser(IDB):
     """
     Parses the given sqlite db given using -cm
     and extracts the TP, TN, FP, FN for each tool from it
     """
     name = "ConfusionMatrixDBParser"
-    def init(self, db_path=None):
-        self.cm_db = db_path
-
-    def connect(self):
-        self.conn = sqlite3.connect(self.cm_db, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
-        self.cursor = self.conn.cursor()
-
-    def validate_path(self) -> bool:
-        """
-        checks if the given db's path exists
-        """
-        if not path.exists(self.cm_db):
-            self.log(f"Inavlid path: {self.cm_db}. "
-                     f"Confusion matrix db doesn't exist.")
-            return False
-        return True
-
+    cm_results = {}
+    def init(self, db_full_path=None):
+        pass
 
     def parse(self):
-        if not self.validate_path():
-            return False
-        # valid path, connect
-        self.connect()
-        print(f"@@@@@@@@@@@@@@@@ connected!!")
+        # read the values from the given db and store them in this tools' db
+        # to  be able to use them later
+        for tool in ("slips", 'suricata'):
+            cm = self.select('performance_errors',
+                             '*',
+                             condition=f'tool = "{tool}"',
+                             fetch='one')
+            if cm:
+                self.cm_results[tool] = {
+                    'TP': cm[0],
+                    'FP': cm[1],
+                    'TN': cm[2],
+                    'FN': cm[3]
+                }
+
+            else:
+                self.log(f"Tool {tool} doesn't have CM values! terminating.",'')
+        return self.cm_results
