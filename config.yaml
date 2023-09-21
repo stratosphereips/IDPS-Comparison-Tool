@@ -1,8 +1,10 @@
 Slips:
+  # DO NOT use spaces in the version
   version: 1.0.6
 
 Suricata:
-  version: 7.0.0 RELEASE
+  # DO NOT use spaces in the version
+  version: 7.0.0_RELEASE
 
 
 Params:

@@ -118,7 +118,7 @@ class SuricataParser(Parser):
 
                 self.db.store_flow(
                     flow,
-                    'suricata_label'
+                    'suricata'
                 )
                 self.db.store_suricata_flow(flow)
 

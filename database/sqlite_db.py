@@ -14,11 +14,6 @@ class SQLiteDB():
     cursor_lock = Lock()
     # stores each  type_ param supported value along with the name of the db
     # column that stores the label of this type_
-    labels_map = {
-        'slips': 'slips_label',
-        'suricata': 'suricata_label',
-        'ground_truth': 'ground_truth'
-    }
     # stores the ts of the first flow for each tool
     ts_tracker = {}
     aid_collisions = 0
@@ -26,12 +21,24 @@ class SQLiteDB():
     def __init__(self, output_dir):
         super(SQLiteDB, self).__new__(SQLiteDB)
         self._flows_db = os.path.join(output_dir, 'db.sqlite')
-        self.connect()
         self.read_config()
+        # column names use the current version of the tool read from config.yaml
+        self.slips_label_col = f"slips_v{self.slips_version.replace('.','')}_label"
+        self.suricata_label_col = f"suricata_v{self.suricata_version.replace('.','')}_label"
+        self.labels_map = {
+            'slips': self.slips_label_col,
+            'suricata': self.suricata_label_col,
+            'ground_truth': 'ground_truth_label'
+        }
+        self.connect()
+
+
 
     def read_config(self):
         config = ConfigurationParser('config.yaml')
         self.twid_width = config.timewindow_width()
+        self.slips_version = config.slips_version()
+        self.suricata_version = config.suricata_version()
 
     def connect(self):
         """
@@ -61,12 +68,13 @@ class SQLiteDB():
 
     def init_tables(self):
         """creates the tables we're gonna use"""
+
         table_schema = {
             # this table will be used to store all the tools' labels per flow
-            'flows': "aid TEXT PRIMARY KEY, "
-                     "ground_truth TEXT, "
-                     "slips_label TEXT, "
-                     "suricata_label TEXT",
+            'flows': f"aid TEXT PRIMARY KEY, "
+                     f"ground_truth_label TEXT, "
+                     f"{self.slips_label_col} TEXT, "
+                     f"{self.suricata_label_col} TEXT",
 
             'flows_count': "type_ TEXT PRIMARY KEY, "
                            "count INT",
@@ -98,12 +106,12 @@ class SQLiteDB():
 
             # this table will be used to store all the tools' labels per IP per timewindow, not flow by flow
             # the combination of these 2 cols (IP, timewindow) are the primary key, they have to be unique combined
-            'labels_per_tw': "IP TEXT NOT NULL, "
-                             "timewindow TEXT NOT NULL, "
-                             "ground_truth_label TEXT, "
-                             "slips_label TEXT,  "
-                             "suricata_label TEXT,"
-                             "CONSTRAINT PK_interval PRIMARY KEY (IP, timewindow)",
+            'labels_per_tw': f"IP TEXT NOT NULL, "
+                             f"timewindow TEXT NOT NULL, "
+                             f"ground_truth_label TEXT, "
+                             f"{self.slips_label_col} TEXT,  "
+                             f"{self.suricata_label_col} TEXT,"
+                             f"CONSTRAINT PK_interval PRIMARY KEY (IP, timewindow)",
 
             }
         for table_name, schema in table_schema.items():
@@ -200,41 +208,42 @@ class SQLiteDB():
         self.execute(query)
 
 
-    def store_flow(self, flow: dict, label_type: str):
+    def store_flow(self, flow: dict, tool: str):
         """
         updates or inserts into the flows db, the flow and label detected by the
         label_type (which is either slips or suricata)
 
         :param flow: dict with aid and label
-        :param label_type: the label can be the ground_truth , slips_label, or suricata_label
+        :param tool: the label can be the ground_truth , slips, or suricata
         """
         aid = flow["aid"]
         label = flow['label']
 
         # check if the row already exists with a label
         exists = self.select('flows', '*', condition=f'aid="{aid}"')
-        if label_type == 'ground_truth':
+        if tool == 'ground_truth':
+            label_col: str = self.labels_map[tool]
             if exists:
                 # aid collision in gt, replace the old flow
                 # #TODO handle this
                 print(f"[Warning] Found collision in ground truth. 2 flows have the same aid."
-                      f" flow: {flow}. label_type: {label_type} .. "
+                      f" flow: {flow}. label_type: {tool} .. "
                       f"discarded the first flow and stored the last one only.")
                 self.aid_collisions += 1
-                self.update('flows', f'{label_type}= "{label}"', condition=f'aid ="{aid}"')
+                self.update('flows', f'{label_col}= "{label}"', condition=f'aid ="{aid}"')
             else:
-                query = f'INSERT INTO flows (aid, {label_type}) VALUES (?, ?);'
+                query = f'INSERT INTO flows (aid, {label_col}) VALUES (?, ?);'
                 params = (aid, label)
                 self.execute(query, params=params)
         else:
             # this flow is read by a tool, not the gt
             # if the gt doesn't have the aid of this flow, we discard it
             if exists:
-                query = f"UPDATE flows SET {label_type} = \"{label}\" WHERE aid = \"{aid}\";"
+                # can be slips_vxxx_label or suricata_vxxx_label
+                label_col: str = self.labels_map[tool]
+                query = f"UPDATE flows SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
                 self.execute(query)
-
             else:
-                tool = label_type.replace("_label",'')
                 self.increase_discarded_flows(tool)
                 return
 
@@ -364,7 +373,7 @@ class SQLiteDB():
             print("TRYING TO STORE THE LABEL FOR AN INVALID TOOL!!")
             return False
 
-        label_col = f"{tool}_label"
+        label_col:str = self.labels_map[tool]
         query = f'INSERT OR REPLACE INTO labels_per_tw (IP, timewindow, {label_col}) VALUES (?, ?, ?);'
         params = (ip, tw, label)
         self.execute(query, params=params)
@@ -388,10 +397,12 @@ class SQLiteDB():
 
         if by == 'all':
             cols = '*'
-        elif by == 'slips':
-            cols = 'IP, timewindow, ground_truth_label, slips_label'
-        elif by == 'suricata':
-            cols =  'IP, timewindow, ground_truth_label, suricata_label'
+        else:
+            label_col = self.labels_map[by]
+            if by == 'slips':
+                cols = f'IP, timewindow, ground_truth_label, {label_col}'
+            elif by == 'suricata':
+                cols =  f'IP, timewindow, ground_truth_label,  {label_col}'
 
         return self.select('labels_per_tw',
                            cols,

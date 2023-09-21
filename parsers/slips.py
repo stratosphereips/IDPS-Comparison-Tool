@@ -173,7 +173,7 @@ class SlipsParser(Parser):
             else:
                 self.benign_labels += 1
 
-            self.db.store_flow(flow, 'slips_label')
+            self.db.store_flow(flow, 'slips')
             # used for printing the stats in the main.py
             self.db.store_flows_count('slips', flows_count)
 
