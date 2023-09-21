@@ -1,5 +1,6 @@
 from utils.timewindow_handler import TimewindowHandler
 from parsers.config import ConfigurationParser
+from abstracts.dbs import IDB
 import os.path
 import sqlite3
 from threading import Lock
@@ -7,64 +8,32 @@ from time import sleep
 
 
 
-class SQLiteDB():
+class SQLiteDB(IDB):
     """Stores all the flows slips reads and handles labeling them"""
-    _obj = None
-    # used to lock each call to commit()
-    cursor_lock = Lock()
-    # stores each  type_ param supported value along with the name of the db
-    # column that stores the label of this type_
     # stores the ts of the first flow for each tool
     ts_tracker = {}
     aid_collisions = 0
 
-    def __init__(self, output_dir):
-        super(SQLiteDB, self).__new__(SQLiteDB)
-        self._flows_db = os.path.join(output_dir, 'db.sqlite')
+    def init(self):
         self.read_config()
         # column names use the current version of the tool read from config.yaml
-        self.slips_label_col = f"slips_v{self.slips_version.replace('.','')}_label"
-        self.suricata_label_col = f"suricata_v{self.suricata_version.replace('.','')}_label"
+        self.slips_label_col = f"slips_v{self.slips_version}_label"
+        self.suricata_label_col = f"suricata_v{self.suricata_version}_label"
         self.labels_map = {
             'slips': self.slips_label_col,
             'suricata': self.suricata_label_col,
             'ground_truth': 'ground_truth_label'
         }
-        self.connect()
-
-
+        if self.db_newly_created:
+            # only init tables if the db is newly created
+            self.init_tables()
 
     def read_config(self):
         config = ConfigurationParser('config.yaml')
         self.twid_width = config.timewindow_width()
-        self.slips_version = config.slips_version()
-        self.suricata_version = config.suricata_version()
+        self.slips_version = config.slips_version().replace('.','')
+        self.suricata_version = config.suricata_version().replace('.','')
 
-    def connect(self):
-        """
-        Creates the db if it doesn't exist and connects to it
-        """
-        db_newly_created = False
-        if not os.path.exists(self._flows_db):
-            # db not created, mark it as first time accessing it so we can init tables once we connect
-            db_newly_created = True
-            self._init_db()
-
-        self.conn = sqlite3.connect(
-            self._flows_db,
-            check_same_thread=False)
-
-        self.cursor = self.conn.cursor()
-        if db_newly_created:
-            # only init tables if the db is newly created
-            self.init_tables()
-
-
-    def _init_db(self):
-        """
-        creates the db if it doesn't exist and clears it if it exists
-        """
-        open(self._flows_db,'w').close()
 
     def init_tables(self):
         """creates the tables we're gonna use"""
@@ -119,10 +88,6 @@ class SQLiteDB():
         self.init_discarded_flows_table()
 
 
-    def create_table(self, table_name, schema):
-        query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
-        self.cursor.execute(query)
-        self.conn.commit()
 
     def init_discarded_flows_table(self):
         # init the count of discarded_flows
@@ -250,31 +215,6 @@ class SQLiteDB():
     def get_aid_collisions(self):
         return self.aid_collisions
 
-    def insert(self, table_name, values):
-        query = f"INSERT INTO {table_name} VALUES ({values})"
-        self.execute(query)
-
-
-    def update(self, table_name, set_clause, condition):
-        query = f"UPDATE {table_name} SET {set_clause} WHERE {condition}"
-        self.execute(query)
-
-
-    def delete(self, table_name, condition):
-        query = f"DELETE FROM {table_name} WHERE {condition}"
-        self.execute(query)
-
-
-    def select(self, table_name, columns="*", condition=None, fetch='all'):
-        query = f"SELECT {columns} FROM {table_name}"
-        if condition:
-            query += f" WHERE {condition}"
-        self.execute(query)
-        if fetch == 'all':
-            result = self.fetchall()
-        else:
-            result = self.fetchone()
-        return result
 
     def store_suricata_flow(self, flow: dict):
         """
@@ -488,69 +428,6 @@ class SQLiteDB():
         return self.select('flows', label, condition=f' aid = "{aid}";', fetch='one')
 
 
-    def get_count(self, table, condition=None):
-        """
-        returns the number of matching rows in the given table based on a specific contioins
-        """
-        res = self.select(table, 'COUNT(*)', condition=condition, fetch='one')
-        return res[0]
 
-
-    def close(self):
-        self.cursor.close()
-        self.conn.close()
-
-    def fetchall(self):
-        """
-        wrapper for sqlite fetchall to be able to use a lock
-        """
-        self.cursor_lock.acquire(True)
-        res = self.cursor.fetchall()
-        self.cursor_lock.release()
-        return res
-
-
-    def fetchone(self):
-        """
-        wrapper for sqlite fetchone to be able to use a lock
-        """
-        self.cursor_lock.acquire(True)
-        res = self.cursor.fetchone()
-        self.cursor_lock.release()
-        return res
-
-    def execute(self, query, params=None):
-        """
-        wrapper for sqlite execute() To avoid 'Recursive use of cursors not allowed' error
-        and to be able to use a Lock()
-        since sqlite is terrible with multi-process applications
-        this should be used instead of all calls to commit() and execute()
-        """
-
-        try:
-            self.cursor_lock.acquire(True)
-            #start a transaction
-            self.cursor.execute('BEGIN')
-
-            if not params:
-                self.cursor.execute(query)
-            else:
-                self.cursor.execute(query, params)
-
-            self.conn.commit()
-
-            self.cursor_lock.release()
-        except sqlite3.Error as e:
-            # An error occurred during execution
-            self.conn.rollback()
-
-            if "database is locked" in str(e):
-                self.cursor_lock.release()
-                # Retry after a short delay
-                sleep(0.1)
-                self.execute(query, params=params)
-            else:
-                # An error occurred during execution
-                print(f"Error executing query ({query}): {e} - params: {params}")
 
 
