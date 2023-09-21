@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from multiprocessing import Process
-
+from termcolor import colored
 from database.sqlite_db import SQLiteDB
 
 

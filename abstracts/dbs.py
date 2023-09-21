@@ -14,15 +14,19 @@ class IDB(ABC):
     cursor_lock = Lock()
     db_newly_created = False
 
-    def __init__(self, output_dir:str = None, db_full_path:str = None, **kwargs):
+    def __init__(
+            self,
+            output_dir=None,
+            db_full_path=None,
+         ):
         """
         :param output_dir: output dir. when this param is given a new db is created in this output dir
         :param db_path: full path to the db to connect to
         """
-        self.path: str = db_full_path
         self.output_dir = output_dir
+        self.path: str = db_full_path
         self.connect()
-        self.init(**kwargs)
+        self.init()
 
     def log(self, green_txt, normal_txt):
         normal_txt = str(normal_txt)
@@ -49,7 +53,6 @@ class IDB(ABC):
                 # so we can init tables once we connect
                 self.db_newly_created = True
                 open(self.path,'w').close()
-
 
         self.conn = sqlite3.connect(
             self.path,

@@ -23,10 +23,10 @@ class ConfusionMatrixDBParser(IDB):
                              fetch='one')
             if cm:
                 self.cm_results[tool] = {
-                    'TP': cm[0],
-                    'FP': cm[1],
-                    'TN': cm[2],
-                    'FN': cm[3]
+                    'TP': int(cm[1]),
+                    'FP': int(cm[2]),
+                    'TN': int(cm[3]),
+                    'FN': int(cm[4])
                 }
 
             else:

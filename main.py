@@ -2,6 +2,7 @@ import os.path
 import sys
 from threading import Thread
 from typing import Tuple, List
+from typing import Optional
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
 from parsers.cm_db import ConfusionMatrixDBParser
@@ -196,38 +197,79 @@ def validate_gt(args):
         sys.exit()
 
 
-def read_cm_db(cm_db: str):
+def read_cm_db(output_dir: str, cm_db: str):
     """
     starts the confusion matrix db parser
     :param cm_db: confusion matrix db as read from the args (-cm)
     """
     log("Consusion matrix database parser started using:", cm_db)
-    ConfusionMatrixDBParser(output_dir, db_path=cm_db).parse()
+    cm: dict = ConfusionMatrixDBParser(output_dir, db_full_path=cm_db).parse()
+
+    for tool in ('slips', 'suricata'):
+        # dont pass the calc lists with actual and predicted data as the cm is already calculated
+        calc = Calculator(tool, [],[], output_dir)
+        calc.metrics = cm
+        for metric in (
+            calc.FPR,
+            calc.FNR,
+            calc.TPR,
+            calc.TNR,
+            calc.recall,
+            calc.precision,
+            calc.F1,
+            calc.accuracy,
+            calc.MCC,
+        ):
+            metric()
+        print()
+
+def calc_metrics(
+        comparer,
+        tool: str,
+        output_dir: str
+):
+    """
+    runs all calculator methods using the given method (comparer obj) on the given tool
+    :param comparer: obj of FlowByFlow class or PerTimewindow class
+    :param tool: slips or suricata
+    :param output_dir: to start the calculator
+    """
+    # get the actual and predicted labels by the tool
+    actual, predicted = comparer.get_labels_lists(tool)
+    calc = Calculator(tool, actual, predicted, output_dir)
+
+    for metric in (
+        calc.get_confusion_matrix,
+        calc.FPR,
+        calc.FNR,
+        calc.TPR,
+        calc.TNR,
+        calc.recall,
+        calc.precision,
+        calc.F1,
+        calc.accuracy,
+        calc.MCC,
+
+    ):
+        metric()
+    print()
 
 def main():
     starttime = time()
     args = ArgsParser().args
-
-
     output_dir = setup_output_dir()
-
     add_metadata(output_dir, args)
-
-
     db = SQLiteDB(output_dir)
-
 
     if args.confusion_matrix_db:
         """
-        given a db with precalculated TP, tN FP, FN for each tool
+        given a db with pre-calculated TP, TN FP, FN for each tool
         continue analysis from here
         """
-        read_cm_db(args.confusion_matrix_db)
-        # tODO add a main function
+        read_cm_db(output_dir, args.confusion_matrix_db)
+
     else:
-
         validate_gt(args)
-
         # used to tell the print_stats thread to start
         print_stats_event = multiprocessing.Event()
 
@@ -236,64 +278,44 @@ def main():
 
         start_parsers(args, output_dir, print_stats_event)
         # now that the parses ended don't print more stats
+        print(f"@@@@@@@@@@@@@@@@  now that the parses ended don't print more stats")
+        global stop_stats_thread
         stop_stats_thread = True
+        print(f"@@@@@@@@@@@@@@@@joining")
         stats_thread.join()
 
+
+        print(f"@@@@@@@@@@@@@@@@ done joi ingn!")
         print()
         print("-" * 30)
         log(f"Total flows read by parsers: ",'')
         db.print_table('flows_count')
 
+        supported_tools = ('slips', 'suricata')
 
-    ###############################
-
-
-    supported_tools = ('slips', 'suricata')
-
-    print()
-    for tool in supported_tools:
-        print_flows_parsed_vs_discarded(tool, db)
-
-
-    # before calculating anything, fill out the missing labels with benign
-    db.fill_null_labels()
-
-    log(f"Done. For labels db check: ", output_dir)
-
-
-    print()
-
-    supported_comparison_methods = (FlowByFlow, PerTimewindow)
-    for comparison_method in supported_comparison_methods:
-        # create an obj of the helper class sresponsible for handling this type of comparison
-        comparer = comparison_method(output_dir)
-
-        print('-' * 30)
-        log("Comparison type: ", comparer.name)
         print()
-
-        # now apply this method to all supported tools
         for tool in supported_tools:
-            # get the actual and predicted labels by the tool using the
-            # comparison method above
-            actual, predicted = comparer.get_labels_lists(tool)
-            calc = Calculator(tool, actual, predicted, output_dir)
+            print_flows_parsed_vs_discarded(tool, db)
 
-            for metric in (
-                calc.get_confusion_matrix,
-                calc.FPR,
-                calc.FNR,
-                calc.TPR,
-                calc.TNR,
-                calc.recall,
-                calc.precision,
-                calc.F1,
-                calc.accuracy,
-                calc.MCC,
 
-            ):
-                metric()
+        # before calculating anything, fill out the missing labels with benign
+        db.fill_null_labels()
+
+        log(f"Done. For labels db check: ", output_dir)
+
+        print()
+        supported_comparison_methods = (FlowByFlow, PerTimewindow)
+        for comparison_method in supported_comparison_methods:
+            # create an obj of the helper class sresponsible for handling this type of comparison
+            comparer = comparison_method(output_dir)
+
+            print('-' * 30)
+            log("Comparison type: ", comparer.name)
             print()
+
+            # now apply this method to all supported tools
+            for tool in supported_tools:
+                calc_metrics(comparer, tool, output_dir)
 
 
     db.close()
