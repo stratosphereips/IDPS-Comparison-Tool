@@ -1,5 +1,6 @@
 from typing import Tuple, List
-from abstracts.abstracts import ComparisonMethod
+from abstracts.comparison_methods import ComparisonMethod
+
 
 class FlowByFlow(ComparisonMethod):
     """

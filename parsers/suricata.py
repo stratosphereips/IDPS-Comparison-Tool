@@ -1,7 +1,7 @@
 from utils.timewindow_handler import TimewindowHandler
 from utils.timestamp_handler import TimestampHandler
 from utils.hash import Hash
-from abstracts.abstracts import Parser
+from abstracts.parsers import Parser
 from database.sqlite_db import SQLiteDB
 
 import json

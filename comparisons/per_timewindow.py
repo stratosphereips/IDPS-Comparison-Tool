@@ -1,6 +1,6 @@
 from typing import Tuple, List
 from database.sqlite_db import SQLiteDB
-from abstracts.abstracts import ComparisonMethod
+from abstracts.comparison_methods import ComparisonMethod
 
 
 class PerTimewindow(ComparisonMethod):

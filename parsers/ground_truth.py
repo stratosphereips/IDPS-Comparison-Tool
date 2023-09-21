@@ -5,7 +5,7 @@ from typing import Tuple, List
 from re import findall
 from parsers.config import ConfigurationParser
 from utils.hash import Hash
-from abstracts.abstracts import Parser
+from abstracts.parsers import Parser
 from re import split
 import json
 import os
