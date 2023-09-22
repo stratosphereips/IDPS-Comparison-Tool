@@ -2,20 +2,24 @@ from abc import ABC, abstractmethod
 from multiprocessing import Process
 from termcolor import colored
 from database.sqlite_db import SQLiteDB
-from abstracts.observer import IOvservable
+from abstracts.observer import IObservable
 from logger.logger import Logger
-class Parser(IOvservable):
+from typing import Optional
+class Parser(IObservable):
     name = ''
     def __init__(self,
-                 output_dir,
-                 results_path=None,
+                 output_dir: str,
+                 results_path: Optional[str]=None,
                  **kwargs):
-        super(Parser, self).__init__(results_path)
+        super(Parser, self).__init__()
+        # init the logger
+        self.results_path = results_path
+        self.logger = Logger(self.name, self.results_path)
+        # add the logger as an observer so each msg printed to the cli will be sent to it too
+        self.add_observer(self.logger)
+
         Process.__init__(self)
         self.db = SQLiteDB(output_dir)
-        # add the logger as an observer so each msg printed to the cli will be sent to it too
-        self.logger = Logger(self.name)
-        self.add_observer(self.logger)
 
         self.init(**kwargs)
 
@@ -32,15 +36,7 @@ class Parser(IOvservable):
         """
         logs the txt to stdout
         """
-        msg = f"{colored(f'[{self.name}] ', 'blue')} " \
-              f"{colored(green_txt, 'green')} " \
-              f"{normal_txt}"
-
-        end = '\r' if 'Parsed' in green_txt else '\n'
-        print(msg, end=end)
-
-        msg = f"{self.name} {green_txt} {normal_txt}"
-        self.notify_observers(msg)
+        self.notify_observers((normal_txt, green_txt))
 
     @abstractmethod
     def parse(self):

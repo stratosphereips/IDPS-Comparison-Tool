@@ -336,7 +336,8 @@ class GroundTruthParser(Parser):
 
     def log_stats(self):
         print('\n')
-        print('-' * 30)
+        self.log('', "-" * 30)
+
         self.log("Total parsed ground truth flows: ", self.total_flows_read)
         self.log("Total aid collisions (discarded flows) found in ground truth: ",
                  self.db.get_aid_collisions())
@@ -344,7 +345,8 @@ class GroundTruthParser(Parser):
         self.log(f"Total malicious labels: ", self.malicious_labels)
         self.log(f"Total benign labels: ", self.benign_labels )
         self.log(f"Total unknown labels: ", self.unknown_labels)
-        print('-' * 30)
+        self.log('', "-" * 30)
+
         print()
 
     def get_line_type(self, log_file_path: str):

@@ -177,11 +177,13 @@ class SlipsParser(Parser):
             # used for printing the stats in the main.py
             self.db.store_flows_count('slips', flows_count)
 
-        print('-' * 30)
+        self.log('', "-" * 30)
+
         self.log(f"Total malicious labels: ", self.malicious_labels)
         self.log(f"Total benign labels: ", self.benign_labels )
         self.log(f"Total Slips discarded timewindow labels (due to inability to map the ts to an existing tw): ", self.discarded_tw_labels)
-        print('-' * 30)
+        self.log('', "-" * 30)
+
         print()
 
 

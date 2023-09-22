@@ -3,33 +3,35 @@ from termcolor import colored
 from sklearn.metrics import confusion_matrix
 from os import path
 from math import sqrt
+from abstracts.observer import IObservable
+from logger.logger import Logger
 
-class Calculator:
+class Calculator(IObservable):
     name = "MetricsCalculator"
     # will save the tp, tn, fp and fn for each tool in this dict
     metrics = {}
-    
+
     def __init__(self,
                  tool,
                  actual_labels:list,
                  predicted_labels: list,
                  output_dir: str
                  ):
+        super(Calculator, self).__init__()
+
+        # init the logger
+        self.results_path = path.join(output_dir, 'results.txt')
+        self.logger = Logger(self.name, self.results_path)
+        self.add_observer(self.logger)
+
         self.db = SQLiteDB(output_dir)
-        self.results_file = path.join(output_dir, 'results.txt')
         assert tool in ['slips', 'suricata'], f'Trying to get metrics of an invalid tool: {tool}'
         self.tool = tool
         self.actual_labels = actual_labels
         self.predicted_labels = predicted_labels
 
     def log(self, green_txt, normal_txt):
-        normal_txt = str(normal_txt)
-        green_txt = str(green_txt)
-
-        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
-
-        with open(self.results_file, 'a') as results:
-            results.write(f"[{self.name}] {green_txt} {normal_txt}\n")
+        self.notify_observers((normal_txt, green_txt))
 
 
     def clean_labels(self, labels: list)-> list:
