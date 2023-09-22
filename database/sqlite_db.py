@@ -40,10 +40,10 @@ class SQLiteDB(IDB):
 
         table_schema = {
             # this table will be used to store all the tools' labels per flow
-            'flows': f"aid TEXT PRIMARY KEY, "
-                     f"ground_truth_label TEXT, "
-                     f"{self.slips_label_col} TEXT, "
-                     f"{self.suricata_label_col} TEXT",
+            'labels_flow_by_flow': f"aid TEXT PRIMARY KEY, "
+                                   f"ground_truth_label TEXT, "
+                                   f"{self.slips_label_col} TEXT, "
+                                   f"{self.suricata_label_col} TEXT",
 
             'flows_count': "type_ TEXT PRIMARY KEY, "
                            "count INT",
@@ -146,7 +146,7 @@ class SQLiteDB(IDB):
         """
         iterates through all flows in the flows table, and fills the null labels with benign
         """
-        for table in ('flows', 'labels_per_tw'):
+        for table in ('labels_flow_by_flow', 'labels_per_tw'):
             for column in self.get_column_names(table):
                 # fill all columns except the community id
                 if column in ('aid', 'IP', 'timewindow', ''):
@@ -175,7 +175,8 @@ class SQLiteDB(IDB):
 
     def store_flow(self, flow: dict, tool: str):
         """
-        updates or inserts into the flows db, the flow and label detected by the
+        updates or inserts into the labels_flow_by_flow table,
+        the flow and label detected by the
         label_type (which is either slips or suricata)
 
         :param flow: dict with aid and label
@@ -185,7 +186,7 @@ class SQLiteDB(IDB):
         label = flow['label']
 
         # check if the row already exists with a label
-        exists = self.select('flows', '*', condition=f'aid="{aid}"')
+        exists = self.select('labels_flow_by_flow', '*', condition=f'aid="{aid}"')
         if tool == 'ground_truth':
             label_col: str = self.labels_map[tool]
             if exists:
@@ -195,9 +196,9 @@ class SQLiteDB(IDB):
                       f" flow: {flow}. label_type: {tool} .. "
                       f"discarded the first flow and stored the last one only.")
                 self.aid_collisions += 1
-                self.update('flows', f'{label_col}= "{label}"', condition=f'aid ="{aid}"')
+                self.update('labels_flow_by_flow', f'{label_col}= "{label}"', condition=f'aid ="{aid}"')
             else:
-                query = f'INSERT INTO flows (aid, {label_col}) VALUES (?, ?);'
+                query = f'INSERT INTO labels_flow_by_flow (aid, {label_col}) VALUES (?, ?);'
                 params = (aid, label)
                 self.execute(query, params=params)
         else:
@@ -206,7 +207,7 @@ class SQLiteDB(IDB):
             if exists:
                 # can be slips_vxxx_label or suricata_vxxx_label
                 label_col: str = self.labels_map[tool]
-                query = f"UPDATE flows SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
+                query = f"UPDATE labels_flow_by_flow SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
                 self.execute(query)
             else:
                 self.increase_discarded_flows(tool)
@@ -393,7 +394,7 @@ class SQLiteDB(IDB):
         assert type_ in self.labels_map, "get_malicious_flows_count() was given an invalid type"
 
         column = self.labels_map[type_]
-        return self.get_count('flows', condition=f'{column}="{label}"')
+        return self.get_count('labels_flow_by_flow', condition=f'{column}="{label}"')
 
     def get_labeled_flows_by(self, type_):
         """
@@ -406,7 +407,7 @@ class SQLiteDB(IDB):
         # get the column name  of the given type
         label = self.labels_map[type_]
 
-        all_labeled_flows = self.select('flows', '*', condition=f' {label} IS NOT NULL AND {label} != "";')
+        all_labeled_flows = self.select('labels_flow_by_flow', '*', condition=f' {label} IS NOT NULL AND {label} != "";')
         return all_labeled_flows
 
 
@@ -421,11 +422,11 @@ class SQLiteDB(IDB):
         :return: 'malicious' or 'benign'
         """
         if not by:
-            return self.select('flows', '*', condition=f' aid = "{aid}";', fetch='one')
+            return self.select('labels_flow_by_flow', '*', condition=f' aid = "{aid}";', fetch='one')
 
         assert by in self.labels_map, f'trying to get the label set by an invalid tool {by}'
         label = self.labels_map[by]
-        return self.select('flows', label, condition=f' aid = "{aid}";', fetch='one')
+        return self.select('labels_flow_by_flow', label, condition=f' aid = "{aid}";', fetch='one')
 
 
 

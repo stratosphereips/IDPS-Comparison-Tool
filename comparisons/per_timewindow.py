@@ -26,12 +26,12 @@ class PerTimewindow(ComparisonMethod):
         predicted_count = predicted.count(label)
         actual_count = actual.count(label)
 
-        self.log(f"Total timewindows detected by {tool} as {label}: "
-                 f"{predicted_count}/{tot_tws} "
-                 
-                 f"Actual {label} timewindows found "
-                 f"in the grount truth:",
-                 f"{actual_count}" )
+        self.log(f"Total timeinwodws seen in the ground truth (malicious+benign): ",
+                 tot_tws)
+        self.log(f"Total timewindows detected by {tool} as {label}: ",
+                 predicted_count)
+        self.log(f"Actual {label} timewindows found in the grount truth:",
+                 actual_count)
 
     def get_labels_lists(self, tool: str) -> Tuple[List, List]:
         """
