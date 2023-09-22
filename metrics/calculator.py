@@ -73,6 +73,7 @@ class Calculator:
             'FN': fn
         }
         self.db.store_confusion_matrix(self.tool, self.metrics[self.tool])
+        return self.metrics[self.tool]
 
     def MCC(self):
         """

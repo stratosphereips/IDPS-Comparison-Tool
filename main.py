@@ -278,14 +278,11 @@ def main():
 
         start_parsers(args, output_dir, print_stats_event)
         # now that the parses ended don't print more stats
-        print(f"@@@@@@@@@@@@@@@@  now that the parses ended don't print more stats")
         global stop_stats_thread
         stop_stats_thread = True
-        print(f"@@@@@@@@@@@@@@@@joining")
         stats_thread.join()
 
 
-        print(f"@@@@@@@@@@@@@@@@ done joi ingn!")
         print()
         print("-" * 30)
         log(f"Total flows read by parsers: ",'')
