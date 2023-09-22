@@ -45,7 +45,7 @@ This tool reads the ```flows.sqlite``` db, extracts the labels and community ids
 it calculates the aid of each read flow on the fly using the (community_id + ts) combination
 
 
-## suricata eve.json
+#### suricata eve.json
 
 This tool reads Suricata's eve.json file 
 
@@ -87,31 +87,31 @@ Timewindow labels are detected in the following way:
 
 A timewindow is 1h interval, the given pcap is splitted into as many 1h intervals as needed and each interval (timewindow) has 1 label, either malicious or benign
 
-### for slips
+#### for slips
 the slips database given to this tool using -s contains a table called alerts where slips stores the malcious timewindows with their label, start and end date.
 
 
-### Applying the timewindow concept for the ground truth
+#### Applying the timewindow concept for the ground truth
 we read 1h worth of flows, once we find one 'malicious' label, we consider their entire timewindow as malicious, if there is no malicious flows in there, we mark that timewindow as benign
 
 
-### Applying the timewindow concept for suricata
+#### Applying the timewindow concept for suricata
 
 Same as the ground truth. we read 1h worth of flows, once we find one 'malicious' label, we consider their entire timewindow as malicious, if there is no malicious flows in there, we mark that timewindow as benign
 
 ## Comparison Method2: labels flow by flow
 
-### for slips
+#### for slips
 
 The slips database given to this tool using -s contains a table called flows where each flow is stored with its label. 
 The flow is considered malicious by slips if it was part of an alert.
 Slips detects alerts based on a complex ensembling algorithm, check it Slips documentation for more about this.
 
-### for suricata
+#### for suricata
 The eve.json given to this tool using -e contains flows and event_type = 'alert'.
 Each alerts is marked as malicious and each flow is marked as benign
 
-### for the ground truth
+#### for the ground truth
 Ground truth flows are labeled using the netflow labeler. so each flow has a label either benign or malicious
 
 ---
@@ -139,14 +139,17 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 # Used cmds
 
 command for generating all zeek files in the dataset/
- zeek -C -r <pcap>  tcp_inactivity_timeout=60mins tcp_attempt_delay=1min
+
+``` zeek -C -r <pcap>  tcp_inactivity_timeout=60mins tcp_attempt_delay=1min```
 
 
 command for labeling conn.log files
-python3 netflowlabeler.py -c labels.config -f /path/to/generated/conn.log
+
+``` python3 netflowlabeler.py -c labels.config -f /path/to/generated/conn.log ```
 
 (optional) To label the rest of the Zeek files using an already labeled conn.log file (conn.log.labeled)
-zeek-files-labeler.py -l conn.log.labeled -f folder-with-zeek-log-files
+
+```zeek-files-labeler.py -l conn.log.labeled -f folder-with-zeek-log-files```
 
 
 
