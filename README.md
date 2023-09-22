@@ -2,17 +2,19 @@
 
 pip3 install -r requirements.txt
 
+---
+
 # Usage 
 
 python3 main.py -s <slips_db_abs_path> -e <eve.json_abs_path> -g <ground_truth_labeled_zeek_dir_abs_path>
 
-for testing use this command:
+for testing, use this command:
 
-***Example of using labeled ground truth file***
+***Example of using labeled ground truth dir***
 
 python3 main.py -gtd $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/ -s $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json  
 
-***Example of using ground truth dir***
+***Example of using ground truth file***
 
 python3 main.py -gtf $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/ground_truth/conn.log.labeled -s $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/slips/flows.sqlite -e $(pwd)/dataset/CTU-Malware-Capture-Botnet-4/suricata/eve.json  
 
@@ -23,40 +25,96 @@ python3 main.py -s $(pwd)/dataset/Experiment-VM-Linux-Ubuntu2204-1-2023-02-25/sl
 python3 main.py -e $(pwd)/dataset/Experiment-VM-Microsoft-Windows7AD-1-2023-02-26/suricata/eve.json -s $(pwd)/dataset/Experiment-VM-Microsoft-Windows7AD-1-2023-02-26/slips/flows.sqlite -gtf $(pwd)/dataset/Experiment-VM-Microsoft-Windows7AD-1-2023-02-26/zeek_labeled/conn.log.labeled
 
 
-# How it works
 
-## comparison tool output
+# Comparison Tool Input
 
-The output of this tool is:
-
-1. a sqlite db with 1 table
-2. the metrics printed in the CLI at the end of the analysis
-
-each row in the output table should have the following:
-
-flow community_id, ground_truth_label, suricata_label, slips_label
+The tool needs the following 3 to run:
+1. Slips db
+2. suricata eve.json
+3. a labeled conn.log file
 
 
-The sqlite db created by this tool is stored in a subdir in the output/ dir
-for example
-```output/2023-07-10-14:04:16```
+#### Slips DB 
 
-## slips output 
-
-Slips now stores the community id for each conn.log flow in the sqlite db
+Slips stores the community id for each conn.log flow in the sqlite db
 
 The SQL table with the community id and label in Slips is called 'flows' inside the ```flows.sqlite``` db
 
 This tool reads the ```flows.sqlite``` db, extracts the labels and community ids, and stores the them in its' own db stored in ```output/<date-time>/db.sqlite```
 
-## suricata output
+it calculates the aid of each read flow on the fly using the (community_id + ts) combination
 
-Suricata's used output file is eve.json with the 'community_id' field
+
+## suricata eve.json
+
+This tool reads Suricata's eve.json file 
 
 if the field event_type is set to 'alert', this tool marks this flow as malicious by suricata.
 
-After this tool parses the ground truth, slips and suricata's output, it uses metrics/calculator.py to calc the metrics and display them in the CLI
+it calculates the aid of each read flow on the fly using the (community_id + ts) combination
 
+
+
+---
+
+# Comparison tool output
+
+The output of this tool is:
+
+1. a sqlite db with labels per flow, and labels per timewindow, it also has the performance errors and, total flows count and the files read of each tool. 
+
+The sqlite db created by this tool is stored in a subdir in the output/ dir
+for example
+```output/2023-07-10-14:04:16```
+
+2. the metrics printed in the CLI at the end of the analysis
+
+
+
+---
+
+# How it works
+
+<img src="docs/images/workflow.png">
+
+1. This tool consists of 3 parsers, the ground truth parser runs first, once it's done the slips and suricata parsers start in parallel
+2. The 3 parsers job is to store the label for each tool in the sqlite database
+3. labels are stored per flow and per timewindow
+4. the tool then retrieves the actual and predicted value of each of the given tools and passes them to the calculator for calculating the metrics
+
+## Comparison Method 1: How labels per timewindow are calculated
+Timewindow labels are detected in the following way:
+
+A timewindow is 1h interval, the given pcap is splitted into as many 1h intervals as needed and each interval (timewindow) has 1 label, either malicious or benign
+
+### for slips
+the slips database given to this tool using -s contains a table called alerts where slips stores the malcious timewindows with their label, start and end date.
+
+
+### Applying the timewindow concept for the ground truth
+we read 1h worth of flows, once we find one 'malicious' label, we consider their entire timewindow as malicious, if there is no malicious flows in there, we mark that timewindow as benign
+
+
+### Applying the timewindow concept for suricata
+
+Same as the ground truth. we read 1h worth of flows, once we find one 'malicious' label, we consider their entire timewindow as malicious, if there is no malicious flows in there, we mark that timewindow as benign
+
+## Comparison Method2: labels flow by flow
+
+### for slips
+
+The slips database given to this tool using -s contains a table called flows where each flow is stored with its label. 
+The flow is considered malicious by slips if it was part of an alert.
+Slips detects alerts based on a complex ensembling algorithm, check it Slips documentation for more about this.
+
+### for suricata
+The eve.json given to this tool using -e contains flows and event_type = 'alert'.
+Each alerts is marked as malicious and each flow is marked as benign
+
+### for the ground truth
+Ground truth flows are labeled using the netflow labeler. so each flow has a label either benign or malicious
+
+---
 
 # Limitations
 
@@ -69,11 +127,14 @@ After this tool parses the ground truth, slips and suricata's output, it uses me
 
 * slips now labels conn.log flows only, just like zeek does when community_id is enabled as a plugin
 
-* all flows read by a tool, tat don't have a matching flow in the ground truth file, are discarded. the number if discarded flow sis written in the cli
+* all flows read by a tool, that don't have a matching flow in the ground truth file, are discarded. the number if discarded flows is written in the cli
 
 * we only read even_type= "flow" or "alert" in suricata eve.json files
 
 * the flows read by suricata, slips and the gt don't have to be the same, aka the final flows count don't have to match because each tool reads the pcap differently
+
+---
+
 
 # Used cmds
 
