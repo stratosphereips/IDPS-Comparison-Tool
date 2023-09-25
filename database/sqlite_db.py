@@ -353,11 +353,13 @@ class SQLiteDB(IDB):
         returns all ground truth and the given tools' labels from the labels_flow_by_flow table
         :param by: do we want the labels for all tools? slips only? or suricata only?
         """
+        print(f"@@@@@@@@@@@@@@@@ get_labels_flow_by_flow for tool {by}")
 
         if by == 'all':
             cols = '*'
         else:
             label_col = self.labels_map[by]
+            print(f"@@@@@@@@@@@@@@@@ col name for this tool is {label_col}")
             cols = f'ground_truth_label, {label_col}'
 
         return self.select('labels_flow_by_flow', cols)
