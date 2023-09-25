@@ -18,20 +18,12 @@ class FlowByFlow(ComparisonMethod):
         actual = []
         predicted = []
 
-        # get all the ground truth labels
-        for flow in self.db.get_labeled_flows_by('ground_truth'):
-            # todo do this with a query!
-
+        # get the ground truth labels and the given tools' labels for all flows
+        for flow in self.db.get_labels_flow_by_flow(by=tool):
             # each flow looks something like this
-            # ('1:Vdr6nTTZvru6dIeEb/SYh9dxtCI=', 'benign', None, None)
-            aid, ground_truth_label, slips_label, suricata_label = flow
-
+            # (aid, gt_label, tool_label)
+            ground_truth_label, tool_label = flow
             actual.append(ground_truth_label)
+            predicted.append(tool_label)
 
-            # this is important. if any of the tools have no label for a specific flow, we consider it as benign
-            if tool == 'slips':
-                predicted.append(slips_label)
-            elif tool =='suricata':
-                predicted.append(suricata_label)
-
-        return (actual, predicted)
+        return actual, predicted

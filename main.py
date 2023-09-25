@@ -250,25 +250,7 @@ class Main(IObservable):
         :param comparer: obj of FlowByFlow class or PerTimewindow class
         :param tool: slips or suricata
         """
-        # get the actual and predicted labels by the tool
-        actual, predicted = comparer.get_labels_lists(tool)
-        calc = Calculator(tool, actual, predicted, self.output_dir)
 
-        for metric in (
-            calc.get_confusion_matrix,
-            calc.FPR,
-            calc.FNR,
-            calc.TPR,
-            calc.TNR,
-            calc.recall,
-            calc.precision,
-            calc.F1,
-            calc.accuracy,
-            calc.MCC,
-
-        ):
-            metric()
-        self.log(' ', ' ')
 
     def main(self):
 
@@ -311,8 +293,8 @@ class Main(IObservable):
             self.log(f"Done. For labels db check: ", self.output_dir)
 
             self.log(' ', ' ')
-            supported_comparison_methods = (FlowByFlow, PerTimewindow)
-            for comparison_method in supported_comparison_methods:
+
+            for comparison_method in (FlowByFlow, PerTimewindow):
                 # create an obj of the helper class sresponsible for handling this type of comparison
                 comparer = comparison_method(self.output_dir)
 
@@ -322,7 +304,25 @@ class Main(IObservable):
 
                 # now apply this method to all supported tools
                 for tool in supported_tools:
-                    self.calc_metrics(comparer, tool)
+                    # get the actual and predicted labels by the tool
+                    actual, predicted = comparer.get_labels_lists(tool)
+                    calc = Calculator(tool, actual, predicted, self.output_dir)
+
+                    for metric in (
+                        calc.get_confusion_matrix,
+                        calc.FPR,
+                        calc.FNR,
+                        calc.TPR,
+                        calc.TNR,
+                        calc.recall,
+                        calc.precision,
+                        calc.F1,
+                        calc.accuracy,
+                        calc.MCC,
+
+                    ):
+                        metric()
+                    self.log(' ', ' ')
 
 
         self.db.close()

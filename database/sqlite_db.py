@@ -340,15 +340,25 @@ class SQLiteDB(IDB):
             cols = '*'
         else:
             label_col = self.labels_map[by]
-            if by == 'slips':
-                cols = f'IP, timewindow, ground_truth_label, {label_col}'
-            elif by == 'suricata':
-                cols =  f'IP, timewindow, ground_truth_label,  {label_col}'
+            cols = f'IP, timewindow, ground_truth_label, {label_col}'
 
         return self.select('labels_per_tw',
                            cols,
                            condition=condition)
 
+    def get_labels_flow_by_flow(self, by='all'):
+        """
+        returns all ground truth and the given tools' labels from the labels_flow_by_flow table
+        :param by: do we want the labels for all tools? slips only? or suricata only?
+        """
+
+        if by == 'all':
+            cols = '*'
+        else:
+            label_col = self.labels_map[by]
+            cols = f'ground_truth_label, {label_col}'
+
+        return self.select('labels_flow_by_flow', cols)
 
 
     def is_tw_marked_as_malicious(self, tool: str, twid: int) -> bool:
