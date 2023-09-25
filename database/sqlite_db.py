@@ -208,9 +208,6 @@ class SQLiteDB(IDB):
                 self.execute(query)
             else:
                 self.increase_discarded_flows(tool)
-                if tool == 'suricata':
-                    self.discarded +=1
-                    print(f"@@@@@@@@@@@@@@@@ db: discarded suicata flow sup till now : {self.discarded}")
                 return False
         return True
 

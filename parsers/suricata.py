@@ -9,7 +9,6 @@ import json
 
 class SuricataParser(Parser):
     name = "SuricataParser"
-    discarded = 0
 
     def init(self,
              eve_file=None):
@@ -130,10 +129,6 @@ class SuricataParser(Parser):
                     if 'malicious' in label.lower():
                         if not self.label_malicious_tw(timestamp, line['src_ip']):
                             self.warn_about_discarded_alert(timestamp)
-
-                else:
-                    self.discarded +=1
-                    print(f"@@@@@@@@@@@@@@@@ {self.name}    -    {self.discarded} up til now")
 
             self.print_stats()
 
