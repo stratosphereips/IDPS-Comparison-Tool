@@ -167,13 +167,14 @@ class SlipsParser(Parser):
                 'aid': row['aid'],
                 'label' : row['label']
             }
-            if 'malicious' in row['label'].lower():
-                self.malicious_labels += 1
-                self.handle_labeling_tws(row)
-            else:
-                self.benign_labels += 1
 
-            self.db.store_flow(flow, 'slips')
+            if self.db.store_flow(flow, 'slips'):
+                if 'malicious' in row['label'].lower():
+                    self.malicious_labels += 1
+                    self.handle_labeling_tws(row)
+                else:
+                    self.benign_labels += 1
+
             # used for printing the stats in the main.py
             self.db.store_flows_count('slips', flows_count)
 

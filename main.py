@@ -279,7 +279,7 @@ class Main(IObservable):
 
             self.log(' ', ' ')
             self.log('', "-" * 30)
-            self.log(f"Total flows read by parsers: ",'')
+            self.log(f"Total flows read by parsers (including discarded flows): ",'')
             self.db.print_table('flows_count')
 
             supported_tools = ('slips', 'suricata')

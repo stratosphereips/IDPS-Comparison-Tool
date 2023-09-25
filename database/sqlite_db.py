@@ -181,6 +181,7 @@ class SQLiteDB(IDB):
 
         :param flow: dict with aid and label
         :param tool: the label can be the ground_truth , slips, or suricata
+        :return: True if the flow is stored in the db and False if it is discarded
         """
         aid = flow["aid"]
         label = flow['label']
@@ -211,7 +212,8 @@ class SQLiteDB(IDB):
                 self.execute(query)
             else:
                 self.increase_discarded_flows(tool)
-                return
+                return False
+        return True
 
     def get_aid_collisions(self):
         return self.aid_collisions

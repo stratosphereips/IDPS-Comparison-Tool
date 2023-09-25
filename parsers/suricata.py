@@ -108,25 +108,21 @@ class SuricataParser(Parser):
                     'timestamp': timestamp
                     }
 
+                if self.db.store_flow(flow, 'suricata'):
+                    if 'malicious' in label.lower():
+                        self.malicious_labels += 1
+                        if not self.label_malicious_tw(timestamp, line['src_ip']):
+                            self.warn_about_discarded_alert(timestamp)
+                    else:
+                        self.benign_labels += 1
 
-                if 'malicious' in label.lower():
-                    self.malicious_labels += 1
-                    if not self.label_malicious_tw(timestamp, line['src_ip']):
-                        self.warn_about_discarded_alert(timestamp)
-                else:
-                    self.benign_labels += 1
 
-                self.db.store_flow(
-                    flow,
-                    'suricata'
-                )
                 self.db.store_suricata_flow(flow)
-
                 # used for printing the stats in the main.py
+                # the flows count include the discarded flows
                 self.db.store_flows_count('suricata', flows_count)
 
             self.log('', "-" * 30)
-
             self.log(f"Total malicious labels: ", self.malicious_labels)
             self.log(f"Total benign labels: ", self.benign_labels )
             self.log(f"Total Suricata discarded timewindow labels (due to inability to map the ts to an existing current tw): ",
