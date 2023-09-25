@@ -192,10 +192,8 @@ class Main(IObservable):
         if not discarded_flows:
             used_flows = parsed_flows
 
-        self.log(f"Total read flows by {tool}: {parsed_flows}  -- "
-                 f"Discarded flows: {discarded_flows} -- "
-                 f"Flows used after discarding: "
-                 f"{used_flows}", '')
+        self.log(f"Total read flows by {tool} (doesn't include discarded flows): {parsed_flows}  -- "
+                 f"Discarded flows: {discarded_flows}", '')
 
     def validate_gt(self):
         # this should always be a labeled zeek json dir

@@ -13,6 +13,7 @@ class SQLiteDB(IDB):
     # stores the ts of the first flow for each tool
     ts_tracker = {}
     aid_collisions = 0
+    discarded = 0
 
     def init(self):
         self.read_config()
@@ -158,13 +159,13 @@ class SQLiteDB(IDB):
         query = f"UPDATE discarded_flows SET count = count + 1 WHERE tool = '{tool}';"
         self.execute(query)
 
-    def store_flows_count(self, type_: str, count: int):
+    def store_flows_count(self, tool: str, count: int):
         """
         store =s the total number of labeled flows by slips, suricata or ground_Truth
-        :param type_:  slips, suricata or ground_truth
+        :param tool:  slips, suricata or ground_truth
         :param count: number of labeled flows
         """
-        query = f'INSERT OR REPLACE INTO flows_count (type_, count) VALUES (\'{type_}\', {count});'
+        query = f'INSERT OR REPLACE INTO flows_count (type_, count) VALUES (\'{tool}\', {count});'
         self.execute(query)
 
 
@@ -187,7 +188,7 @@ class SQLiteDB(IDB):
             label_col: str = self.labels_map[tool]
             if exists:
                 # aid collision in gt, replace the old flow
-                # #TODO handle this
+                # TODO handle this
                 print(f"[Warning] Found collision in ground truth. 2 flows have the same aid."
                       f" flow: {flow}. label_type: {tool} .. "
                       f"discarded the first flow and stored the last one only.")
@@ -207,6 +208,9 @@ class SQLiteDB(IDB):
                 self.execute(query)
             else:
                 self.increase_discarded_flows(tool)
+                if tool == 'suricata':
+                    self.discarded +=1
+                    print(f"@@@@@@@@@@@@@@@@ db: discarded suicata flow sup till now : {self.discarded}")
                 return False
         return True
 
