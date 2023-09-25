@@ -15,7 +15,6 @@ class FlowByFlow(ComparisonMethod):
         parses the labels from the db and returns actual and predicted labels list for the given tool
         :return: a tuple with 2 lists, first is actual, second is predicted labels
         """
-        print(f"@@@@@@@@@@@@@@@@ get_labels_lists is called for tool {tool}")
         actual = []
         predicted = []
 
@@ -25,8 +24,6 @@ class FlowByFlow(ComparisonMethod):
             # (aid, gt_label, tool_label)
             ground_truth_label, tool_label = flow
             actual.append(ground_truth_label)
-            if tool_label == 'malicious':
-                print(f"@@@@@@@@@@@@@@@@ {self.name} found 1 predicted malicious flow by {tool}")
             predicted.append(tool_label)
 
         return actual, predicted

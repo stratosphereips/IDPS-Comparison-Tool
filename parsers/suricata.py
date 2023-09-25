@@ -109,12 +109,8 @@ class SuricataParser(Parser):
 
                 if self.db.store_flow(flow, 'suricata'):
                     if 'malicious' in label.lower():
-                        print(f"@@@@@@@@@@@@@@@@ found 1 NON DISCARDED flow with malicious label in suricata! ")
                         if not self.label_malicious_tw(timestamp, line['src_ip']):
                             self.warn_about_discarded_alert(timestamp)
-                else:
-                    if 'malicious' in label.lower():
-                        print(f"@@@@@@@@@@@@@@@@ found 1 discarded flow with malcious label in suricata! ")
 
                 self.db.store_suricata_flow(flow)
                 # used for printing the stats in the main.py

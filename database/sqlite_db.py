@@ -148,10 +148,6 @@ class SQLiteDB(IDB):
         """
         iterates through all flows in the flows table, and fills the null labels with benign
         """
-        print(f"@@@@@@@@@@@@@@@@ before filling benigns: ")
-        mal_flows = self.get_malicious_suricata_flows()
-        print(f"@@@@@@@@@@@@@@@@ {mal_flows}")
-
         for table in ('labels_flow_by_flow', 'labels_per_tw'):
             for column in self.get_column_names(table):
                 # fill all columns except the community id
@@ -161,9 +157,6 @@ class SQLiteDB(IDB):
                 query = f"UPDATE {table} SET {column} = 'benign' WHERE {column} IS NULL"
                 self.execute(query)
 
-        print(f"@@@@@@@@@@@@@@@@ after filling benigns: ")
-        mal_flows = self.get_malicious_suricata_flows()
-        print(f"@@@@@@@@@@@@@@@@ {mal_flows}")
 
 
     def increase_discarded_flows(self, tool: str):
@@ -219,13 +212,6 @@ class SQLiteDB(IDB):
             if exists:
                 # can be slips_vxxx_label or suricata_vxxx_label
                 label_col: str = self.labels_map[tool]
-                if "malicious" in label:
-                    print(f"@@@@@@@@@@@@@@@@ storing  a mal flow by {tool} in the db, aid: {aid}")
-                    print(f"@@@@@@@@@@@@@@@@ mal suricata flows: {self.get_malicious_suricata_flows()}")
-                else:
-                    if aid in ('NGQ4ZWNlN2M4MmQ0N2FkNjczOGM2OGYxMDcxMWZkMWE3MDY1ZTIzZQ==', 'NWQ5MDk2YTQ4ZDU0NTkzYzNlNWExNmViOWM2YzViM2I4NGQ2YzAxNw=='):
-                        print(f"@@@@@@@@@@@@@@@@ aid {aid} is now benign!!!!!!")
-
                 query = f"UPDATE labels_flow_by_flow SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
                 self.execute(query)
             else:
@@ -371,13 +357,11 @@ class SQLiteDB(IDB):
         returns all ground truth and the given tools' labels from the labels_flow_by_flow table
         :param by: do we want the labels for all tools? slips only? or suricata only?
         """
-        print(f"@@@@@@@@@@@@@@@@ get_labels_flow_by_flow for tool {by}")
 
         if by == 'all':
             cols = '*'
         else:
             label_col = self.labels_map[by]
-            print(f"@@@@@@@@@@@@@@@@ col name for this tool is {label_col}")
             cols = f'ground_truth_label, {label_col}'
 
         return self.select('labels_flow_by_flow', cols)
