@@ -89,7 +89,6 @@ class SuricataParser(Parser):
                     # only read benign flows and alert events
                     continue
 
-                flows_count += 1
 
                 flow: dict = self.extract_flow(line)
 
@@ -107,15 +106,20 @@ class SuricataParser(Parser):
                     'timestamp': timestamp
                     }
 
+
+                # if a flow is not stored in the db, it's because it
+                # was found in suricata but not in the gt
                 if self.db.store_flow(flow, 'suricata'):
+                    flows_count += 1
+                    # used for printing the stats in the main.py
+                    self.db.store_flows_count('suricata', flows_count)
+
                     if 'malicious' in label.lower():
                         if not self.label_malicious_tw(timestamp, line['src_ip']):
                             self.warn_about_discarded_alert(timestamp)
 
+                # this one will be used later for labeling tws
                 self.db.store_suricata_flow(flow)
-                # used for printing the stats in the main.py
-                # the flows count include the discarded flows
-                self.db.store_flows_count('suricata', flows_count)
 
             self.log('', "-" * 30)
             self.log(f"Total malicious labels: ", self.db.get_flows_count('suricata', 'malicious'))

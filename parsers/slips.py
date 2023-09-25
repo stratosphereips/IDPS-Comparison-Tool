@@ -85,19 +85,6 @@ class SlipsParser(Parser):
                 print(f"Error executing query ({query}): {e}")
 
 
-    def handle_labeling_tws(self, row: dict):
-        """
-        gets the timewindow that corresponds to this slips tw and marks it as malicious
-        :param row:  dict with
-        :return:
-        """
-        return
-        #TODO
-        # tw: int = int(row['twid'].replace("timewindow",''))
-        # if tw not in self.labeled_tws:
-        #     self.db.store_tw_label('slips', tw, row['label'])
-        #     self.labeled_tws.append(tw)
-
     def warn_about_discarded_alert(self, alert: dict):
         """
         prints a warning when the tool i sdiscarding an alert detected by slips
@@ -119,9 +106,19 @@ class SlipsParser(Parser):
                  "discarding alert.")
 
 
+    def print_stats(self):
+        self.log('', "-" * 30)
+        self.log(f"Total malicious labels: ", self.db.get_flows_count('slips', 'malicious'))
+        self.log(f"Total benign labels: ", self.db.get_flows_count('slips', 'benign'))
+        self.log(f"Total Slips discarded timewindow labels (due to inability to map the ts to an existing tw): ", self.discarded_tw_labels)
+        self.log('', "-" * 30)
+
+        print()
     def parse_alerts_table(self):
         """
-        parses the labels set by slips for each timewindow, and marks them as malicious in this tools' db
+        Handles the labeling of slips timewindows
+        by parsing the labels set by slips for each timewindow,
+        and marking them as malicious in this tools' db
         """
         def mark_tw_as_malicious(ts: str, ip: str):
             """
@@ -159,7 +156,6 @@ class SlipsParser(Parser):
         """
         flows_count = 0
         for row in self.iterate('flows'):
-            flows_count += 1
             # each row is a dict
             flow = {
                 'aid': row['aid'],
@@ -167,25 +163,18 @@ class SlipsParser(Parser):
             }
 
             if self.db.store_flow(flow, 'slips'):
-                if 'malicious' in row['label'].lower():
-                    self.handle_labeling_tws(row)
+                flows_count += 1
+                # used for printing the stats in the main.py #TODO shouldn't be stored in a separate table!
+                self.db.store_flows_count('slips', flows_count)
 
-            # used for printing the stats in the main.py
-            self.db.store_flows_count('slips', flows_count)
-
-        self.log('', "-" * 30)
-
-        self.log(f"Total malicious labels: ", self.db.get_flows_count('slips', 'malicious'))
-        self.log(f"Total benign labels: ", self.db.get_flows_count('slips', 'benign') )
-        self.log(f"Total Slips discarded timewindow labels (due to inability to map the ts to an existing tw): ", self.discarded_tw_labels)
-        self.log('', "-" * 30)
-
-        print()
+        self.print_stats()
 
 
     def parse(self):
         """reads the output db of slips with the labels and stores it in this tools' db"""
         # connect to the given db
         self.connect()
+        # labeling flows
         self.parse_flow_by_flow_labels()
+        # labeling tws
         self.parse_alerts_table()
