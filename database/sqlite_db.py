@@ -55,12 +55,6 @@ class SQLiteDB(IDB):
                                   "FOREIGN KEY (aid) REFERENCES flows(aid), "
                                   "FOREIGN KEY (label) REFERENCES flows(ground_truth)",
 
-            # this reads the ts of all suricata flows, and has the aid and suricata_label in common with the "flows" table
-            'suricata_flows': "aid TEXT PRIMARY KEY, "
-                              "timestamp REAL, "
-                              "label TEXT,  "
-                              "FOREIGN KEY (aid) REFERENCES flows(aid), "
-                              "FOREIGN KEY (label) REFERENCES flows(suricata_label)",
             'performance_errors': "tool TEXT, "
                                   "TP INTEGER, "
                                   "FP INTEGER, "
@@ -141,9 +135,6 @@ class SQLiteDB(IDB):
             column_names.append(col[1])
         return column_names
 
-    def get_malicious_suricata_flows(self):
-        return self.select('labels_flow_by_flow', '*', condition=f"{self.suricata_label_col} = 'malicious'")
-
     def fill_null_labels(self):
         """
         iterates through all flows in the flows table, and fills the null labels with benign
@@ -222,15 +213,6 @@ class SQLiteDB(IDB):
     def get_aid_collisions(self):
         return self.aid_collisions
 
-
-    def store_suricata_flow(self, flow: dict):
-        """
-        fills the suricata_flows table with the suricata flow read from eve.json
-        :param flow: contains timestamp, aid and label of the flow
-        """
-        query = f'INSERT OR REPLACE INTO suricata_flows (aid, timestamp, label) VALUES (?, ?, ?);'
-        params = (flow['aid'], flow['timestamp'], flow['label'])
-        self.execute(query, params=params)
 
     def store_ground_truth_flow(self, flow: dict):
         """

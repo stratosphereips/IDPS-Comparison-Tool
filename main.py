@@ -38,7 +38,7 @@ class Main(IObservable):
 
         self.db = SQLiteDB(self.output_dir)
         self.add_metadata()
-        self.log(f"Storing metadata in: ", self.results_path)
+        self.log(f"Storing results in: ", self.results_path)
 
 
     def setup_output_dir(self):

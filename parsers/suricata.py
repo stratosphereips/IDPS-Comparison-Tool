@@ -77,6 +77,18 @@ class SuricataParser(Parser):
                  f"timewindows in gt start at: {gt_start_time} and end at: {gt_end_time}. ",
                  "discarding alert.")
 
+    def print_stats(self):
+        self.log('', "-" * 30)
+        self.log(f"Total malicious labels: ", self.db.get_flows_count('suricata', 'malicious'))
+        self.log(f"Total benign labels: ", self.db.get_flows_count('suricata', 'benign'))
+        self.log(f"Total Suricata discarded timewindow labels "
+                 f"(due to inability to map the ts to an existing current tw): ",
+                 self.discarded_tw_labels )
+        self.log('', "-" * 30)
+
+        print()
+
+
     def parse(self):
         """reads the given suricata eve.json"""
         with open(self.eve_file, 'r') as f:
@@ -118,18 +130,8 @@ class SuricataParser(Parser):
                         if not self.label_malicious_tw(timestamp, line['src_ip']):
                             self.warn_about_discarded_alert(timestamp)
 
-                # this one will be used later for labeling tws
-                self.db.store_suricata_flow(flow)
 
-            self.log('', "-" * 30)
-            self.log(f"Total malicious labels: ", self.db.get_flows_count('suricata', 'malicious'))
-            self.log(f"Total benign labels: ", self.db.get_flows_count('suricata', 'benign'))
-            self.log(f"Total Suricata discarded timewindow labels (due to inability to map the ts to an existing current tw): ",
-                     self.discarded_tw_labels )
-            self.log('', "-" * 30)
-
-            print()
-
+            self.print_stats()
 
 
 

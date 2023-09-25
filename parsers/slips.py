@@ -110,7 +110,9 @@ class SlipsParser(Parser):
         self.log('', "-" * 30)
         self.log(f"Total malicious labels: ", self.db.get_flows_count('slips', 'malicious'))
         self.log(f"Total benign labels: ", self.db.get_flows_count('slips', 'benign'))
-        self.log(f"Total Slips discarded timewindow labels (due to inability to map the ts to an existing tw): ", self.discarded_tw_labels)
+        self.log(f"Total Slips discarded timewindow labels "
+                 f"(due to inability to map the ts to an existing tw): ",
+                 self.discarded_tw_labels)
         self.log('', "-" * 30)
 
         print()
