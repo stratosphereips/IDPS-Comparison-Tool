@@ -181,8 +181,8 @@ class Main(IObservable):
 
     def print_flows_parsed_vs_discarded(self, tool: str):
         """
-        print the flows parsed, discarded and actual
-        flows taken into consideration in the calculations by the given
+        print the flows parsed, discarded and
+        actual flows taken into consideration in the calculations by the given
         tool
         :param tool: slips or suricata
         """
@@ -192,8 +192,10 @@ class Main(IObservable):
         if not discarded_flows:
             used_flows = parsed_flows
 
-        self.log(f"Total read flows by {tool}: {parsed_flows}  -- Discarded flows: {discarded_flows} -- Flows used after discarding:"
-            f" {used_flows}", '')
+        self.log(f"Total read flows by {tool}: {parsed_flows}  -- "
+                 f"Discarded flows: {discarded_flows} -- "
+                 f"Flows used after discarding: "
+                 f"{used_flows}", '')
 
     def validate_gt(self):
         # this should always be a labeled zeek json dir
@@ -283,6 +285,7 @@ class Main(IObservable):
             supported_tools = ('slips', 'suricata')
 
             self.log(' ', ' ')
+            self.log("Flows are discarded when they're found in a tool but not in the ground truth", '')
             for tool in supported_tools:
                 self.print_flows_parsed_vs_discarded(tool)
 
