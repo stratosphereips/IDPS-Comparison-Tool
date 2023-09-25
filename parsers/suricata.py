@@ -9,8 +9,6 @@ import json
 
 class SuricataParser(Parser):
     name = "SuricataParser"
-    malicious_labels = 0
-    benign_labels = 0
 
     def init(self,
              eve_file=None):
@@ -98,9 +96,10 @@ class SuricataParser(Parser):
                 timestamp = self.timestamp_handler.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                 flow['timestamp'] = timestamp
 
-                #TODO suricata calculates the aid in a wrong way, we'll be calculating it on the fly until they fix it
+                # suricata calculates the aid in a wrong way, we'll be calculating it on the fly until they fix it
                 aid: str = self.hash.get_aid(flow)
-                # todo we assume all flows with event_type=alert are marked as malicious by suricata
+
+                # we assume all flows with event_type=alert are marked as malicious by suricata
                 label =  'malicious' if line['event_type'] == 'alert' else 'benign'
                 flow = {
                     'aid' : aid,
@@ -111,12 +110,8 @@ class SuricataParser(Parser):
                 if self.db.store_flow(flow, 'suricata'):
                     if 'malicious' in label.lower():
                         print(f"@@@@@@@@@@@@@@@@ found 1 NON DISCARDED flow with malicious label in suricata! ")
-
-                        self.malicious_labels += 1
                         if not self.label_malicious_tw(timestamp, line['src_ip']):
                             self.warn_about_discarded_alert(timestamp)
-                    else:
-                        self.benign_labels += 1
                 else:
                     if 'malicious' in label.lower():
                         print(f"@@@@@@@@@@@@@@@@ found 1 discarded flow with malcious label in suricata! ")
@@ -127,8 +122,8 @@ class SuricataParser(Parser):
                 self.db.store_flows_count('suricata', flows_count)
 
             self.log('', "-" * 30)
-            self.log(f"Total malicious labels: ", self.malicious_labels)
-            self.log(f"Total benign labels: ", self.benign_labels )
+            self.log(f"Total malicious labels: ", self.db.get_flows_count('suricata', 'malicious'))
+            self.log(f"Total benign labels: ", self.db.get_flows_count('suricata', 'benign'))
             self.log(f"Total Suricata discarded timewindow labels (due to inability to map the ts to an existing current tw): ",
                      self.discarded_tw_labels )
             self.log('', "-" * 30)

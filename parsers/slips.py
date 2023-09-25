@@ -11,8 +11,6 @@ class SlipsParser(Parser):
     name = "Slips"
     # used to lock each call to commit()
     cursor_lock = Lock()
-    malicious_labels = 0
-    benign_labels = 0
     discarded_tw_labels = 0
 
     def init(self,
@@ -170,18 +168,15 @@ class SlipsParser(Parser):
 
             if self.db.store_flow(flow, 'slips'):
                 if 'malicious' in row['label'].lower():
-                    self.malicious_labels += 1
                     self.handle_labeling_tws(row)
-                else:
-                    self.benign_labels += 1
 
             # used for printing the stats in the main.py
             self.db.store_flows_count('slips', flows_count)
 
         self.log('', "-" * 30)
 
-        self.log(f"Total malicious labels: ", self.malicious_labels)
-        self.log(f"Total benign labels: ", self.benign_labels )
+        self.log(f"Total malicious labels: ", self.db.get_flows_count('slips', 'malicious'))
+        self.log(f"Total benign labels: ", self.db.get_flows_count('slips', 'benign') )
         self.log(f"Total Slips discarded timewindow labels (due to inability to map the ts to an existing tw): ", self.discarded_tw_labels)
         self.log('', "-" * 30)
 

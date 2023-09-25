@@ -141,11 +141,17 @@ class SQLiteDB(IDB):
             column_names.append(col[1])
         return column_names
 
+    def get_malicious_suricata_flows(self):
+        return self.select('labels_flow_by_flow', '*', condition=f"{self.suricata_label_col} = 'malicious'")
 
     def fill_null_labels(self):
         """
         iterates through all flows in the flows table, and fills the null labels with benign
         """
+        print(f"@@@@@@@@@@@@@@@@ before filling benigns: ")
+        mal_flows = self.get_malicious_suricata_flows()
+        print(f"@@@@@@@@@@@@@@@@ {mal_flows}")
+
         for table in ('labels_flow_by_flow', 'labels_per_tw'):
             for column in self.get_column_names(table):
                 # fill all columns except the community id
@@ -154,6 +160,11 @@ class SQLiteDB(IDB):
 
                 query = f"UPDATE {table} SET {column} = 'benign' WHERE {column} IS NULL"
                 self.execute(query)
+
+        print(f"@@@@@@@@@@@@@@@@ after filling benigns: ")
+        mal_flows = self.get_malicious_suricata_flows()
+        print(f"@@@@@@@@@@@@@@@@ {mal_flows}")
+
 
     def increase_discarded_flows(self, tool: str):
         """
@@ -208,6 +219,13 @@ class SQLiteDB(IDB):
             if exists:
                 # can be slips_vxxx_label or suricata_vxxx_label
                 label_col: str = self.labels_map[tool]
+                if "malicious" in label:
+                    print(f"@@@@@@@@@@@@@@@@ storing  a mal flow by {tool} in the db, aid: {aid}")
+                    print(f"@@@@@@@@@@@@@@@@ mal suricata flows: {self.get_malicious_suricata_flows()}")
+                else:
+                    if aid in ('NGQ4ZWNlN2M4MmQ0N2FkNjczOGM2OGYxMDcxMWZkMWE3MDY1ZTIzZQ==', 'NWQ5MDk2YTQ4ZDU0NTkzYzNlNWExNmViOWM2YzViM2I4NGQ2YzAxNw=='):
+                        print(f"@@@@@@@@@@@@@@@@ aid {aid} is now benign!!!!!!")
+
                 query = f"UPDATE labels_flow_by_flow SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
                 self.execute(query)
             else:
@@ -395,7 +413,8 @@ class SQLiteDB(IDB):
 
     def get_flows_count(self, type_:str, label="") -> int:
         """
-        returns all the malicious/benign labeled flows by slips, suricata, or ground truth
+        returns all the malicious/benign labeled flows by slips, suricata, or ground truth from the
+        labels_flow_by_flow timewindow
         if type_ is 'slips' returns all the flows with slips_label = 'malicious'
 
         :param type_: can be 'slips' , 'suricata', or 'ground_truth'
@@ -404,11 +423,11 @@ class SQLiteDB(IDB):
         """
         assert label in ['benign', 'malicious'], "get_malicious_flows_count() was given an invalid label"
 
-
         assert type_ in self.labels_map, "get_malicious_flows_count() was given an invalid type"
 
         column = self.labels_map[type_]
         return self.get_count('labels_flow_by_flow', condition=f'{column}="{label}"')
+
 
     def get_labeled_flows_by(self, type_):
         """
