@@ -331,9 +331,7 @@ class SQLiteDB(IDB):
             label_col = self.labels_map[by]
             cols = f'IP, timewindow, ground_truth_label, {label_col}'
 
-        return self.select('labels_per_tw',
-                           cols,
-                           condition=condition)
+        self.select('labels_per_tw', cols, condition=condition)
 
 
     def get_labels_flow_by_flow(self, by='all'):
@@ -341,15 +339,14 @@ class SQLiteDB(IDB):
         returns all ground truth and the given tools' labels from the labels_flow_by_flow table
         :param by: do we want the labels for all tools? slips only? or suricata only?
         """
-        #TODO modify iterate in slips.py too
-
         if by == 'all':
             cols = '*'
         else:
             label_col = self.labels_map[by]
             cols = f'ground_truth_label, {label_col}'
 
-        self.select('labels_flow_by_flow', cols)
+        # don't use select() here, we'll fetch one by one
+        self.execute(f"SELECT {cols} from labels_flow_by_flow")
 
         while True:
             row = self.fetchone()
