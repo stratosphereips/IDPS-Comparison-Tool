@@ -2,6 +2,7 @@ from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from os import path
 from math import sqrt
+from typing import Optional
 from abstracts.observer import IObservable
 from logger.logger import Logger
 
@@ -12,8 +13,7 @@ class Calculator(IObservable):
 
     def __init__(self,
                  tool,
-                 actual_labels:list,
-                 predicted_labels: list,
+                 comparer,
                  output_dir: str
                  ):
         super(Calculator, self).__init__()
@@ -26,13 +26,15 @@ class Calculator(IObservable):
         self.db = SQLiteDB(output_dir)
         assert tool in ['slips', 'suricata'], f'Trying to get metrics of an invalid tool: {tool}'
         self.tool = tool
-        self.actual_labels = actual_labels
-        self.predicted_labels = predicted_labels
+
+        # this is an instance of any class from the comparisons/ dir
+        self.comparer = comparer
+
 
     def log(self, green_txt, normal_txt):
         self.notify_observers((normal_txt, green_txt))
 
-    def confusion_matrix(self, actual_labels, predicted_labels):
+    def confusion_matrix(self):
         """
         Calculate a confusion matrix for binary classification.
 
@@ -43,12 +45,18 @@ class Calculator(IObservable):
         Returns:
         - A dictionary containing TP, TN, FP, FN counts.
         """
-        assert len(actual_labels) == len(predicted_labels), "Input lists must have the same length."
-
-        tp, tn, fp, fn = 0, 0, 0, 0
         positive_label = 'malicious'
 
-        for actual, predicted in zip(actual_labels, predicted_labels):
+        tp, tn, fp, fn = 0, 0, 0, 0
+
+        while labels := list(self.comparer.get_labels(self.tool)):
+            actual, predicted = labels
+            actual: str = self.clean_label(actual)
+            predicted: str = self.clean_label(predicted)
+
+            if not actual and not predicted:
+                break
+
             if actual == positive_label:
                 if predicted == positive_label:
                     tp += 1
@@ -67,28 +75,19 @@ class Calculator(IObservable):
             'FN': fn
         }
 
-    def clean_labels(self, labels: list)-> list:
+    def clean_label(self, label: Optional[str]) -> str:
         """
-        replaces all the None values with 'benign'
-        :return: returns the given list with all the None values replaced with benign
+        returns benign if the label is unknown
         """
-
-        for idx, label in enumerate(labels):
-            if label is None:
-                labels[idx] = 'benign'
-        return labels
+        return 'benign' if label is None else label
 
     def get_confusion_matrix(self):
         """
         prints the FP, FN, TP, TN of the given self.tool compared with the ground truth
         and stores them in mem for later
         """
-
-        actual: list = self.clean_labels(self.actual_labels)
-        predicted: list = self.clean_labels(self.predicted_labels)
-
         # the order of labels is Negative, Positive respectively.
-        cm = self.confusion_matrix(actual, predicted)
+        cm = self.confusion_matrix()
 
 
         self.log(f"{self.tool}: True Positives (TP): ", cm['TP'])
@@ -255,6 +254,7 @@ class Calculator(IObservable):
 
         self.log(f"{self.tool}: Accuracy: ", acc)
         return acc
+
 
     def __del__(self):
         self.db.close()
