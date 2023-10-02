@@ -33,19 +33,14 @@ class SlipsParser(Parser):
         returns an iterator for all rows in the flows table in slips db
         :param table: table to iterate in slips db
         """
-        # generator function to iterate over the rows
-        def row_generator():
-            # select all flows and altflows
-            self.execute(f'SELECT * FROM {table};')
+        self.execute(f'SELECT * FROM {table};')
 
-            while True:
-                row = self.fetchone()
-                if row is None:
-                    break
-                yield dict(row)
+        while True:
+            row = self.fetchone()
+            if row is None:
+                break
+            yield dict(row)
 
-        # Return the combined iterator
-        return iter(row_generator())
 
     def fetchone(self):
         """
