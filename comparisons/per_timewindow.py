@@ -21,7 +21,7 @@ class PerTimewindow(ComparisonMethod):
         prints the number of actual and predicted timewindow labels compared with the ground truth
         """
         # total registered tws
-        tot_tws: int = self.db.get_last_registered_timewindow() +1
+        tot_tws: int = self.db.get_last_registered_timewindow() + 1
 
         predicted_count = predicted.count(label)
         actual_count = actual.count(label)

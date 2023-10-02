@@ -308,7 +308,6 @@ class Main(IObservable):
                     # get the actual and predicted labels by the tool
                     actual, predicted = comparer.get_labels_lists(tool)
                     calc = Calculator(tool, actual, predicted, self.output_dir)
-
                     for metric in (
                         calc.get_confusion_matrix,
                         calc.FPR,

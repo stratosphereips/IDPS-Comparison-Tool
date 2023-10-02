@@ -1,6 +1,5 @@
 from database.sqlite_db import SQLiteDB
 from termcolor import colored
-from sklearn.metrics import confusion_matrix
 from os import path
 from math import sqrt
 from abstracts.observer import IObservable
@@ -33,6 +32,40 @@ class Calculator(IObservable):
     def log(self, green_txt, normal_txt):
         self.notify_observers((normal_txt, green_txt))
 
+    def confusion_matrix(self, actual_labels, predicted_labels):
+        """
+        Calculate a confusion matrix for binary classification.
+
+        Parameters:
+        - actual_labels: A list of actual labels (0 or 1).
+        - predicted_labels: A list of predicted labels (0 or 1).
+
+        Returns:
+        - A dictionary containing TP, TN, FP, FN counts.
+        """
+        assert len(actual_labels) == len(predicted_labels), "Input lists must have the same length."
+
+        tp, tn, fp, fn = 0, 0, 0, 0
+        positive_label = 'malicious'
+
+        for actual, predicted in zip(actual_labels, predicted_labels):
+            if actual == positive_label:
+                if predicted == positive_label:
+                    tp += 1
+                else:
+                    fn += 1
+            else:
+                if predicted == positive_label:
+                    fp += 1
+                else:
+                    tn += 1
+
+        return {
+            'TP': tp,
+            'TN': tn,
+            'FP': fp,
+            'FN': fn
+        }
 
     def clean_labels(self, labels: list)-> list:
         """
@@ -48,32 +81,24 @@ class Calculator(IObservable):
     def get_confusion_matrix(self):
         """
         prints the FP, FN, TP, TN of the given self.tool compared with the ground truth
+        and stores them in mem for later
         """
 
         actual: list = self.clean_labels(self.actual_labels)
         predicted: list = self.clean_labels(self.predicted_labels)
 
         # the order of labels is Negative, Positive respectively.
-        cm = confusion_matrix(actual, predicted, labels=['benign', 'malicious'])
-        # extract TP, TN, FP, FN from the confusion matrix
-        tp = cm[1, 1]
-        tn = cm[0, 0]
-        fp = cm[0, 1]
-        fn = cm[1, 0]
+        cm = self.confusion_matrix(actual, predicted)
 
-        self.log(f"{self.tool}: True Positives (TP): ", tp)
-        self.log(f"{self.tool}: True Negatives (TN): ", tn)
-        self.log(f"{self.tool}: False Positives (FP): ", fp)
-        self.log(f"{self.tool}: False Negatives (FN): ", fn)
+
+        self.log(f"{self.tool}: True Positives (TP): ", cm['TP'])
+        self.log(f"{self.tool}: True Negatives (TN): ", cm['TN'])
+        self.log(f"{self.tool}: False Positives (FP): ", cm['FP'])
+        self.log(f"{self.tool}: False Negatives (FN): ", cm['FN'])
         print()
-        
+
         # will use them later
-        self.metrics[self.tool] = {
-            'TP': tp,
-            'TN': tn,
-            'FP': fp,
-            'FN': fn
-        }
+        self.metrics[self.tool] = cm
         self.db.store_confusion_matrix(self.tool, self.metrics[self.tool])
         return self.metrics[self.tool]
 
