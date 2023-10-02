@@ -255,6 +255,24 @@ class Calculator(IObservable):
         self.log(f"{self.tool}: Accuracy: ", acc)
         return acc
 
+    def calc_all_metrics(self):
+        """
+        calls all the methods in this class
+        :return:
+        """
+        for metric in (
+            self.get_confusion_matrix,
+            self.FPR,
+            self.FNR,
+            self.TPR,
+            self.TNR,
+            self.recall,
+            self.precision,
+            self.F1,
+            self.accuracy,
+            self.MCC,
+        ):
+            metric()
 
     def __del__(self):
         self.db.close()
