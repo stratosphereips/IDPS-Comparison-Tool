@@ -306,22 +306,7 @@ class Main(IObservable):
                 # now apply this method to all supported tools
                 for tool in supported_tools:
                     # get the actual and predicted labels by the tool
-                    actual, predicted = comparer.get_labels_lists(tool)
-                    calc = Calculator(tool, actual, predicted, self.output_dir)
-                    for metric in (
-                        calc.get_confusion_matrix,
-                        calc.FPR,
-                        calc.FNR,
-                        calc.TPR,
-                        calc.TNR,
-                        calc.recall,
-                        calc.precision,
-                        calc.F1,
-                        calc.accuracy,
-                        calc.MCC,
-
-                    ):
-                        metric()
+                    Calculator(tool, comparer, self.output_dir).calc_all_metrics()
                     self.log(' ', ' ')
 
 
