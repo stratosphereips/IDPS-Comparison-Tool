@@ -10,7 +10,7 @@ class FlowByFlow(ComparisonMethod):
     def init(self):
         ...
 
-    def get_labels(self, tool: str) -> Tuple[List, List]:
+    def get_labels(self, tool: str):
         """
         yields the actual and predicted labels for each flow stored in the db
         :return: an iterator for all the flows' labels
@@ -18,5 +18,4 @@ class FlowByFlow(ComparisonMethod):
         # get the ground truth labels and the given tools' labels for all flows
         for flow in self.db.get_labels_flow_by_flow(by=tool):
             # each flow is a tuple
-            ground_truth_label, tool_label = flow
-            yield ground_truth_label, tool_label
+            yield flow
