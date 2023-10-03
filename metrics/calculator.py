@@ -49,8 +49,9 @@ class Calculator(IObservable):
 
         tp, tn, fp, fn = 0, 0, 0, 0
 
-        while labels := list(self.comparer.get_labels(self.tool)):
+        for labels in self.comparer.get_labels(self.tool):
             actual, predicted = labels
+
             actual: str = self.clean_label(actual)
             predicted: str = self.clean_label(predicted)
 
@@ -98,7 +99,7 @@ class Calculator(IObservable):
 
         # will use them later
         self.metrics[self.tool] = cm
-        self.db.store_confusion_matrix(self.tool, self.metrics[self.tool])
+        self.db.store_confusion_matrix(self.tool, self.comparer.name,  self.metrics[self.tool])
         return self.metrics[self.tool]
 
     def MCC(self):

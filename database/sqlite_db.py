@@ -57,6 +57,7 @@ class SQLiteDB(IDB):
                                   "FOREIGN KEY (label) REFERENCES flows(ground_truth)",
 
             'performance_errors': "tool TEXT, "
+                                  "comparison_type TEXT, "
                                   "TP INTEGER, "
                                   "FP INTEGER, "
                                   "TN INTEGER, "
@@ -89,14 +90,15 @@ class SQLiteDB(IDB):
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('slips', 0)")
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('suricata', 0)")
 
-    def store_confusion_matrix(self, tool, metrics: dict):
+    def store_confusion_matrix(self, tool, comparison_type: str, metrics: dict):
         """
         stores the confusion matrix of each tool in performance_errors table
         :param tool: slips or suricata
+        :param comparison_type: Per Timewindow or Flow By Flow
         :param metrics: dict with 'FP', 'FN', "TN", "TP"
         """
-        query = f'INSERT OR REPLACE INTO performance_errors (tool, TP, FP, TN, FN) VALUES (?, ?, ?, ?, ?);'
-        params = (tool, int(metrics['TP']),int(metrics['FP']), int(metrics['TN']), int(metrics['FN']))
+        query = f'INSERT OR REPLACE INTO performance_errors (tool, comparison_type, TP, FP, TN, FN) VALUES (?, ?, ?, ?, ?, ?);'
+        params = (tool, comparison_type, int(metrics['TP']),int(metrics['FP']), int(metrics['TN']), int(metrics['FN']))
         self.execute(query, params=params)
 
     def get_flows_parsed(self, tool: str):
@@ -352,7 +354,7 @@ class SQLiteDB(IDB):
             row = self.fetchone()
             if row is None:
                 break
-            yield dict(row)
+            yield row
 
     def is_tw_marked_as_malicious(self, tool: str, twid: int) -> bool:
         """
