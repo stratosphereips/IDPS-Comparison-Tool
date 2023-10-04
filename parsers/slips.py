@@ -101,6 +101,7 @@ class SlipsParser(Parser):
                  "discarding alert.")
 
 
+
     def print_stats(self):
         self.log('', "-" * 30)
         self.log(f"Total malicious labels: ", self.db.get_flows_count('slips', 'malicious'))
@@ -126,7 +127,7 @@ class SlipsParser(Parser):
 
             ts = float(ts)
             ip = ip.replace("profile_","")
-            if tw_number:= self.db.get_timewindow_of_ts(ts):
+            if tw_number := self.db.get_timewindow_of_ts(ts):
                 self.db.set_tw_label(ip, 'slips', tw_number, 'malicious')
                 return True
 
@@ -140,10 +141,7 @@ class SlipsParser(Parser):
             # │             tw 1                   │            tw 2                     │
 
             for ts in (alert['tw_start'], alert['tw_end']):
-                if not mark_tw_as_malicious(ts , alert['ip_alerted']):
-                    # we can't get the corresponding tw of an alert that was found in slips,
-                    # discard it and print a warning
-                    self.warn_about_discarded_alert(alert)
+                mark_tw_as_malicious(ts , alert['ip_alerted'])
 
 
     def parse_flow_by_flow_labels(self):
