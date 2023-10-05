@@ -89,7 +89,7 @@ class SuricataParser(Parser):
 
 
                 flow: dict = self.extract_flow(line)
-
+                original_ts = flow['timestamp']
                 timestamp = self.timestamp_handler.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                 flow['timestamp'] = timestamp
 
@@ -101,7 +101,8 @@ class SuricataParser(Parser):
                 flow = {
                     'aid' : aid,
                     'label' : label,
-                    'timestamp': timestamp
+                    'timestamp': timestamp,
+                    'original_ts': original_ts,
                     }
 
 

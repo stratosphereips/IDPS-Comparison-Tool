@@ -213,6 +213,7 @@ class SQLiteDB(IDB):
                 query = f"UPDATE labels_flow_by_flow SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
                 self.execute(query)
             else:
+                print(f"@@@@@@@@@@@@@@@@ discarded suricata flow: {flow} original_ts: {flow.get('original_ts','')}")
                 self.increase_discarded_flows(tool)
                 return False
         return True
