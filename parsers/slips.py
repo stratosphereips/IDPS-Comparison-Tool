@@ -11,7 +11,6 @@ class SlipsParser(Parser):
     name = "Slips"
     # used to lock each call to commit()
     cursor_lock = Lock()
-    discarded_tw_labels = 0
 
     def init(self,
              slips_db=None):
@@ -80,35 +79,10 @@ class SlipsParser(Parser):
                 print(f"Error executing query ({query}): {e}")
 
 
-    def warn_about_discarded_alert(self, alert: dict):
-        """
-        prints a warning when the tool i sdiscarding an alert detected by slips
-        :param alert:
-        :return:
-        """
-        self.discarded_tw_labels += 1
-        gt_start_time, gt_end_time = self.db.get_timewindows_limit()
-
-        gt_start_time = self.timestamp_handler.convert_to_human_readable(gt_start_time)
-        gt_end_time = self.timestamp_handler.convert_to_human_readable(gt_end_time)
-        slips_start_time =  self.timestamp_handler.convert_to_human_readable(alert['tw_start'])
-        slips_end_time =  self.timestamp_handler.convert_to_human_readable(alert['tw_end'])
-
-        self.log(f"Problem marking malicious tw: "
-                 f"Slips marked timewindow {alert['timewindow']} as malicious,"
-                 f"timewindow start: {slips_start_time} end: {slips_end_time}. "
-                 f"meanwhile tws in gt start at: {gt_start_time} and end at: {gt_end_time}. ",
-                 "discarding alert.")
-
-
-
     def print_stats(self):
         self.log('', "-" * 30)
         self.log(f"Total malicious labels: ", self.db.get_flows_count('slips', 'malicious'))
         self.log(f"Total benign labels: ", self.db.get_flows_count('slips', 'benign'))
-        self.log(f"Total Slips discarded timewindow labels "
-                 f"(due to inability to map the ts to an existing tw): ",
-                 self.discarded_tw_labels)
         self.log('', "-" * 30)
 
         print()
@@ -124,7 +98,6 @@ class SlipsParser(Parser):
             :param ts: timestamp of the start or end of a malicious alert
             :param ip: the source ip that was marked as malicious by slips
             """
-
             ts = float(ts)
             ip = ip.replace("profile_","")
             if tw_number := self.db.get_timewindow_of_ts(ts):
