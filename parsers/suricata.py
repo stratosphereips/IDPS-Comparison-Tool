@@ -1,8 +1,7 @@
-from utils.timewindow_handler import TimewindowHandler
 from utils.timestamp_handler import TimestampHandler
+from parsers.config import ConfigurationParser
 from utils.hash import Hash
 from abstracts.parsers import Parser
-from database.sqlite_db import SQLiteDB
 
 import json
 
@@ -18,6 +17,14 @@ class SuricataParser(Parser):
         self.hash = Hash()
         self.timestamp_handler = TimestampHandler()
         self.discarded_tw_labels = 0
+        self.read_config()
+        self.tw_start = self.db.get_timewindows_limit()[0]
+        self.tw_end = self.tw_start + self.twid_width
+
+
+    def read_config(self):
+        config = ConfigurationParser('config.yaml')
+        self.twid_width = float(config.timewindow_width())
 
     def extract_flow(self, line: str) -> dict:
         """
@@ -46,17 +53,18 @@ class SuricataParser(Parser):
 
         return flow
 
-    def label_malicious_tw(self, ts, srcip):
+    def label_tw(self, ts: float, srcip: str, label: str):
         """
         sets the label of the twid where the given ts exists as malicious by suricata
         :param ts: current flow timestamp
-        :param srcip: src ip marked as malicious
+        :param label: malicious or benign
         :return:
         """
         # if 1 flow is malicious, mark the whole tw as malicious by suricata
         # map this suricata flow to one of the existing(gt) timewindows
         if tw := self.db.get_timewindow_of_ts(ts):
-            self.db.set_tw_label(srcip, 'suricata', tw, 'malicious')
+            print(f"@@@@@@@@@@@@@@@@ tw number: {tw}")
+            self.db.set_tw_label(srcip, 'suricata', tw, label)
             return True
 
     def warn_about_discarded_alert(self, ts):
@@ -122,13 +130,23 @@ class SuricataParser(Parser):
                 # if a flow is not stored in the db, it's because it
                 # was found in suricata but not in the gt
                 if self.db.store_flow(flow, 'suricata'):
+                    if self.is_first_flow:
+                        # set the first tw as benign by default
+                        self.label_tw(timestamp, line['src_ip'], 'benign')
+
                     flows_count += 1
                     # used for printing the stats in the main.py
                     self.db.store_flows_count('suricata', flows_count)
 
+                    if flow['timestamp'] > self.tw_end:
+                        # this is a new tw. add the label for it in the db
+                        self.label_tw(timestamp, line['src_ip'], 'benign')
+                        # update the start and end of this tw
+                        self.tw_start = self.tw_end
+                        self.tw_end = self.tw_start + self.twid_width
+
                     if 'malicious' in label.lower():
-                        if not self.label_malicious_tw(timestamp, line['src_ip']):
-                            self.warn_about_discarded_alert(timestamp)
+                        self.label_tw(timestamp, line['src_ip'], 'malicious')
 
             self.print_stats()
 
