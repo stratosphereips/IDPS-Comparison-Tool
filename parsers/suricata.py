@@ -16,7 +16,6 @@ class SuricataParser(Parser):
         self.is_first_flow = True
         self.hash = Hash()
         self.timestamp_handler = TimestampHandler()
-        self.discarded_tw_labels = 0
         self.read_config()
         self.tw_start = self.db.get_timewindows_limit()[0]
         self.tw_end = self.tw_start + self.twid_width
@@ -63,35 +62,14 @@ class SuricataParser(Parser):
         # if 1 flow is malicious, mark the whole tw as malicious by suricata
         # map this suricata flow to one of the existing(gt) timewindows
         if tw := self.db.get_timewindow_of_ts(ts):
-            print(f"@@@@@@@@@@@@@@@@ tw number: {tw}")
             self.db.set_tw_label(srcip, 'suricata', tw, label)
             return True
 
-    def warn_about_discarded_alert(self, ts):
-        """
-        prints a warning when the tool is discarding an alert detected by suricata
-        :param ts: ts of the alert found
-        """
-        self.discarded_tw_labels += 1
-        gt_start_time, gt_end_time = self.db.get_timewindows_limit()
-
-        gt_start_time = self.timestamp_handler.convert_to_human_readable(gt_start_time)
-        gt_end_time = self.timestamp_handler.convert_to_human_readable(gt_end_time)
-        ts = self.timestamp_handler.convert_to_human_readable(ts)
-
-        self.log(f"Problem marking malicious tw: "
-                 f"Suricata marked a flow at {ts} as malicious, "
-                 f"this flow doesn't belong to any registered timewindow by the ground truth. "
-                 f"timewindows in gt start at: {gt_start_time} and end at: {gt_end_time}. ",
-                 "discarding alert.")
 
     def print_stats(self):
         self.log('', "-" * 30)
         self.log(f"Total malicious labels: ", self.db.get_flows_count('suricata', 'malicious'))
         self.log(f"Total benign labels: ", self.db.get_flows_count('suricata', 'benign'))
-        self.log(f"Total Suricata discarded timewindow labels "
-                 f"(due to inability to map the ts to an existing current tw): ",
-                 self.discarded_tw_labels )
         self.log('', "-" * 30)
 
         print()

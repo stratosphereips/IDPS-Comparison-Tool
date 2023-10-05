@@ -205,6 +205,9 @@ class SQLiteDB(IDB):
             # this flow is read by a tool, not the gt
             # if the gt doesn't have the aid of this flow, we discard it
             if exists:
+                # this flow is read by slips or suricata AND was read by one of them or the gt before
+                # now we update this flow's label to the latest label seen in the eve.json or the slips db
+                # TODO write this in the docs
                 # can be slips_vxxx_label or suricata_vxxx_label
                 label_col: str = self.labels_map[tool]
                 query = f"UPDATE labels_flow_by_flow SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
