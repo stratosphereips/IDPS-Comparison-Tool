@@ -95,21 +95,28 @@ class SQLiteDB(IDB):
         self.init_discarded_flows_table()
 
 
-
     def init_discarded_flows_table(self):
         # init the count of discarded_flows
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('slips', 0)")
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('suricata', 0)")
 
-    def store_confusion_matrix(self, tool, comparison_type: str, metrics: dict):
+
+    def store_performance_errors_per_tw(self, ip: str, tw: int, tool: str, cm: dict):
         """
-        stores the confusion matrix of each tool in performance_errors table
+        stores the performance errors of each tool in performance_errors_per_tw table
+        :param ip: the ip that was labeled by the given tool
+        :param tw: the tw in which this ip wa slabeled
         :param tool: slips or suricata
-        :param comparison_type: Per Timewindow or Flow By Flow
-        :param metrics: dict with 'FP', 'FN', "TN", "TP"
+        :param cm: dict with tp tn fp and fp. if a value is not there we store itin the db as 0
         """
-        query = f'INSERT OR REPLACE INTO performance_errors (tool, comparison_type, TP, FP, TN, FN) VALUES (?, ?, ?, ?, ?, ?);'
-        params = (tool, comparison_type, int(metrics['TP']),int(metrics['FP']), int(metrics['TN']), int(metrics['FN']))
+        query = f"INSERT INTO performance_errors_per_tw " \
+                f"(ip, timewindow, tool, TP, FP, TN, FN) " \
+                f"VALUES (?, ?, ?, ?, ?, ?, ?)"
+        params = (ip, tw, tool,
+                  int(cm.get("TP", 0)),
+                  int(cm.get("FP", 0)),
+                  int(cm.get("TN", 0)),
+                  int(cm.get("FN", 0)))
         self.execute(query, params=params)
 
     def get_flows_parsed(self, tool: str):
