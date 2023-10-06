@@ -26,6 +26,7 @@ class Main(IObservable):
     starttime = time()
     args = ArgsParser().args
     stop_stats_thread = False
+    supported_tools = ('slips', 'suricata')
 
     def __init__(self):
         # call the IObservable() init
@@ -241,15 +242,19 @@ class Main(IObservable):
                 metric()
             self.log(' ', ' ')
 
-    def calc_metrics(self,
-            comparer,
-            tool: str,
-    ):
-        """
-        runs all calculator methods using the given method (comparer obj) on the given tool
-        :param comparer: obj of FlowByFlow class or PerTimewindow class
-        :param tool: slips or suricata
-        """
+
+    def handle_flow_by_flow_comparison(self):
+        comparer = FlowByFlow(self.output_dir)
+
+        self.log('', "-" * 30)
+        self.log("Comparison method: ", comparer.name)
+        self.log(' ', ' ')
+
+        # now apply this method to all supported tools
+        for tool in self.supported_tools:
+            # get the actual and predicted labels by the tool
+            Calculator(tool, comparer, self.output_dir).calc_all_metrics()
+            self.log(' ', ' ')
 
 
     def main(self):
@@ -280,13 +285,11 @@ class Main(IObservable):
             self.log(f"Total flows read by parsers (doesn't include discarded flows): ",'')
             self.db.print_table('flows_count')
 
-            supported_tools = ('slips', 'suricata')
 
             self.log(' ', ' ')
             self.log("Flows are discarded when they're found in a tool but not in the ground truth", '')
-            for tool in supported_tools:
+            for tool in self.supported_tools:
                 self.print_flows_parsed_vs_discarded(tool)
-
 
             # before calculating anything, fill out the missing labels with benign
             self.db.fill_null_labels()
@@ -295,20 +298,7 @@ class Main(IObservable):
 
             self.log(' ', ' ')
 
-            for comparison_method in (FlowByFlow, PerTimewindow):
-                # create an obj of the helper class sresponsible for handling this type of comparison
-                comparer = comparison_method(self.output_dir)
-
-                self.log('', "-" * 30)
-                self.log("Comparison method: ", comparer.name)
-                self.log(' ', ' ')
-
-                # now apply this method to all supported tools
-                for tool in supported_tools:
-                    # get the actual and predicted labels by the tool
-                    Calculator(tool, comparer, self.output_dir).calc_all_metrics()
-                    self.log(' ', ' ')
-
+            self.handle_flow_by_flow_comparison()
 
         self.db.close()
 
