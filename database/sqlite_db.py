@@ -100,6 +100,20 @@ class SQLiteDB(IDB):
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('slips', 0)")
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('suricata', 0)")
 
+    def store_confusion_matrix(self, tool,  metrics: dict):
+        """
+        stores the confusion matrix of each tool in performance_errors_flow_by_flow table
+        :param tool: slips or suricata
+        :param comparison_type: Per Timewindow or Flow By Flow
+        :param metrics: dict with 'FP', 'FN', "TN", "TP"
+        """
+        #TODO this shouldnt be called from the calculator!
+        # should be called from flowbyflow lass
+        query = f'INSERT OR REPLACE INTO performance_errors_flow_by_flow ' \
+                f'(tool, TP, FP, TN, FN) ' \
+                f'VALUES (?, ?, ?, ?, ?);'
+        params = (tool, int(metrics['TP']), int(metrics['FP']), int(metrics['TN']), int(metrics['FN']))
+        self.execute(query, params=params)
 
     def store_performance_errors_per_tw(self, ip: str, tw: int, tool: str, cm: dict):
         """
