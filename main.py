@@ -1,8 +1,7 @@
 import os
 import sys
 from threading import Thread
-from typing import Tuple, List
-from typing import Optional
+from typing import Tuple, List, Iterator, Optional
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
 from parsers.cm_db import ConfusionMatrixDBParser
@@ -244,8 +243,6 @@ class Main(IObservable):
 
 
     def handle_flow_by_flow_comparison(self):
-        #TODO handle this
-        return
         comparer = FlowByFlow(self.output_dir)
 
         self.log('', "-" * 30)
@@ -255,16 +252,19 @@ class Main(IObservable):
         # now apply this method to all supported tools
         for tool in self.supported_tools:
             # get the actual and predicted labels by the tool
-            Calculator(tool, comparer, self.output_dir).calc_all_metrics()
+            calc = Calculator(tool, self.output_dir)
+            labels: Iterator = comparer.get_labels(tool)
+            calc.get_confusion_matrix(labels)
+            calc.calc_all_metrics()
             self.log(' ', ' ')
 
     def handle_per_tw_comparison(self):
-        #TODO this should be moved to the per tw.py
-        comparer = FlowByFlow(self.output_dir)
+        comparer = PerTimewindow(self.output_dir)
 
         self.log('', "-" * 30)
         self.log("Comparison method: ", comparer.name)
         self.log(' ', ' ')
+        #TODO what to log per tw?
 
         # now apply this method to all supported tools
         for tool in self.supported_tools:
@@ -272,7 +272,7 @@ class Main(IObservable):
             for row in  self.db.get_all_labels_per_all_tws(tool):
                 # each row is (ip, tw , gt_label, tool_label)
                 ip, tw , gt_label, tool_label = row
-                cm: dict = calc.get_confusion_matrix([(gt_label, tool_label)])
+                cm: dict = calc.get_confusion_matrix([(gt_label, tool_label)], log=False)
                 self.db.store_performance_errors_per_tw(ip, tw, tool, cm)
 
         comparer.print_stats()
@@ -318,7 +318,7 @@ class Main(IObservable):
 
             self.log(' ', ' ')
 
-            # self.handle_flow_by_flow_comparison()
+            self.handle_flow_by_flow_comparison()
             self.handle_per_tw_comparison()
 
         self.db.close()
