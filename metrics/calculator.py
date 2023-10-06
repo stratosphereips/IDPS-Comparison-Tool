@@ -99,10 +99,6 @@ class Calculator(IObservable):
 
         # will use them later
         self.metrics[self.tool] = cm
-
-        # TODO this shouldnt be called here
-        # self.db.store_confusion_matrix(self.tool, self.metrics[self.tool])
-
         return cm
 
     def MCC(self):

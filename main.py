@@ -253,8 +253,11 @@ class Main(IObservable):
         for tool in self.supported_tools:
             # get the actual and predicted labels by the tool
             calc = Calculator(tool, self.output_dir)
+
             labels: Iterator = comparer.get_labels(tool)
-            calc.get_confusion_matrix(labels)
+            cm: dict = calc.get_confusion_matrix(labels)
+            self.db.store_performance_errors_flow_by_flow(tool, cm)
+
             calc.calc_all_metrics()
             self.log(' ', ' ')
 

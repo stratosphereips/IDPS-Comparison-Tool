@@ -100,7 +100,7 @@ class SQLiteDB(IDB):
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('slips', 0)")
         self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('suricata', 0)")
 
-    def store_confusion_matrix(self, tool,  metrics: dict):
+    def store_performance_errors_flow_by_flow(self, tool, metrics: dict):
         """
         stores the confusion matrix of each tool in performance_errors_flow_by_flow table
         :param tool: slips or suricata
@@ -132,6 +132,7 @@ class SQLiteDB(IDB):
                   int(cm.get("TN", 0)),
                   int(cm.get("FN", 0)))
         self.execute(query, params=params)
+
 
     def get_flows_parsed(self, tool: str):
         """reads the number of flows parsed so far by tool from the flows_count table"""
