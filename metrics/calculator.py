@@ -76,12 +76,12 @@ class Calculator(IObservable):
         """
         return 'benign' if label is None else label
 
-    def get_confusion_matrix(self, labels):
+    def get_confusion_matrix(self, labels, log=True):
         """
         prints the FP, FN, TP, TN of the given self.tool compared with the ground truth
         and stores them in mem for later
         by default we're expecting the comparer.get_labels to return an interator, if not,
-        :param labels:
+        :param labels: a  list of tuples [(actual, predicted)] ,, or an iterator of tuples
         """
         # labels can be a list of tuples or an iterator
         if type(labels) == list:
@@ -90,18 +90,20 @@ class Calculator(IObservable):
         # the order of labels is Negative, Positive respectively.
         cm = self.confusion_matrix(labels)
 
-
-        self.log(f"{self.tool}: True Positives (TP): ", cm['TP'])
-        self.log(f"{self.tool}: True Negatives (TN): ", cm['TN'])
-        self.log(f"{self.tool}: False Positives (FP): ", cm['FP'])
-        self.log(f"{self.tool}: False Negatives (FN): ", cm['FN'])
-        print()
+        if log:
+            self.log(f"{self.tool}: True Positives (TP): ", cm['TP'])
+            self.log(f"{self.tool}: True Negatives (TN): ", cm['TN'])
+            self.log(f"{self.tool}: False Positives (FP): ", cm['FP'])
+            self.log(f"{self.tool}: False Negatives (FN): ", cm['FN'])
+            print()
 
         # will use them later
         self.metrics[self.tool] = cm
-        #TODO this shouldnt be called here
+
+        # TODO this shouldnt be called here
         # self.db.store_confusion_matrix(self.tool, self.metrics[self.tool])
-        return self.metrics[self.tool]
+
+        return cm
 
     def MCC(self):
         """
@@ -133,7 +135,7 @@ class Calculator(IObservable):
             self.get_confusion_matrix()
 
         if self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FN'] == 0:
-            self.log(f"Can't get recall of {self.tool} because TP+FN of {self.tool} is: "," 0")
+            # self.log(f"Can't get recall of {self.tool} because TP+FN of {self.tool} is: "," 0")
             recall = 0
         else:
             recall = self.metrics[self.tool]['TP']/(self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FN'])
@@ -263,7 +265,6 @@ class Calculator(IObservable):
         :return:
         """
         for metric in (
-            self.get_confusion_matrix,
             self.FPR,
             self.FNR,
             self.TPR,
