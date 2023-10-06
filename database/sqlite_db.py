@@ -341,20 +341,25 @@ class SQLiteDB(IDB):
         tw = self.select('labels_per_tw', 'MAX(timewindow)', fetch='one')
         return int(tw[0])
 
-    def get_labels_per_tw(self, tw: int, by='all') -> Iterator[str]:
-        """
-        returns all ground truth and tools' labels per tw for all ips
-        :param tw: timewindow number to get all the labels in
-        :param by: do we want the labels for all tools? slips only? or suricata only?
-        """
-        if by == 'all':
-            cols = '*'
-        else:
-            label_col = self.labels_map[by]
-            cols = f'ground_truth_label, {label_col}'
 
-        # don't use select() here, we'll fetch one by one
-        self.execute(f"SELECT {cols} from labels_per_tw WHERE timewindow = {tw}")
+    def get_all_labels_per_all_tws(self, tool: str) -> Iterator[str]:
+        """
+        GT labels and all tools' labels are stored in the labels_per_tw table
+
+        this method returns an iterator that iterates through all the rows in
+         the labels_per_tw table
+        and returns the GT label + the given tool's label along with the IP and tw
+        :param tool: slips or suricata
+        :return: reurns an iterator that iterates through all rows by
+        the given tool in the labels_per_Tw table
+        return value looks like this
+        [(IP, tw, gt_label, tool_label),(..),(..)]
+        """
+        label_col = self.labels_map[tool]
+        cols = f'IP, timewindow, ground_truth_label, {label_col}'
+
+        # IMPORTANT: don't use select() here, we'll fetch one by one
+        self.execute(f"SELECT {cols} from labels_per_tw ")
 
         while True:
             row = self.fetchone()
