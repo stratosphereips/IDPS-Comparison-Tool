@@ -57,12 +57,11 @@ class SQLiteDB(IDB):
                                   "FOREIGN KEY (aid) REFERENCES flows(aid), "
                                   "FOREIGN KEY (label) REFERENCES flows(ground_truth)",
 
-            'performance_errors': "tool TEXT, "
-                                  "comparison_type TEXT, "
-                                  "TP INTEGER, "
-                                  "FP INTEGER, "
-                                  "TN INTEGER, "
-                                  "FN INTEGER",
+            'performance_errors_flow_by_flow': "tool TEXT, "
+                                               "TP INTEGER, "
+                                               "FP INTEGER, "
+                                               "TN INTEGER, "
+                                               "FN INTEGER",
             'discarded_flows': "tool TEXT, "
                                "count INTEGER DEFAULT 0 ",
 
@@ -73,11 +72,22 @@ class SQLiteDB(IDB):
             # this table will be used to store all the tools' labels per IP per timewindow, not flow by flow
             # the combination of these 2 cols (IP, timewindow) are the primary key, they have to be unique combined
             'labels_per_tw': f"IP TEXT NOT NULL, "
-                             f"timewindow TEXT NOT NULL, "
+                             f"timewindow INTEGER NOT NULL, "
                              f"ground_truth_label TEXT, "
                              f"{self.slips_label_col} TEXT,  "
                              f"{self.suricata_label_col} TEXT,"
                              f"CONSTRAINT PK_interval PRIMARY KEY (IP, timewindow)",
+
+            # there cannot be duplicate ip+tw+tool
+            # this table stores the TP, tn FP fn per ip per tw per tool :D
+            'performance_errors_per_tw': "IP TEXT NOT NULL, "
+                                         "timewindow INTEGER NOT NULL, "
+                                         "tool INTEGER NOT NULL, "
+                                         "TP INTEGER, "
+                                         "FP INTEGER, "
+                                         "TN INTEGER, "
+                                         "FN INTEGER, "
+                                         "CONSTRAINT PK_interval PRIMARY KEY (IP, timewindow, tool)",
 
             }
         for table_name, schema in table_schema.items():
