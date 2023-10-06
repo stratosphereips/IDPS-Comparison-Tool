@@ -223,22 +223,12 @@ class Main(IObservable):
             self.output_dir,
             db_full_path=self.args.confusion_matrix_db).parse()
 
+        #todo update this method and test it
         for tool in ('slips', 'suricata'):
             # dont pass the calc lists with actual and predicted data as the cm is already calculated
-            calc = Calculator(tool, [],[], self.output_dir)
+            calc = Calculator(tool, self.output_dir)
             calc.metrics = cm
-            for metric in (
-                calc.FPR,
-                calc.FNR,
-                calc.TPR,
-                calc.TNR,
-                calc.recall,
-                calc.precision,
-                calc.F1,
-                calc.accuracy,
-                calc.MCC,
-            ):
-                metric()
+            calc.calc_all_metrics()
             self.log(' ', ' ')
 
 
@@ -267,7 +257,7 @@ class Main(IObservable):
         self.log('', "-" * 30)
         self.log("Comparison method: ", comparer.name)
         self.log(' ', ' ')
-        #TODO what to log per tw?
+        # TODO what to log per tw?
 
         # now apply this method to all supported tools
         for tool in self.supported_tools:
