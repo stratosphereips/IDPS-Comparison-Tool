@@ -2,7 +2,7 @@ from database.sqlite_db import SQLiteDB
 from termcolor import colored
 from os import path
 from math import sqrt
-from typing import Optional
+from typing import Optional, Iterator
 from abstracts.observer import IObservable
 from logger.logger import Logger
 
@@ -12,9 +12,8 @@ class Calculator(IObservable):
     metrics = {}
 
     def __init__(self,
-                 tool,
-                 comparer,
-                 output_dir: str
+                 tool: str,
+                 output_dir: str,
                  ):
         super(Calculator, self).__init__()
 
@@ -27,21 +26,17 @@ class Calculator(IObservable):
         assert tool in ['slips', 'suricata'], f'Trying to get metrics of an invalid tool: {tool}'
         self.tool = tool
 
-        # this is an instance of any class from the comparisons/ dir
-        self.comparer = comparer
-
 
     def log(self, green_txt, normal_txt):
         self.notify_observers((normal_txt, green_txt))
 
-    def confusion_matrix(self):
+    def confusion_matrix(self, labels: Iterator):
         """
         Calculate a confusion matrix for binary classification.
 
         Parameters:
         - actual_labels: A list of actual labels (0 or 1).
         - predicted_labels: A list of predicted labels (0 or 1).
-
         Returns:
         - A dictionary containing TP, TN, FP, FN counts.
         """
@@ -49,9 +44,8 @@ class Calculator(IObservable):
 
         tp, tn, fp, fn = 0, 0, 0, 0
 
-        for labels in self.comparer.get_labels(self.tool):
-            actual, predicted = labels
-
+        for set_ in labels:
+            actual, predicted = set_
             actual: str = self.clean_label(actual)
             predicted: str = self.clean_label(predicted)
 
@@ -82,13 +76,19 @@ class Calculator(IObservable):
         """
         return 'benign' if label is None else label
 
-    def get_confusion_matrix(self):
+    def get_confusion_matrix(self, labels):
         """
         prints the FP, FN, TP, TN of the given self.tool compared with the ground truth
         and stores them in mem for later
+        by default we're expecting the comparer.get_labels to return an interator, if not,
+        :param labels:
         """
+        # labels can be a list of tuples or an iterator
+        if type(labels) == list:
+            labels = iter(labels)
+
         # the order of labels is Negative, Positive respectively.
-        cm = self.confusion_matrix()
+        cm = self.confusion_matrix(labels)
 
 
         self.log(f"{self.tool}: True Positives (TP): ", cm['TP'])
@@ -99,7 +99,8 @@ class Calculator(IObservable):
 
         # will use them later
         self.metrics[self.tool] = cm
-        self.db.store_confusion_matrix(self.tool, self.comparer.name,  self.metrics[self.tool])
+        #TODO this shouldnt be called here
+        # self.db.store_confusion_matrix(self.tool, self.metrics[self.tool])
         return self.metrics[self.tool]
 
     def MCC(self):
