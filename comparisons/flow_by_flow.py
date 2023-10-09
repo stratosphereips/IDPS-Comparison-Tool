@@ -26,7 +26,6 @@ class FlowByFlow(ComparisonMethod):
             labels: Iterator = self.get_labels(tool)
             cm: dict = calc.get_confusion_matrix(labels)
             self.db.store_performance_errors_flow_by_flow(tool, cm)
-
             calc.calc_all_metrics()
             self.log(' ', ' ')
 

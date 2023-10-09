@@ -126,9 +126,6 @@ class Calculator(IObservable):
         """
         prints the recall of the given tool compared with the ground truth
         """
-        # make sure we have the fp and tn of this store calculated already
-        if  self.tool not in self.metrics:
-            self.get_confusion_matrix()
 
         if self.metrics['TP'] + self.metrics['FN'] == 0:
             # self.log(f"Can't get recall of {self.tool} because TP+FN of {self.tool} is: "," 0")
@@ -145,9 +142,6 @@ class Calculator(IObservable):
         """
         prints the precision of the given tool compared with the ground truth
         """
-        # make sure we have the fp and tn of this store calculated already
-        if  self.tool not in self.metrics:
-            self.get_confusion_matrix()
 
         if self.metrics['TP'] + self.metrics['FP'] == 0:
             precision = 0
@@ -163,9 +157,6 @@ class Calculator(IObservable):
         """
         prints the F1 of the given tool
         """
-        if self.tool not in self.metrics:
-            self.get_confusion_matrix()
-
 
         precision = self.metrics['precision']
         recall = self.metrics['recall']
@@ -185,9 +176,6 @@ class Calculator(IObservable):
         :param log: logs the output to cli if set to true, we set it to false when we're using this function inside another one
         :return: float
         """
-        # make sure we have the fp and tn of this store calculated already
-        if not self.tool in self.metrics:
-            self.get_confusion_matrix()
 
         if self.metrics['FP'] + self.metrics['TN'] == 0:
             fpr = 0
