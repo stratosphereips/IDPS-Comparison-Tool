@@ -10,7 +10,8 @@ class ComparisonMethod(ABC):
                  output_dir,
                  **kwargs):
         Process.__init__(self)
-        self.db = SQLiteDB(output_dir)
+        self.output_dir = output_dir
+        self.db = SQLiteDB(self.output_dir)
         self.init(**kwargs)
 
     @abstractmethod

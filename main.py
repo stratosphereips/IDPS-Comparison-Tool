@@ -232,26 +232,10 @@ class Main(IObservable):
             self.log(' ', ' ')
 
 
-    def handle_flow_by_flow_comparison(self):
-        comparer = FlowByFlow(self.output_dir)
-
-        self.log('', "-" * 30)
-        self.log("Comparison method: ", comparer.name)
-        self.log(' ', ' ')
-
-        # now apply this method to all supported tools
-        for tool in self.supported_tools:
-            # get the actual and predicted labels by the tool
-            calc = Calculator(tool, self.output_dir)
-
-            labels: Iterator = comparer.get_labels(tool)
-            cm: dict = calc.get_confusion_matrix(labels)
-            self.db.store_performance_errors_flow_by_flow(tool, cm)
-
-            calc.calc_all_metrics()
-            self.log(' ', ' ')
 
     def handle_per_tw_comparison(self):
+        #TODO move this to per tw class
+
         comparer = PerTimewindow(self.output_dir)
 
         self.log('', "-" * 30)
@@ -311,8 +295,8 @@ class Main(IObservable):
 
             self.log(' ', ' ')
 
-            self.handle_flow_by_flow_comparison()
-            self.handle_per_tw_comparison()
+            FlowByFlow(self.output_dir).handle_flow_by_flow_comparison()
+            PerTimewindow(self.output_dir).handle_per_tw_comparison()
 
         self.db.close()
 

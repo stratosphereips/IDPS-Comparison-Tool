@@ -1,33 +1,38 @@
-from typing import Tuple, List
-from database.sqlite_db import SQLiteDB
 from abstracts.comparison_methods import ComparisonMethod
-
+from metrics.calculator import Calculator
 
 class PerTimewindow(ComparisonMethod):
     """
     responsible for grouping helper methods used for timewindow comparison of tools
     """
     name = "Per Timewindow"
+    supported_tools = ('slips', 'suricata')
     def init(self):
         self.last_registered_tw: int = self.db.get_last_registered_timewindow()
+
 
     def print_stats(self):
         self.log(f"Total registered timewindows by the ground truth: "
                  f"{self.last_registered_tw+ 1}. ",
                  f"from 0-{self.last_registered_tw}")
-        print()
 
-    def get_labels(self, tool: str) -> Tuple[List, List]:
-        """
-        parses the labels from the db and returns actual and predicted labels list for the given tool
-        :return: a tuple with 2 lists, first is actual, second is predicted labels
-        """
+    def handle_per_tw_comparison(self):
 
-        for tw in range(self.last_registered_tw +1):
-            for row in self.db.get_labels_per_tw(tw, by=tool):
-                # Each detection per TW is represented by 1 label in the actual and 1 label in the predicted list
-                # if 1 IP is detected in 7 tws, this detection will be represented by 7 different values in
-                yield row
+
+        self.log('', "-" * 30)
+        self.log("Comparison method: ", self.name)
+        self.log(' ', ' ')
+        # TODO what to log per tw?
+
+        # now apply this method to all supported tools
+        for tool in self.supported_tools:
+            calc = Calculator(tool, self.output_dir)
+            for row in  self.db.get_all_labels_per_all_tws(tool):
+                # each row is (ip, tw , gt_label, tool_label)
+                ip, tw , gt_label, tool_label = row
+                cm: dict = calc.get_confusion_matrix([(gt_label, tool_label)], log=False)
+                self.db.store_performance_errors_per_tw(ip, tw, tool, cm)
+
         self.print_stats()
 
 
