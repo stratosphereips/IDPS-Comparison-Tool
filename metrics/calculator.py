@@ -98,21 +98,21 @@ class Calculator(IObservable):
             print()
 
         # will use them later
-        self.metrics[self.tool] = cm
+        self.metrics = cm
         return cm
 
     def MCC(self):
         """
         Calculates the Matthews correlation coefficient (MCC) for a given tool
         """
-        numerator = self.metrics[self.tool]['TP'] * self.metrics[self.tool]['TN'] \
-                    - self.metrics[self.tool]['FP'] * self.metrics[self.tool]['FN']
+        numerator = self.metrics['TP'] * self.metrics['TN'] \
+                    - self.metrics['FP'] * self.metrics['FN']
 
         denominator = sqrt(
-            (self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FP'])
-            * (self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FN'])
-            * (self.metrics[self.tool]['TN'] + self.metrics[self.tool]['FP'])
-            * (self.metrics[self.tool]['TN'] + self.metrics[self.tool]['FN'])
+            (self.metrics['TP'] + self.metrics['FP'])
+            * (self.metrics['TP'] + self.metrics['FN'])
+            * (self.metrics['TN'] + self.metrics['FP'])
+            * (self.metrics['TN'] + self.metrics['FN'])
         )
 
         if denominator == 0:
@@ -130,13 +130,13 @@ class Calculator(IObservable):
         if  self.tool not in self.metrics:
             self.get_confusion_matrix()
 
-        if self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FN'] == 0:
+        if self.metrics['TP'] + self.metrics['FN'] == 0:
             # self.log(f"Can't get recall of {self.tool} because TP+FN of {self.tool} is: "," 0")
             recall = 0
         else:
-            recall = self.metrics[self.tool]['TP']/(self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FN'])
+            recall = self.metrics['TP']/(self.metrics['TP'] + self.metrics['FN'])
 
-        self.metrics[self.tool].update({'recall': recall})
+        self.metrics.update({'recall': recall})
         self.log(f"{self.tool}: recall: ", recall)
         return recall
 
@@ -149,13 +149,13 @@ class Calculator(IObservable):
         if  self.tool not in self.metrics:
             self.get_confusion_matrix()
 
-        if self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FP'] == 0:
+        if self.metrics['TP'] + self.metrics['FP'] == 0:
             precision = 0
         else:
-            precision = self.metrics[self.tool]['TP']/(self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FP'])
+            precision = self.metrics['TP']/(self.metrics['TP'] + self.metrics['FP'])
 
 
-        self.metrics[self.tool].update({'precision': precision})
+        self.metrics.update({'precision': precision})
         self.log(f"{self.tool}: precision: ", precision)
         return precision
 
@@ -167,8 +167,8 @@ class Calculator(IObservable):
             self.get_confusion_matrix()
 
 
-        precision = self.metrics[self.tool]['precision']
-        recall = self.metrics[self.tool]['recall']
+        precision = self.metrics['precision']
+        recall = self.metrics['recall']
         if precision + recall == 0:
             f1 = 0
         else:
@@ -189,10 +189,10 @@ class Calculator(IObservable):
         if not self.tool in self.metrics:
             self.get_confusion_matrix()
 
-        if self.metrics[self.tool]['FP'] + self.metrics[self.tool]['TN'] == 0:
+        if self.metrics['FP'] + self.metrics['TN'] == 0:
             fpr = 0
         else:
-            fpr = self.metrics[self.tool]['FP']/(self.metrics[self.tool]['FP'] + self.metrics[self.tool]['TN'])
+            fpr = self.metrics['FP']/(self.metrics['FP'] + self.metrics['TN'])
 
         if log:
             self.log(f"{self.tool}: FPR: ", fpr)
@@ -206,10 +206,10 @@ class Calculator(IObservable):
         :param log: logs the output to cli if set to true, we set it to false when we're using this function inside another one
         :return: float
         """
-        if self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FN'] == 0:
+        if self.metrics['TP'] + self.metrics['FN'] == 0:
             tpr = 0
         else:
-            tpr = self.metrics[self.tool]['TP'] / (self.metrics[self.tool]['TP'] + self.metrics[self.tool]['FN'])
+            tpr = self.metrics['TP'] / (self.metrics['TP'] + self.metrics['FN'])
         if log:
             self.log(f"{self.tool}: TPR: ", tpr)
         return tpr
@@ -240,13 +240,13 @@ class Calculator(IObservable):
         """
         :return: float
         """
-        numerator = self.metrics[self.tool]['TP'] + \
-                    self.metrics[self.tool]['TN']
+        numerator = self.metrics['TP'] + \
+                    self.metrics['TN']
 
-        denominator = self.metrics[self.tool]['TP'] + \
-                      self.metrics[self.tool]['TN'] + \
-                      self.metrics[self.tool]['FP'] + \
-                      self.metrics[self.tool]['FN']
+        denominator = self.metrics['TP'] + \
+                      self.metrics['TN'] + \
+                      self.metrics['FP'] + \
+                      self.metrics['FN']
         if denominator == 0:
             acc = 0
         else:
@@ -258,7 +258,6 @@ class Calculator(IObservable):
     def calc_all_metrics(self):
         """
         calls all the methods in this class
-        :return:
         """
         for metric in (
             self.FPR,
