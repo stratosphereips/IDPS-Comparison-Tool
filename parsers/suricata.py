@@ -126,8 +126,6 @@ class SuricataParser(Parser):
 
                     if 'malicious' in label.lower():
                         self.label_tw(timestamp, line['src_ip'], 'malicious')
-                else:
-                    self.log(f"@@@@@@@@@@@@@@@@ discarded suricata flow: {flow} original_ts: {flow.get('original_ts', '')}",'')
 
             self.print_stats()
 

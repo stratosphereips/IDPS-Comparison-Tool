@@ -107,8 +107,6 @@ class SQLiteDB(IDB):
         :param comparison_type: Per Timewindow or Flow By Flow
         :param metrics: dict with 'FP', 'FN', "TN", "TP"
         """
-        #TODO this shouldnt be called from the calculator!
-        # should be called from flowbyflow lass
         query = f'INSERT OR REPLACE INTO performance_errors_flow_by_flow ' \
                 f'(tool, TP, FP, TN, FN) ' \
                 f'VALUES (?, ?, ?, ?, ?);'
