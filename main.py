@@ -40,26 +40,42 @@ class Main(IObservable):
         self.add_metadata()
         self.log(f"Storing results in: ", self.results_path)
 
+    def prep_given_output_dir(self):
+        """
+        handles the -o arg
+        by clearing the given output dir if it's there,
+        or creating it if it's not.
+        """
+        if not os.path.exists(self.args.output_dir):
+            os.makedirs(self.args.output_dir)
+            return
+
+        files_in_the_dir = os.listdir(self.args.output_dir)
+        if len(files_in_the_dir) == 0 :
+            # dir already empty
+            return
+
+        self.log(f"Overwriting all files in {self.args.output_dir}",'')
+        # delete all old files in the output dir
+        for file in files_in_the_dir:
+            file_path = os.path.join(self.args.output_dir, file)
+            with suppress(Exception):
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    rmtree(file_path)
 
     def setup_output_dir(self):
-        output_dir = 'output/'
-        current_datetime = datetime.datetime.now()
-        output_dir = os.path.join(output_dir, current_datetime.strftime('%Y-%m-%d-%H:%M:%S') + '/')
-
-        # todo add support for -o
-        # delete all old files in the output dir
-        if os.path.exists(output_dir):
-            # this will be used when -o is supported
-            self.log(f"Overwriting all files in {output_dir}",'')
-            for file in os.listdir(output_dir):
-                file_path = os.path.join(output_dir, file)
-                with suppress(Exception):
-                    if os.path.isfile(file_path):
-                        os.remove(file_path)
-                    elif os.path.isdir(file_path):
-                        rmtree(file_path)
+        if self.args.output_dir:
+            # -o is given
+            self.prep_given_output_dir()
+            output_dir: str = self.args.output_dir
         else:
+            # -o isn't given, prep an output dir
+            current_datetime = datetime.datetime.now()
+            output_dir = os.path.join('output/', f"{current_datetime.strftime('%Y-%m-%d-%H:%M:%S')}/")
             os.makedirs(output_dir)
+
         self.log(f"Storing output in: ", output_dir)
         return output_dir
 
@@ -177,7 +193,8 @@ class Main(IObservable):
                            f"Ground truth: "
                            f"{self.args.ground_truth_dir or self.args.ground_truth_file}\n"
                            f"Slips DB: {self.args.slips_db}\n"
-                           f"Suricata file: {self.args.eve_file}\n")
+                           f"Suricata file: {self.args.eve_file}\n"
+                           f"Output directory: {self.output_dir}")
 
     def print_flows_parsed_vs_discarded(self, tool: str):
         """

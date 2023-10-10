@@ -59,16 +59,25 @@ it calculates the aid of each read flow on the fly using the (community_id + ts)
 
 # Comparison tool output
 
-The output of this tool is:
+The output directory of this tool can be specified using -o, for example:
 
-1. a sqlite db with labels per flow, and labels per timewindow, it also has the performance errors and, total flows count and the files read of each tool. 
+```
+python3 main.py -e suricata/eve.json -s slips/flows.sqlite -gtf zeek/conn.log.labeled -o some_dir
+```
+
+if -o is not given, it creates a new dir inside ```output/``` with the date and time of the run.
+
+The output of this tool consists of:
+
+1. a sqlite db with labels per flow, and labels per time window, it also has the performance errors and, total flows count and the files read of each tool. 
 
 The sqlite db created by this tool is stored in a subdir in the output/ dir
 for example
 ```output/2023-07-10-14:04:16```
 
-2. the metrics printed in the CLI at the end of the analysis
+2. the metrics printed in the CLI and to the output directory in results.txt at the end of the analysis
 
+3. a metadata file with the versions and files used
 
 
 ---
