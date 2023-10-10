@@ -112,6 +112,7 @@ class SuricataParser(Parser):
                     if self.is_first_flow:
                         # set the first tw as benign by default
                         self.label_tw(timestamp, line['src_ip'], 'benign')
+                        self.is_first_flow = False
 
                     flows_count += 1
                     # used for printing the stats in the main.py

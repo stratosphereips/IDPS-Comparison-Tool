@@ -1,11 +1,8 @@
 from utils.timewindow_handler import TimewindowHandler
 from parsers.config import ConfigurationParser
 from abstracts.dbs import IDB
-from typing import Iterator
-import os.path
-import sqlite3
-from threading import Lock
-from time import sleep
+from typing import Iterator, Optional
+
 
 
 
@@ -238,6 +235,16 @@ class SQLiteDB(IDB):
                 # this flow is read by slips or suricata AND was read by one of them or the gt before
                 # now we update this flow's label to the latest label seen in the eve.json or the slips db
                 # TODO write this in the docs
+
+                # we have this problem of suricata logging the same flow many times, sometimes in an alert event,
+                # other times as a flow event
+                # the solution to this is, if a fow was found once as malicious, we don't change its' label
+                # to benign again. event if it was found many times as a "flow" event
+                # TODO write this in the docs
+                flow_old_label: Optional[str] = self.get_label_of_flow(aid, by=tool)
+                if flow_old_label == 'malicious':
+                    return True
+
                 # can be slips_vxxx_label or suricata_vxxx_label
                 label_col: str = self.labels_map[tool]
                 query = f"UPDATE labels_flow_by_flow SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
@@ -483,8 +490,8 @@ class SQLiteDB(IDB):
             return self.select('labels_flow_by_flow', '*', condition=f' aid = "{aid}";', fetch='one')
 
         assert by in self.labels_map, f'trying to get the label set by an invalid tool {by}'
-        label = self.labels_map[by]
-        return self.select('labels_flow_by_flow', label, condition=f' aid = "{aid}";', fetch='one')
+        label_col = self.labels_map[by]
+        return self.select('labels_flow_by_flow', label_col, condition=f' aid = "{aid}";', fetch='one')[0]
 
 
 
