@@ -4,8 +4,10 @@ from os import path
 from time import sleep
 from threading import Lock
 from termcolor import colored
+from abstracts.observer import IObservable
+from logger.logger import Logger
 
-class IDB(ABC):
+class IDB(IObservable, ABC ):
     """
     Interface for every sqlite db
     """
@@ -25,18 +27,21 @@ class IDB(ABC):
         """
         self.output_dir = output_dir
         self.path: str = db_full_path
+
+        IObservable.__init__(self)
+        self.logger = Logger(self.name, self.output_dir)
+        # add the logger as an observer so each msg printed to the cli will be sent to it too
+        self.add_observer(self.logger)
+
         self.connect()
         self.init()
 
-    def log(self, green_txt, normal_txt):
-        normal_txt = str(normal_txt)
-        green_txt = str(green_txt)
+    def log(self, green_txt, normal_txt, log_to_results_file=True):
+        """
+        gives the txt to the logger to log it to stdout and results.txt
+        """
+        self.notify_observers((normal_txt, green_txt, log_to_results_file))
 
-        print(colored(f'[{self.name}] ', 'blue') + colored(green_txt,'green') + normal_txt)
-
-        #TODO
-        with open(self.results_file, 'a') as results:
-            results.write(f"[{self.name}] {green_txt} {normal_txt}\n")
 
     def connect(self):
         """
