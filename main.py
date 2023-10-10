@@ -80,8 +80,8 @@ class Main(IObservable):
         return output_dir
 
 
-    def log(self, green_txt, normal_txt, log_to_results_file=True):
-        self.notify_observers((normal_txt, green_txt, log_to_results_file))
+    def log(self, green_txt, normal_txt, log_to_results_file=True, end="\n"):
+        self.notify_observers((normal_txt, green_txt, log_to_results_file, end))
 
 
     def start_slips_parser(self):
@@ -101,7 +101,7 @@ class Main(IObservable):
         SuricataParser(self.output_dir, self.results_path, eve_file=eve_file).parse()
 
     def start_ground_truth_parser(self):
-        self.log("Starting ground truth parser ...", '')
+        self.log("Starting ground truth parser.", '')
         if self.args.ground_truth_dir:
             # read the ground truth and store it in the db
             GroundTruthParser(
@@ -247,7 +247,7 @@ class Main(IObservable):
             calc = Calculator(tool, self.output_dir)
             calc.metrics = cm
             calc.calc_all_metrics()
-            self.log(' ', ' ')
+            self.log(' ', ' ', log_to_results_file=False)
 
 
 
@@ -258,7 +258,7 @@ class Main(IObservable):
 
         self.log('', "-" * 30)
         self.log("Comparison method: ", comparer.name)
-        self.log(' ', ' ')
+        self.log(' ', ' ', log_to_results_file=False)
         # TODO what to log per tw?
 
         # now apply this method to all supported tools
@@ -295,8 +295,8 @@ class Main(IObservable):
             stats_thread.join()
 
 
-            self.log(' ', ' ')
-            self.log('', "-" * 30)
+            self.log(' ', ' ', log_to_results_file=False)
+            self.log('', "-" * 30, log_to_results_file=False)
             self.log(f"Total flows read by parsers (doesn't include discarded flows): ",'')
             self.db.print_table('flows_count')
 
@@ -311,7 +311,7 @@ class Main(IObservable):
 
             self.log(f"Done. For labels db check: ", self.output_dir)
 
-            self.log(' ', ' ')
+            self.log(' ', ' ', log_to_results_file=False)
 
             FlowByFlow(self.output_dir).handle_flow_by_flow_comparison()
             PerTimewindow(self.output_dir).handle_per_tw_comparison()

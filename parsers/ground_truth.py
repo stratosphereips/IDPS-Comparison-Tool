@@ -1,6 +1,4 @@
 import utils.timestamp_handler
-from database.sqlite_db import SQLiteDB
-from termcolor import colored
 from typing import Tuple, List
 from re import findall
 from parsers.config import ConfigurationParser
@@ -9,6 +7,7 @@ from abstracts.parsers import Parser
 from re import split
 import json
 import os
+
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -330,7 +329,10 @@ class GroundTruthParser(Parser):
                 self.db.store_flows_count('ground_truth', self.total_flows_read)
 
                 if self.total_flows_read % 180 == 0:
-                    self.log("Parsed ground truth flows: ", self.total_flows_read, log_to_results_file=False)
+                    self.log("Parsed ground truth flows: ",
+                             self.total_flows_read,
+                             log_to_results_file=False,
+                             end="\r")
 
 
 

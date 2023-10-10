@@ -36,11 +36,11 @@ class IDB(IObservable, ABC ):
         self.connect()
         self.init()
 
-    def log(self, green_txt, normal_txt, log_to_results_file=True):
+    def log(self, green_txt, normal_txt, log_to_results_file=True, end="\n"):
         """
         gives the txt to the logger to log it to stdout and results.txt
         """
-        self.notify_observers((normal_txt, green_txt, log_to_results_file))
+        self.notify_observers((normal_txt, green_txt, log_to_results_file, end))
 
 
     def connect(self):

@@ -27,8 +27,8 @@ class Calculator(IObservable):
         self.tool = tool
 
 
-    def log(self, green_txt, normal_txt, log_to_results_file=True):
-        self.notify_observers((normal_txt, green_txt, log_to_results_file))
+    def log(self, green_txt, normal_txt, log_to_results_file=True, end="\n"):
+        self.notify_observers((normal_txt, green_txt, log_to_results_file, end))
 
     def confusion_matrix(self, labels: Iterator):
         """
