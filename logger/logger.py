@@ -3,17 +3,18 @@ from os import path
 from abstracts.observer import IObserver
 from termcolor import colored
 from typing import Tuple
+import os
 
 class Logger(IObserver):
     def __init__(self,
                  name,
-                 results_path: str):
+                 output_dir: str):
         """
         :param name: name of observable
-        :param results_path: path to results.txt to log the txt to
+        :param output_dir: path where results.txt will be to log the txt to it
         """
         self.name = name
-        self.results_path = results_path
+        self.results_path = os.path.join(output_dir, 'results.txt')
 
     def print_to_cli(self, normal_txt, green_txt):
         normal_txt = str(normal_txt)

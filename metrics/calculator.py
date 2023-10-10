@@ -19,7 +19,7 @@ class Calculator(IObservable):
 
         # init the logger
         self.results_path = path.join(output_dir, 'results.txt')
-        self.logger = Logger(self.name, self.results_path)
+        self.logger = Logger(self.name, output_dir)
         self.add_observer(self.logger)
 
         self.db = SQLiteDB(output_dir)

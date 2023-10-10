@@ -5,6 +5,8 @@ from database.sqlite_db import SQLiteDB
 from abstracts.observer import IObservable
 from logger.logger import Logger
 from typing import Optional
+
+
 class Parser(IObservable):
     name = ''
     def __init__(self,
@@ -14,7 +16,7 @@ class Parser(IObservable):
         super(Parser, self).__init__()
         # init the logger
         self.results_path = results_path
-        self.logger = Logger(self.name, self.results_path)
+        self.logger = Logger(self.name, output_dir)
         # add the logger as an observer so each msg printed to the cli will be sent to it too
         self.add_observer(self.logger)
 

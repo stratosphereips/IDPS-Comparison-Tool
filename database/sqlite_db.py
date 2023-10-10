@@ -1,12 +1,12 @@
 from utils.timewindow_handler import TimewindowHandler
 from parsers.config import ConfigurationParser
 from abstracts.dbs import IDB
+from abstracts.observer import IObservable
 from typing import Iterator, Optional
+from logger.logger import Logger
 
 
-
-
-class SQLiteDB(IDB):
+class SQLiteDB(IDB, IObservable):
     """Stores all the flows slips reads and handles labeling them"""
     # stores the ts of the first flow for each tool
     ts_tracker = {}
@@ -14,6 +14,11 @@ class SQLiteDB(IDB):
     discarded = 0
 
     def init(self):
+        IObservable.__init__(self)
+        self.logger = Logger(self.name, self.output_dir)
+        # add the logger as an observer so each msg printed to the cli will be sent to it too
+        self.add_observer(self.logger)
+
         self.read_config()
         # column names use the current version of the tool read from config.yaml
         self.slips_label_col = f"slips_v{self.slips_version}_label"

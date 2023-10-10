@@ -33,7 +33,7 @@ class Main(IObservable):
         self.output_dir = self.setup_output_dir()
         self.results_path = os.path.join(self.output_dir, 'results.txt')
         # init the logger
-        self.logger = Logger(self.name, self.results_path)
+        self.logger = Logger(self.name, self.output_dir)
         self.add_observer(self.logger)
 
         self.db = SQLiteDB(self.output_dir)
@@ -101,6 +101,7 @@ class Main(IObservable):
         SuricataParser(self.output_dir, self.results_path, eve_file=eve_file).parse()
 
     def start_ground_truth_parser(self):
+        self.log("Starting ground truth parser ...", '')
         if self.args.ground_truth_dir:
             # read the ground truth and store it in the db
             GroundTruthParser(
