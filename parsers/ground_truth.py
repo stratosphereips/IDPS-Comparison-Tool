@@ -330,7 +330,7 @@ class GroundTruthParser(Parser):
                 self.db.store_flows_count('ground_truth', self.total_flows_read)
 
                 if self.total_flows_read % 180 == 0:
-                    self.log("Parsed ground truth flows: ", self.total_flows_read)
+                    self.log("Parsed ground truth flows: ", self.total_flows_read, log_to_results_file=False)
 
 
 
