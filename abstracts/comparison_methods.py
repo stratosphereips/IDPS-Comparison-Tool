@@ -23,6 +23,7 @@ class ComparisonMethod(ABC):
          when initializing the module
         """
 
+
     def log(self, green_txt, normal_txt):
         """
         logs the txt to stdout

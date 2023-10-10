@@ -80,8 +80,8 @@ class Main(IObservable):
         return output_dir
 
 
-    def log(self, green_txt, normal_txt):
-        self.notify_observers((normal_txt, green_txt))
+    def log(self, green_txt, normal_txt, log_to_results_file=True):
+        self.notify_observers((normal_txt, green_txt, log_to_results_file))
 
 
     def start_slips_parser(self):

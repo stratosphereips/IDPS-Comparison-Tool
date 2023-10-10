@@ -32,11 +32,11 @@ class Parser(IObservable):
          when initializing the module
         """
 
-    def log(self, green_txt, normal_txt):
+    def log(self, green_txt, normal_txt, log_to_results_file=True):
         """
-        logs the txt to stdout
+        gives the txt to the logger to log it to stdout and results.txt
         """
-        self.notify_observers((normal_txt, green_txt))
+        self.notify_observers((normal_txt, green_txt, log_to_results_file))
 
     @abstractmethod
     def parse(self):

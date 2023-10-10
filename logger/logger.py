@@ -27,9 +27,18 @@ class Logger(IObserver):
     def update(self, msg: Tuple[str,str]):
         """
         writes the given txt to results.txt file and cli
+        each msg should consist of the following
+        normal_txt: not colored text to be written in the CLI
+        green_txt: text to be written in green in the CLI
+        log_to_results_file: bool. if False, we won't log the text to results.txt and
+            it will only be written in the CLI, used when regularly printing the number of flows parsed etc.
         """
-        normal_txt, green_txt = msg
+        normal_txt, green_txt, log_to_results_file = msg
+
         self.print_to_cli(normal_txt, green_txt)
+
+        if not log_to_results_file:
+            return
         self.log_to_results_file(normal_txt, green_txt)
 
 
