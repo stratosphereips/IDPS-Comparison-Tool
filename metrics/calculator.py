@@ -76,6 +76,13 @@ class Calculator(IObservable):
         """
         return 'benign' if label is None else label
 
+    def log_cm(self, cm):
+        self.log(f"{self.tool}: True Positives (TP): ", cm['TP'])
+        self.log(f"{self.tool}: True Negatives (TN): ", cm['TN'])
+        self.log(f"{self.tool}: False Positives (FP): ", cm['FP'])
+        self.log(f"{self.tool}: False Negatives (FN): ", cm['FN'])
+        print()
+
     def get_confusion_matrix(self, labels, log=True):
         """
         prints the FP, FN, TP, TN of the given self.tool compared with the ground truth
@@ -91,11 +98,7 @@ class Calculator(IObservable):
         cm = self.confusion_matrix(labels)
 
         if log:
-            self.log(f"{self.tool}: True Positives (TP): ", cm['TP'])
-            self.log(f"{self.tool}: True Negatives (TN): ", cm['TN'])
-            self.log(f"{self.tool}: False Positives (FP): ", cm['FP'])
-            self.log(f"{self.tool}: False Negatives (FN): ", cm['FN'])
-            print()
+            self.log_cm(cm)
 
         # will use them later
         self.metrics = cm

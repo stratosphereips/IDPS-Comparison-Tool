@@ -43,7 +43,9 @@ class PerTimewindow(ComparisonMethod):
 
             self.db.store_performance_errors_per_tw(tool, cm_sum)
             calc.metrics = cm_sum
+            calc.log_cm(calc.metrics)
             calc.calc_all_metrics()
+            print()
             # todo the printed cm is wrong
 
         self.print_stats()
