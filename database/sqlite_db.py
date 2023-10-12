@@ -53,12 +53,12 @@ class SQLiteDB(IDB, IObservable):
                                   "FOREIGN KEY (aid) REFERENCES flows(aid), "
                                   "FOREIGN KEY (label) REFERENCES flows(ground_truth)",
 
-            'performance_errors_flow_by_flow': "tool TEXT, "
+            'performance_errors_flow_by_flow': "tool TEXT PRIMARY KEY, "
                                                "TP INTEGER, "
                                                "FP INTEGER, "
                                                "TN INTEGER, "
                                                "FN INTEGER",
-            'discarded_flows': "tool TEXT, "
+            'discarded_flows': "tool TEXT PRIMARY KEY, "
                                "count INTEGER DEFAULT 0 ",
 
             'timewindow_details': "timewindow INTEGER PRIMARY KEY, "
@@ -76,14 +76,11 @@ class SQLiteDB(IDB, IObservable):
 
             # there cannot be duplicate ip+tw+tool
             # this table stores the TP, tn FP fn per ip per tw per tool :D
-            'performance_errors_per_tw': "IP TEXT NOT NULL, "
-                                         "timewindow INTEGER NOT NULL, "
-                                         "tool INTEGER NOT NULL, "
+            'performance_errors_per_tw': "tool TEXT PRIMARY KEY, "
                                          "TP INTEGER, "
                                          "FP INTEGER, "
                                          "TN INTEGER, "
-                                         "FN INTEGER, "
-                                         "CONSTRAINT PK_interval PRIMARY KEY (IP, timewindow, tool)",
+                                         "FN INTEGER"
 
             }
         for table_name, schema in table_schema.items():
@@ -109,18 +106,16 @@ class SQLiteDB(IDB, IObservable):
         params = (tool, int(metrics['TP']), int(metrics['FP']), int(metrics['TN']), int(metrics['FN']))
         self.execute(query, params=params)
 
-    def store_performance_errors_per_tw(self, ip: str, tw: int, tool: str, cm: dict):
+    def store_performance_errors_per_tw(self,  tool: str, cm: dict):
         """
         stores the performance errors of each tool in performance_errors_per_tw table
-        :param ip: the ip that was labeled by the given tool
-        :param tw: the tw in which this ip wa slabeled
         :param tool: slips or suricata
-        :param cm: dict with tp tn fp and fp. if a value is not there we store itin the db as 0
+        :param cm: dict with tp tn fp and fp. if a value is not there we store it in the db as 0
         """
         query = f"INSERT INTO performance_errors_per_tw " \
-                f"(ip, timewindow, tool, TP, FP, TN, FN) " \
-                f"VALUES (?, ?, ?, ?, ?, ?, ?)"
-        params = (ip, tw, tool,
+                f"(tool, TP, FP, TN, FN) " \
+                f"VALUES (?, ?, ?, ?, ?)"
+        params = (tool,
                   int(cm.get("TP", 0)),
                   int(cm.get("FP", 0)),
                   int(cm.get("TN", 0)),
