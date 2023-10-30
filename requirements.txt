@@ -8,3 +8,4 @@ scipy==1.10.1
 sklearn==0.0.post9
 termcolor==2.3.0
 threadpoolctl==3.2.0
+aid_hash
