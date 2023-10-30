@@ -36,13 +36,16 @@ The tool needs the following 3 to run:
 
 #### Slips DB 
 
-Slips stores the community id for each conn.log flow in the sqlite db
+Slips stores the AID hash for each conn.log flow in the sqlite db
 
-The SQL table with the community id and label in Slips is called 'flows' inside the ```flows.sqlite``` db
+The SQL table with the AID and label in Slips is called 'flows' inside the ```flows.sqlite``` db
 
-This tool reads the ```flows.sqlite``` db, extracts the labels and community ids, and stores the them in its' own db stored in ```output/<date-time>/db.sqlite```
+This tool reads the ```flows.sqlite``` db, extracts the labels and AIDs,
+and stores them in its' own db stored in ```output/<date-time>/db.sqlite```
 
-it calculates the aid of each read flow on the fly using the (community_id + ts) combination
+it calculates the aid of each read flow on the fly using the (zeek's community_id + ts) combination by using the aid_hash 
+lib from pypi
+https://pypi.org/project/aid-hash
 
 
 #### suricata eve.json
@@ -51,8 +54,9 @@ This tool reads Suricata's eve.json file
 
 if the field event_type is set to 'alert', this tool marks this flow as malicious by suricata.
 
-it calculates the aid of each read flow on the fly using the (community_id + ts) combination
-
+it calculates the aid of each read flow on the fly using the (community_id + ts) combination by using the aid_hash 
+lib from pypi
+https://pypi.org/project/aid-hash
 
 
 ---
@@ -128,13 +132,12 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 # Limitations
 
 * the labels in ground truth zeek dir have to be 'Malicious' or 'Benign' only. if any other label is present this tool will consider it "benign"
-* ground truth files and dir shouldn't have the community id. this tool calculates it on the fly
 * ground truth dirs can either be json or tab separated zeek dir or conn.log file
 
 * all paths given as parameters to this tool must be absolute paths.
 * if any flow doesn't have a label by suricata or slips, this tool considers the flow as benign 
 
-* slips now labels conn.log flows only, just like zeek does when community_id is enabled as a plugin
+* slips now labels conn.log flows only, just like zeek does when zeel's community_id is enabled as a plugin
 
 * all flows read by a tool, that don't have a matching flow in the ground truth file, are discarded. the number if discarded flows is written in the cli
 
