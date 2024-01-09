@@ -7,7 +7,7 @@ from typing import Dict
 from pprint import pp
 from scripts.extracted_levels import extracted_threat_levels
 
-
+expirements_number = len(extracted_threat_levels)
 metrics = {}
 for threshold in range(0, 150):
     metrics[threshold] = {}
@@ -17,6 +17,7 @@ for threshold in range(0, 150):
         scores: Dict[str, float]
 
         # the dir name aka exp name has the label in it
+        malicious = True
         if 'normal' in exp.lower():
             malicious = False
 
@@ -53,6 +54,31 @@ for threshold in range(0, 150):
         metrics[threshold].update({exp: confusion_matrix})
 
 
+        if tn > max_tn or max_tn==0:
+            max_tn = tn
+            threshold_with_max_tn = threshold
+
+        if tp > max_tp or max_tp==0:
+            max_tp = tp
+            threshold_with_max_tp = threshold
+
+        if fp < min_fp or min_fp == float('inf'):
+            min_fp = fp
+            threshold_with_min_fp = threshold
+
+        if fn < min_fn or min_fn == float('inf'):
+            min_fn = fn
+            threshold_with_min_fn = threshold
+
+        metrics[threshold].update({exp: confusion_matrix})
+
+
+print(f"Total experiments: {expirements_number}")
+
+print(f"Threshold with min FN: {threshold_with_min_fn}. min FN: {min_fn}")
+print(f"Threshold with min FP: {threshold_with_min_fp}. min FP: {min_fp}")
+print(f"Threshold with max TP: {threshold_with_max_tp}. max TP: {max_tp}")
+print(f"Threshold with max TN: {threshold_with_max_tn} max TN: {max_tn}")
 
 
 
