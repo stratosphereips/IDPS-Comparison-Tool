@@ -26,9 +26,17 @@ class Hash:
             proto = flow['proto'].lower()
 
             if 'icmp' in proto:
-                tpl = cases['icmp'](ts, flow['saddr'], flow['daddr'], flow['type'], flow['code'])
+                tpl = cases['icmp'](ts,
+                                    flow['saddr'],
+                                    flow['daddr'],
+                                    flow['type'],
+                                    flow['code'])
             else:
-                tpl = cases[proto](ts, flow['saddr'], flow['daddr'], flow['sport'], flow['dport'])
+                tpl = cases[proto](ts,
+                                   flow['saddr'],
+                                   flow['daddr'],
+                                   flow['sport'],
+                                   flow['dport'])
 
             return self.aid.calc(tpl)
         except (KeyError, TypeError):

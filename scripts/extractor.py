@@ -8,10 +8,15 @@ python3 extractor.py <slips' alerts.json> <host ip>
 
 """
 
-
 import json
 import sys
 import ipaddress
+from typing import Dict
+from pprint import pp
+
+tws = {}
+alertsjson = sys.argv[1]
+srcip = sys.argv[2]
 
 def count_and_print_duplicate_scores(scores: list):
     """
@@ -63,6 +68,20 @@ def count_and_print_duplicate_scores(scores: list):
             print(f"{prev_score} --  {ctr} times")
 
 
+def print_json_max_accumulated_score(
+        sorted_tws: Dict[str, float]
+    ):
+    """
+    prints this dict
+    {filename: { 'twid': max_acc_threat_level }}
+    """
+    res = {alertsjson: {} }
+    for timewindow, scores in sorted_tws.items():
+        timewindow: int
+        scores: list
+        res[alertsjson].update({timewindow: max(scores)})
+
+    pp(res)
 
 def print_max_accumulated_score(scores: list):
 
@@ -80,15 +99,13 @@ def get_ip_version(srcip):
 
 
 
-tws = {}
-alertsjson = sys.argv[1]
-srcip = sys.argv[2]
+
 
 ip_version: str = get_ip_version(srcip)
 
 with open(alertsjson, 'r') as f:
     lines_ctr = 0
-    while line:= f.readline():
+    while line := f.readline():
         lines_ctr += 1
         line: dict = json.loads(line)
         try:
@@ -111,12 +128,15 @@ with open(alertsjson, 'r') as f:
 
 #print(f"total alerts.json lines read: {lines_ctr}")
 
-sorted_dict = dict(sorted(tws.items()))
+sorted_tws = dict(sorted(tws.items()))
 
 
-for twid, scores in sorted_dict.items():
-    print(f"\n\ntimewindow {twid}\n")
+# for twid, scores in sorted_tws.items():
+    #print(f"\n\ntimewindow {twid}\n")
 
     #count_and_print_duplicate_scores(scores)
 
-    print_max_accumulated_score(scores)
+    #print_max_accumulated_score(scores)
+    # pass
+
+print_json_max_accumulated_score(sorted_tws)
