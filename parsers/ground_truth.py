@@ -423,7 +423,8 @@ class GroundTruthParser(Parser):
 
         # self.log_stats()
         print(" ")
-        pp(self.tw_labels)
+        print(self.tw_labels)
+        print(" ")
 
 
 
