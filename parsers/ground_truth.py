@@ -1,5 +1,5 @@
 import utils.timestamp_handler
-from typing import Tuple, List
+from typing import Tuple, Dict
 from re import findall
 from parsers.config import ConfigurationParser
 from utils.hash import Hash
@@ -7,7 +7,7 @@ from abstracts.parsers import Parser
 from re import split
 import json
 import os
-
+from pprint import pp
 
 # these are the files that slips doesn't read
 IGNORED_LOGS = {
@@ -49,10 +49,12 @@ class GroundTruthParser(Parser):
         elif ground_truth_type == 'file':
             self.gt_zeek_file  = ground_truth
 
-        # check th etype of the given zeek file/dir with ground truth labels. 'tab-separated' or 'json'?
+        # check th etype of the given zeek file/dir with
+        # ground truth labels. 'tab-separated' or 'json'?
         self.zeek_file_type: str = self.check_type()
         self.read_config()
         self.timestamp_handler = utils.timestamp_handler.TimestampHandler()
+        self.tw_labels: Dict[int, str] = {}
 
     def read_config(self):
         config = ConfigurationParser('config.yaml')
@@ -82,7 +84,8 @@ class GroundTruthParser(Parser):
 
         for field in (saddr, daddr, sport, dport, proto, ts):
             if field == None:
-                self.log(f"skipping flow. can't extract saddr, sport, daddr, dport from line:", line)
+                self.log(f"skipping flow. can't extract saddr, "
+                         f"sport, daddr, dport from line:", line)
                 # todo handle this
                 return False
 
@@ -223,7 +226,7 @@ class GroundTruthParser(Parser):
                'timestamp': flow[2],
                'srcip': flow[3],
             }
-        except IndexError:
+        except (IndexError, TypeError):
             # one of the above 2 methods returned an invalid line!
             return False
 
@@ -280,7 +283,8 @@ class GroundTruthParser(Parser):
         """ labels gt by TW in the db"""
 
         # register a tw as soon as it is encountered as benign,
-        # re-register it as malicious if one malicious flow was found in an already registered tw
+        # re-register it as malicious if one malicious flow was
+        # found in an already registered tw
         if (
                 self.tw_number > self.last_registered_tw
                 or
@@ -296,13 +300,15 @@ class GroundTruthParser(Parser):
                 self.tw_number,
                 flow['label']
             )
+            self.tw_labels.update({self.tw_number: flow['label']})
 
 
     def parse_file(self, filename: str):
         """
         extracts the label and community id from each flow and stores them in the db
         :param filename: the name of the logfile without the path, for example conn.log
-        this can be the file given to this tool using -gtf or 1 file from the zeek dir given to this tool
+        this can be the file given to this tool using -gtf or 1 file
+        from the zeek dir given to this tool
         """
 
         fullpath = self.get_full_path(filename)
@@ -353,7 +359,8 @@ class GroundTruthParser(Parser):
 
     def get_line_type(self, log_file_path: str):
         """
-        determines whether the given file is json or tab separated by reading the first line of it
+        determines whether the given file is json or tab separated
+        by reading the first line of it
         :param log_file_path: path of file we wanna determine the type of
         :return: 'tab-separated' or 'json'
         """
@@ -414,7 +421,9 @@ class GroundTruthParser(Parser):
             # extract fields and store them in the db
             self.parse_file(self.gt_zeek_file)
 
-        self.log_stats()
+        # self.log_stats()
+        print(" ")
+        pp(self.tw_labels)
 
 
 

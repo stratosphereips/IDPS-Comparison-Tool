@@ -136,26 +136,26 @@ class Main(IObservable):
         started reading slips and suricata flows so the print_stats thread can start printing
         """
         gt_parser: multiprocessing.Process = multiprocessing.Process(target=self.start_ground_truth_parser, args=( ))
-        suricata_parser: multiprocessing.Process = multiprocessing.Process(target=self.start_suricata_parser, args=( ))
-        slips_parser: multiprocessing.Process = multiprocessing.Process(target=self.start_slips_parser, args=( ))
+        # suricata_parser: multiprocessing.Process = multiprocessing.Process(target=self.start_suricata_parser, args=( ))
+        # slips_parser: multiprocessing.Process = multiprocessing.Process(target=self.start_slips_parser, args=( ))
 
         gt_parser.start()
         self.log(f"New process started for parsing: ", 'Ground Truth')
         gt_parser.join()
 
-        # since we discard slips and suricata's flows based on the ground truth flows,
-        # we need to make sure we're done  reading them first
-        suricata_parser.start()
-        self.log(f"New process started for parsing: ", 'Suricata')
-
-        slips_parser.start()
-        self.log(f"New process started for parsing: ", 'Slips')
-
-        print_stats_event.set()
-
-        suricata_parser.join()
-        slips_parser.join()
-        self.log('', "-" * 30)
+        # # since we discard slips and suricata's flows based on the ground truth flows,
+        # # we need to make sure we're done  reading them first
+        # suricata_parser.start()
+        # self.log(f"New process started for parsing: ", 'Suricata')
+        #
+        # slips_parser.start()
+        # self.log(f"New process started for parsing: ", 'Slips')
+        #
+        # print_stats_event.set()
+        #
+        # suricata_parser.join()
+        # slips_parser.join()
+        # self.log('', "-" * 30)
 
 
     def print_stats(self, print_stats_event):
@@ -290,31 +290,31 @@ class Main(IObservable):
             stats_thread.start()
 
             self.start_parsers(print_stats_event)
-            # now that the parses ended don't print more stats
-            self.stop_stats_thread = True
-            stats_thread.join()
-
-
-            self.log(' ', ' ', log_to_results_file=False)
-            self.log('', "-" * 30, log_to_results_file=False)
-            self.log(f"Total flows read by parsers (doesn't include discarded flows): ",'')
-            self.db.print_table('flows_count')
-
-
-            self.log(' ', ' ')
-            self.log("Flows are discarded when they're found in a tool but not in the ground truth", '')
-            for tool in self.supported_tools:
-                self.print_flows_parsed_vs_discarded(tool)
-
-            # before calculating anything, fill out the missing labels with benign
-            self.db.fill_null_labels()
-
-            self.log(f"Done. For labels db check: ", self.output_dir)
-
-            self.log(' ', ' ', log_to_results_file=False)
-
-            FlowByFlow(self.output_dir).handle_flow_by_flow_comparison()
-            PerTimewindow(self.output_dir).handle_per_tw_comparison()
+            # # now that the parses ended don't print more stats
+            # self.stop_stats_thread = True
+            # stats_thread.join()
+            #
+            #
+            # self.log(' ', ' ', log_to_results_file=False)
+            # self.log('', "-" * 30, log_to_results_file=False)
+            # self.log(f"Total flows read by parsers (doesn't include discarded flows): ",'')
+            # self.db.print_table('flows_count')
+            #
+            #
+            # self.log(' ', ' ')
+            # self.log("Flows are discarded when they're found in a tool but not in the ground truth", '')
+            # for tool in self.supported_tools:
+            #     self.print_flows_parsed_vs_discarded(tool)
+            #
+            # # before calculating anything, fill out the missing labels with benign
+            # self.db.fill_null_labels()
+            #
+            # self.log(f"Done. For labels db check: ", self.output_dir)
+            #
+            # self.log(' ', ' ', log_to_results_file=False)
+            #
+            # FlowByFlow(self.output_dir).handle_flow_by_flow_comparison()
+            # PerTimewindow(self.output_dir).handle_per_tw_comparison()
 
         self.db.close()
 
