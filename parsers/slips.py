@@ -1,8 +1,6 @@
 import os
 import sqlite3
-from database.sqlite_db import SQLiteDB
 from abstracts.parsers import Parser
-from termcolor import colored
 from utils.timestamp_handler import TimestampHandler
 from threading import Lock
 from time import sleep
