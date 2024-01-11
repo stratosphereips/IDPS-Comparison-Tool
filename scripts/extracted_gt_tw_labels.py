@@ -1673,5 +1673,31 @@ gt_tw_labels: dict = {
  21: 'malicious',
  22: 'malicious',
  23: 'malicious'},
+'CTU-Malware-Capture-Botnet-346-1/Day2':
+ {0: 'malicious',
+ 1: 'malicious',
+ 2: 'malicious',
+ 3: 'malicious',
+ 4: 'malicious',
+ 5: 'malicious',
+ 6: 'malicious',
+ 7: 'malicious',
+ 8: 'malicious',
+ 9: 'malicious',
+ 10: 'malicious',
+ 11: 'malicious',
+ 12: 'malicious',
+ 13: 'malicious',
+ 14: 'malicious',
+ 15: 'malicious',
+ 16: 'malicious',
+ 17: 'malicious',
+ 18: 'malicious',
+ 19: 'malicious',
+ 20: 'malicious',
+ 21: 'malicious',
+ 22: 'malicious',
+ 23: 'malicious'}
+
 
 }
