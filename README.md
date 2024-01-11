@@ -98,7 +98,7 @@ for example
 ## Comparison Method 1: How labels per timewindow are calculated
 Timewindow labels are detected in the following way:
 
-A timewindow is 1h interval, the given pcap is splitted into as many 1h intervals as needed and each interval (timewindow) has 1 label, either malicious or benign
+A timewindow is 1h interval, the given pcap is split into as many 1h intervals as needed and each interval (timewindow) has 1 label, either malicious or benign
 
 #### for slips
 the slips database given to this tool using -s contains a table called alerts where slips stores the malcious timewindows with their label, start and end date.
@@ -111,6 +111,10 @@ we read 1h worth of flows, once we find one 'malicious' label, we consider their
 #### Applying the timewindow concept for suricata
 
 Same as the ground truth. we read 1h worth of flows, once we find one 'malicious' label, we consider their entire timewindow as malicious, if there is no malicious flows in there, we mark that timewindow as benign
+
+If a timewindow was detected by one of the tools, and not detected by the ground truth, for example negative timewindows in slips, 
+we consider the gt label of it as "benign"
+
 
 ## Comparison Method2: labels flow by flow
 
