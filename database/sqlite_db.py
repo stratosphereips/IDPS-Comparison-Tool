@@ -65,8 +65,10 @@ class SQLiteDB(IDB, IObservable):
                                   "start_time REAL, "
                                   "end_time REAL ",
 
-            # this table will be used to store all the tools' labels per IP per timewindow, not flow by flow
-            # the combination of these 2 cols (IP, timewindow) are the primary key, they have to be unique combined
+            # this table will be used to store all the tools' labels per IP
+            # per timewindow, not flow by flow
+            # the combination of these 2 cols (IP, timewindow) are the
+            # primary key, they have to be unique combined
             'labels_per_tw': f"IP TEXT NOT NULL, "
                              f"timewindow INTEGER NOT NULL, "
                              f"ground_truth_label TEXT, "
@@ -330,7 +332,11 @@ class SQLiteDB(IDB, IObservable):
         else:
             # timewindow was not seen by the gt
             # calc it manually
-            starttime_of_first_timewindow: float = self.select('timewindow_details', 'start_time', condition=f"timewindow = 1", fetch='one')[0]
+            starttime_of_first_timewindow: float = self.select(
+                'timewindow_details',
+                'start_time',
+                condition=f"timewindow = 1",
+                fetch='one')[0]
             return int((ts - starttime_of_first_timewindow)/self.twid_width)
 
 
@@ -347,6 +353,7 @@ class SQLiteDB(IDB, IObservable):
         query = f'INSERT OR REPLACE INTO labels_per_tw (IP, timewindow, {label_col}) VALUES (?, ?, ?);'
         params = (ip, tw, label)
         self.execute(query, params=params)
+
         # set the gt label of this tw as benign if it wasn't found
         query = f"UPDATE labels_per_tw SET ground_truth_label = 'benign' " \
                 f"WHERE ground_truth_label IS NULL " \

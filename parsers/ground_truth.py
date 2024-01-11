@@ -280,7 +280,8 @@ class GroundTruthParser(Parser):
         """ labels gt by TW in the db"""
 
         # register a tw as soon as it is encountered as benign,
-        # re-register it as malicious if one malicious flow was found in an already registered tw
+        # re-register it as malicious if one malicious flow was
+        # found in an already registered tw
         if (
                 self.tw_number > self.last_registered_tw
                 or
@@ -353,7 +354,8 @@ class GroundTruthParser(Parser):
 
     def get_line_type(self, log_file_path: str):
         """
-        determines whether the given file is json or tab separated by reading the first line of it
+        determines whether the given file is json or tab separated by
+        reading the first line of it
         :param log_file_path: path of file we wanna determine the type of
         :return: 'tab-separated' or 'json'
         """
