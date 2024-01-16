@@ -1,6 +1,6 @@
 gt_tw_labels = {
  
-'CTU-Malware-Capture-Botnet-219-2/Day5/':
+'CTU-Malware-Capture-Botnet-219-2/Day5':
  
 {0: 'malicious',
  1: 'malicious',
@@ -27,7 +27,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-230-1/Day1/':
+'CTU-Malware-Capture-Botnet-230-1/Day1':
  
 {0: 'malicious',
  1: 'malicious',
@@ -54,23 +54,23 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-230-1/Day2/':
+'CTU-Malware-Capture-Botnet-230-1/Day2':
  
 {},
  
-'CTU-Malware-Capture-Botnet-230-1/Day3/':
+'CTU-Malware-Capture-Botnet-230-1/Day3':
  
 {},
  
-'CTU-Malware-Capture-Botnet-230-1/Day4/':
+'CTU-Malware-Capture-Botnet-230-1/Day4':
  
 {},
  
-'CTU-Malware-Capture-Botnet-230-1/Day5/':
+'CTU-Malware-Capture-Botnet-230-1/Day5':
  
 {},
  
-'CTU-Malware-Capture-Botnet-327-2/Day1/':
+'CTU-Malware-Capture-Botnet-327-2/Day1':
  
 {0: 'malicious',
  1: 'malicious',
@@ -97,7 +97,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-327-2/Day2/':
+'CTU-Malware-Capture-Botnet-327-2/Day2':
  
 {0: 'malicious',
  1: 'malicious',
@@ -124,7 +124,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-327-2/Day3/':
+'CTU-Malware-Capture-Botnet-327-2/Day3':
  
 {0: 'malicious',
  1: 'malicious',
@@ -151,7 +151,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-327-2/Day4/':
+'CTU-Malware-Capture-Botnet-327-2/Day4':
  
 {0: 'malicious',
  1: 'malicious',
@@ -178,7 +178,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-327-2/Day5/':
+'CTU-Malware-Capture-Botnet-327-2/Day5':
  
 {0: 'malicious',
  1: 'malicious',
@@ -205,7 +205,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-346-1/Day1/':
+'CTU-Malware-Capture-Botnet-346-1/Day1':
  
 {0: 'malicious',
  1: 'malicious',
@@ -232,7 +232,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-346-1/Day2/':
+'CTU-Malware-Capture-Botnet-346-1/Day2':
  
 {0: 'malicious',
  1: 'malicious',
@@ -259,7 +259,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-346-1/Day3/':
+'CTU-Malware-Capture-Botnet-346-1/Day3':
  
 {0: 'malicious',
  1: 'malicious',
@@ -286,7 +286,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-346-1/Day4/':
+'CTU-Malware-Capture-Botnet-346-1/Day4':
  
 {0: 'malicious',
  1: 'malicious',
@@ -313,7 +313,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-346-1/Day5/':
+'CTU-Malware-Capture-Botnet-346-1/Day5':
  
 {0: 'malicious',
  1: 'malicious',
@@ -340,7 +340,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-67-1/Day1/':
+'CTU-Malware-Capture-Botnet-67-1/Day1':
  
 {0: 'malicious',
  1: 'malicious',
@@ -367,7 +367,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-67-1/Day2/':
+'CTU-Malware-Capture-Botnet-67-1/Day2':
  
 {0: 'malicious',
  1: 'malicious',
@@ -394,7 +394,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-67-1/Day3/':
+'CTU-Malware-Capture-Botnet-67-1/Day3':
  
 {0: 'malicious',
  1: 'malicious',
@@ -421,7 +421,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-67-1/Day4/':
+'CTU-Malware-Capture-Botnet-67-1/Day4':
  
 {0: 'malicious',
  1: 'malicious',
@@ -447,7 +447,7 @@ gt_tw_labels = {
  21: 'malicious',
  22: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-67-1/Day5/':
+'CTU-Malware-Capture-Botnet-67-1/Day5':
  
 {0: 'malicious',
  1: 'malicious',
@@ -473,7 +473,7 @@ gt_tw_labels = {
  21: 'malicious',
  22: 'malicious'},
  
-'CTU-Normal-40/Day1/':
+'CTU-Normal-40/Day1':
  
 {0: 'benign',
  1: 'benign',
@@ -500,7 +500,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-40/Day2/':
+'CTU-Normal-40/Day2':
  
 {0: 'benign',
  1: 'benign',
@@ -527,7 +527,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-40/Day3/':
+'CTU-Normal-40/Day3':
  
 {0: 'benign',
  1: 'benign',
@@ -554,7 +554,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-40/Day4/':
+'CTU-Normal-40/Day4':
  
 {0: 'benign',
  1: 'benign',
@@ -581,7 +581,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-40/Day5/':
+'CTU-Normal-40/Day5':
  
 {0: 'benign',
  1: 'benign',
@@ -608,7 +608,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-42/Day1/':
+'CTU-Normal-42/Day1':
  
 {1: 'unknown',
  4: 'benign',
@@ -630,7 +630,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-42/Day2/':
+'CTU-Normal-42/Day2':
  
 {0: 'benign',
  1: 'benign',
@@ -654,7 +654,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'unknown'},
  
-'CTU-Normal-42/Day3/':
+'CTU-Normal-42/Day3':
  
 {0: 'benign',
  1: 'unknown',
@@ -673,7 +673,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'unknown'},
  
-'CTU-Normal-42/Day4/':
+'CTU-Normal-42/Day4':
  
 {0: 'benign',
  1: 'benign',
@@ -695,7 +695,7 @@ gt_tw_labels = {
  20: 'benign',
  22: 'benign'},
  
-'CTU-Normal-42/Day5/':
+'CTU-Normal-42/Day5':
  
 {0: 'benign',
  1: 'benign',
@@ -718,7 +718,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'unknown'},
  
-'CTU-Normal-43/Day1/':
+'CTU-Normal-43/Day1':
  
 {0: 'unknown',
  1: 'unknown',
@@ -743,7 +743,7 @@ gt_tw_labels = {
  21: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-43/Day2/':
+'CTU-Normal-43/Day2':
  
 {0: 'unknown',
  1: 'benign',
@@ -768,7 +768,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'unknown'},
  
-'CTU-Normal-43/Day3/':
+'CTU-Normal-43/Day3':
  
 {1: 'benign',
  4: 'benign',
@@ -787,7 +787,7 @@ gt_tw_labels = {
  21: 'benign',
  23: 'unknown'},
  
-'CTU-Normal-43/Day4/':
+'CTU-Normal-43/Day4':
  
 {1: 'benign',
  2: 'benign',
@@ -812,7 +812,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-43/Day5/':
+'CTU-Normal-43/Day5':
  
 {0: 'benign',
  1: 'benign',
@@ -837,7 +837,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-44/Day1/':
+'CTU-Normal-44/Day1':
  
 {1: 'benign',
  4: 'unknown',
@@ -857,7 +857,7 @@ gt_tw_labels = {
  21: 'benign',
  23: 'benign'},
  
-'CTU-Normal-44/Day2/':
+'CTU-Normal-44/Day2':
  
 {1: 'unknown',
  2: 'benign',
@@ -879,7 +879,7 @@ gt_tw_labels = {
  21: 'benign',
  23: 'unknown'},
  
-'CTU-Normal-44/Day3/':
+'CTU-Normal-44/Day3':
  
 {0: 'unknown',
  1: 'benign',
@@ -902,7 +902,7 @@ gt_tw_labels = {
  21: 'benign',
  22: 'unknown'},
  
-'CTU-Normal-44/Day4/':
+'CTU-Normal-44/Day4':
  
 {0: 'unknown',
  2: 'benign',
@@ -926,7 +926,7 @@ gt_tw_labels = {
  21: 'benign',
  22: 'unknown'},
  
-'CTU-Normal-44/Day5/':
+'CTU-Normal-44/Day5':
  
 {0: 'unknown',
  1: 'unknown',
@@ -953,7 +953,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-45/Day1/':
+'CTU-Normal-45/Day1':
  
 {1: 'unknown',
  2: 'unknown',
@@ -973,7 +973,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-45/Day2/':
+'CTU-Normal-45/Day2':
  
 {0: 'benign',
  2: 'benign',
@@ -992,7 +992,7 @@ gt_tw_labels = {
  20: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-45/Day3/':
+'CTU-Normal-45/Day3':
  
 {0: 'benign',
  3: 'unknown',
@@ -1011,7 +1011,7 @@ gt_tw_labels = {
  20: 'unknown',
  22: 'benign'},
  
-'CTU-Normal-45/Day4/':
+'CTU-Normal-45/Day4':
  
 {0: 'benign',
  1: 'unknown',
@@ -1035,7 +1035,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-45/Day5/':
+'CTU-Normal-45/Day5':
  
 {0: 'benign',
  1: 'benign',
@@ -1061,7 +1061,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-46/Day1/':
+'CTU-Normal-46/Day1':
  
 {0: 'benign',
  1: 'benign',
@@ -1085,7 +1085,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-46/Day2/':
+'CTU-Normal-46/Day2':
  
 {0: 'benign',
  1: 'unknown',
@@ -1112,7 +1112,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-46/Day3/':
+'CTU-Normal-46/Day3':
  
 {0: 'benign',
  1: 'unknown',
@@ -1140,7 +1140,7 @@ gt_tw_labels = {
  23: 'unknown',
  24: 'benign'},
  
-'CTU-Normal-46/Day4/':
+'CTU-Normal-46/Day4':
  
 {0: 'unknown',
  1: 'benign',
@@ -1167,7 +1167,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-46/Day5/':
+'CTU-Normal-46/Day5':
  
 {0: 'benign',
  1: 'benign',
@@ -1194,7 +1194,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-47/Day1/':
+'CTU-Normal-47/Day1':
  
 {0: 'benign',
  1: 'benign',
@@ -1221,7 +1221,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-47/Day2/':
+'CTU-Normal-47/Day2':
  
 {0: 'benign',
  1: 'benign',
@@ -1248,7 +1248,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-47/Day3/':
+'CTU-Normal-47/Day3':
  
 {0: 'benign',
  1: 'benign',
@@ -1275,7 +1275,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-47/Day4/':
+'CTU-Normal-47/Day4':
  
 {0: 'benign',
  1: 'unknown',
@@ -1302,7 +1302,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-47/Day5/':
+'CTU-Normal-47/Day5':
  
 {0: 'benign',
  1: 'benign',
@@ -1329,7 +1329,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-48/Day1/':
+'CTU-Normal-48/Day1':
  
 {0: 'benign',
  1: 'benign',
@@ -1356,7 +1356,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-48/Day2/':
+'CTU-Normal-48/Day2':
  
 {0: 'benign',
  1: 'benign',
@@ -1383,7 +1383,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'unknown'},
  
-'CTU-Normal-48/Day3/':
+'CTU-Normal-48/Day3':
  
 {0: 'benign',
  1: 'benign',
@@ -1410,7 +1410,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'benign'},
  
-'CTU-Normal-48/Day4/':
+'CTU-Normal-48/Day4':
  
 {0: 'unknown',
  1: 'unknown',
@@ -1437,7 +1437,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'unknown'},
  
-'CTU-Normal-48/Day5/':
+'CTU-Normal-48/Day5':
  
 {0: 'unknown',
  1: 'unknown',
@@ -1464,7 +1464,7 @@ gt_tw_labels = {
  22: 'unknown',
  23: 'unknown'},
  
-'CTU-Normal-49/Day1/':
+'CTU-Normal-49/Day1':
  
 {0: 'benign',
  1: 'unknown',
@@ -1491,7 +1491,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-49/Day2/':
+'CTU-Normal-49/Day2':
  
 {0: 'benign',
  1: 'benign',
@@ -1518,7 +1518,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'unknown'},
  
-'CTU-Normal-49/Day3/':
+'CTU-Normal-49/Day3':
  
 {0: 'unknown',
  1: 'benign',
@@ -1545,7 +1545,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Normal-49/Day4/':
+'CTU-Normal-49/Day4':
  
 {0: 'benign',
  1: 'benign',
@@ -1573,7 +1573,7 @@ gt_tw_labels = {
  23: 'benign',
  24: 'benign'},
  
-'CTU-Normal-49/Day5/':
+'CTU-Normal-49/Day5':
  
 {0: 'benign',
  1: 'benign',
@@ -1600,7 +1600,7 @@ gt_tw_labels = {
  22: 'benign',
  23: 'benign'},
  
-'CTU-Malware-Capture-Botnet-219-2/Day1/':
+'CTU-Malware-Capture-Botnet-219-2/Day1':
  
 {0: 'malicious',
  1: 'malicious',
@@ -1613,7 +1613,7 @@ gt_tw_labels = {
  8: 'malicious',
  9: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-219-2/Day2/':
+'CTU-Malware-Capture-Botnet-219-2/Day2':
  
 {0: 'malicious',
  1: 'malicious',
@@ -1640,7 +1640,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-219-2/Day3/':
+'CTU-Malware-Capture-Botnet-219-2/Day3':
  
 {0: 'malicious',
  1: 'malicious',
@@ -1667,7 +1667,7 @@ gt_tw_labels = {
  22: 'malicious',
  23: 'malicious'},
  
-'CTU-Malware-Capture-Botnet-219-2/Day4/':
+'CTU-Malware-Capture-Botnet-219-2/Day4':
  
 {0: 'malicious',
  1: 'malicious',
