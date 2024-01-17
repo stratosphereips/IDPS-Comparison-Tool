@@ -254,10 +254,7 @@ class GroundTruthParser(Parser):
         tw_start, tw_end = self.twid_handler.get_start_and_end_ts(
             self.tw_number
             )
-        self.current_twid = self.db.register_tw(
-            self.tw_number,
-            tw_start,
-            tw_end)
+        self.db.register_tw(self.tw_number, tw_start, tw_end)
 
     def get_full_path(self, filename: str) -> str:
         """
