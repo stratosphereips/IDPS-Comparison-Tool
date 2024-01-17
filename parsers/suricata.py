@@ -61,7 +61,7 @@ class SuricataParser(Parser):
         """
         # if 1 flow is malicious, mark the whole tw as malicious by suricata
         # map this suricata flow to one of the existing(gt) timewindows
-        if tw := self.db.get_timewindow_of_ts(ts):
+        if tw := self.db.get_timewindow_of_ts(ts, 'suricata'):
             self.db.set_tw_label(srcip, 'suricata', tw, label)
             return True
 

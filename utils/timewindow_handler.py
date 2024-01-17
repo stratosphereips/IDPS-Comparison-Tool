@@ -35,17 +35,10 @@ class TimewindowHandler:
         returns the start ts and end ts of the given timewindow
         :param tw: the tw that we wanna get the strat and end of
         """
-        start = self.ts_of_first_flow + (self.width * tw )
+        if tw == 0:
+            start = self.ts_of_first_flow
+        else:
+            start = self.ts_of_first_flow + (self.width * tw)
         end = start + self.width
         return start, end
-
-    def get_tw_of_ts(self, ts: str) -> int:
-        """
-        this method returns the timewindow where the given ts exists
-        :param ts: str ts in unix format
-        :return: int of the tw where the ts exists
-        """
-        tw = (ceil((float(ts)-self.ts_of_first_flow)/self.width) - 1)
-
-        return 0 if tw * -1 < 0 else tw
 
