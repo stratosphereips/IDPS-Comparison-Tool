@@ -2,6 +2,7 @@ import utils.timestamp_handler
 from typing import Tuple, List
 from re import findall
 from parsers.config import ConfigurationParser
+from utils.timewindow_handler import TimewindowHandler
 from utils.hash import Hash
 from abstracts.parsers import Parser
 from re import split
@@ -36,7 +37,7 @@ class GroundTruthParser(Parser):
     benign_labels = 0
     malicious_labels = 0
     last_registered_tw = -1
-
+    tool_name = "ground_truth"
     is_first_flow = True
 
     def init(self,
@@ -232,24 +233,6 @@ class GroundTruthParser(Parser):
             # one of the above 2 methods returned an invalid line!
             return False
 
-    def update_timewindow_limits(self, tw_number: int, tw_starttime: float):
-        """
-        sets the start time of a timewindow in the db
-         and updates the current tw start and end vars
-        :param tw_number: number of twid to set the start to
-        :param tw_starttime: start time of this timewindow
-        """
-        self.tw_number = tw_number
-        self.current_tw_start: float = float(
-            self.timestamp_handler.remove_microseconds(tw_starttime)
-            )
-        self.current_tw_end: float = self.current_tw_start + self.twid_width
-        self.db.register_tw(
-            tw_number,
-            self.current_tw_start,
-            self.current_tw_end
-            )
-
 
     def register_timewindow(self, ts):
         """
@@ -260,13 +243,21 @@ class GroundTruthParser(Parser):
 
         if self.is_first_flow:
             self.is_first_flow = False
-            self.update_timewindow_limits(0, ts)
+            self.twid_handler = TimewindowHandler(ts)
+            self.tw_number = 0
         else:
-            # let the db decide which tw this is and register it.
+            # let the db decide which tw this is
             # tw number may be negative if a flow is found with a ts < ts
             # of the first flow seen
-            tw: int = self.db.get_timewindow_of_ts(ts, 'ground_truth')
-            self.update_timewindow_limits(tw, ts)
+            self.tw_number: int = self.db.get_timewindow_of_ts(ts)
+
+        tw_start, tw_end = self.twid_handler.get_start_and_end_ts(
+            self.tw_number
+            )
+        self.current_twid = self.db.register_tw(
+            self.tw_number,
+            tw_start,
+            tw_end)
 
     def get_full_path(self, filename: str) -> str:
         """
@@ -305,7 +296,7 @@ class GroundTruthParser(Parser):
 
             self.db.set_tw_label(
                 flow['srcip'],
-                'ground_truth',
+                self.tool_name,
                 self.tw_number,
                 flow['label']
             )
@@ -338,9 +329,9 @@ class GroundTruthParser(Parser):
                 self.total_flows_read += 1
 
                 self.db.store_ground_truth_flow(flow)
-                self.db.store_flow(flow, 'ground_truth')
+                self.db.store_flow(flow, self.tool_name)
                 # used for printing the stats in the main.py
-                self.db.store_flows_count('ground_truth', self.total_flows_read)
+                self.db.store_flows_count(self.tool_name, self.total_flows_read)
 
                 if self.total_flows_read % 180 == 0:
                     self.log("Parsed ground truth flows so far: ",

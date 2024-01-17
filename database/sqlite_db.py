@@ -270,7 +270,7 @@ class SQLiteDB(IDB, IObservable):
         :param tool: suricata or ground_truth
         :return: ts
         """
-        row = self.select('MIN(timestamp)', f"{tool}_flows", fetch='one')
+        row = self.select(f"{tool}_flows", 'MIN(timestamp)', fetch='one')
         return float(row[0])
 
 
@@ -325,10 +325,9 @@ class SQLiteDB(IDB, IObservable):
         return (start_time, end_time)
 
 
-    def get_timewindow_of_ts(self, ts: float, tool: str) -> int:
+    def get_timewindow_of_ts(self, ts: float) -> int:
         """
         returns the timewindow in which the given timestamp belongs to
-        if the returned tw is not registered, this function registers it
         :param ts: float unix timestamp
         :param tool: options are slips, suricata, or ground_truth
         :return: the timewindow number
@@ -352,17 +351,13 @@ class SQLiteDB(IDB, IObservable):
         if ts < starttime_of_first_timewindow:
             # negative timewindow
             tw = ceil(ts/self.twid_width) - 1
-            print(f"@@@@@@@@@@@@@@@@ just registered a negative twww!!!! "
-                  f"{tw}")
         elif ts == starttime_of_first_timewindow:
             tw = 0
         else:
             # positive tw
             tw = int((ts - starttime_of_first_timewindow)/self.twid_width)
 
-        twid_handler = TimewindowHandler(self.get_first_ts(tool))
-        tw_start, tw_end = twid_handler.get_start_and_end_ts(tw)
-        self.register_tw(tw, tw_start, tw_end)
+        return tw
 
 
     def set_tw_label(self, ip: str, tool: str, tw: int, label: str):
