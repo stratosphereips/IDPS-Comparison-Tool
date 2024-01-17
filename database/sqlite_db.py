@@ -350,7 +350,7 @@ class SQLiteDB(IDB, IObservable):
             fetch='one')[0]
         if ts < starttime_of_first_timewindow:
             # negative timewindow
-            tw = ceil(ts/self.twid_width) - 1
+            tw = ceil((ts - starttime_of_first_timewindow) /self.twid_width) - 1
         elif ts == starttime_of_first_timewindow:
             tw = 0
         else:

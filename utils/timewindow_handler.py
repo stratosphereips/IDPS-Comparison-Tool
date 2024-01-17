@@ -9,12 +9,9 @@ class TimewindowHandler:
     and the width of the tw is 2h
     this is how tws would look like
 
-    5/2 = 2.5
-    0 + 2.5*5
-    0+ ((given/width)*given)/width
-    start + (width * ?) = given
-    width * ?  = given - start
-    ceil((given-start) / width)) -1
+    this is how we get the tw of a given_ts
+    start + (width * ?) = given_ts
+    ceil((given_ts-start_ts) / width)) -1
 
 
           tw0   tw1   tw2   tw3    tw4
@@ -24,6 +21,7 @@ class TimewindowHandler:
 
     a flow with ts = 7 would be in tw3
     """
+
     # 1h, this is the default width in slips
     # TODO we should read this from the config file?
     width = 3600
