@@ -243,10 +243,11 @@ class GroundTruthParser(Parser):
         self.current_tw_start: float = float(
             self.timestamp_handler.remove_microseconds(tw_starttime)
             )
-        self.current_tw_end: float = self.db.register_tw(
+        self.current_tw_end: float = self.current_tw_start + self.twid_width
+        self.db.register_tw(
             tw_number,
             self.current_tw_start,
-            self.current_tw_start + self.twid_width
+            self.current_tw_end
             )
 
 

@@ -285,7 +285,7 @@ class SQLiteDB(IDB, IObservable):
 
 
     def register_tw(self, tw: int, tw_start_ts: float, tw_end_ts: float) -> \
-            float:
+            bool:
         """
         calculates the end ts of the given timewindow and stores in the
          timewindow_details table
@@ -293,10 +293,15 @@ class SQLiteDB(IDB, IObservable):
         :param tw: number of the tw to set the timestamps to
         :param tw_end_ts: the timestamp of the end of this timewindow
         """
+        if self.is_registered_timewindow(tw):
+            return False
+
         query = f'INSERT INTO timewindow_details ' \
                 f'(timewindow, start_time, end_time) VALUES (?, ?, ?);'
         params = (tw, tw_start_ts, tw_end_ts)
         self.execute(query, params=params)
+        return True
+
 
     def get_first_row(self, table: str):
         query = f'SELECT * FROM {table} LIMIT 1'
@@ -390,8 +395,18 @@ class SQLiteDB(IDB, IObservable):
         return int(tw[0])
 
 
-
-
+    def is_registered_timewindow(self, tw: int) -> bool:
+        """
+        checks if the tw is registered in the timewindow_details table
+        :param tw: int
+        """
+        res = self.select(
+            "timewindow_details",
+            "*",
+            condition=f"timewindow={tw}",
+            fetch="one"
+            )
+        return True if res else False
 
 
     def get_all_labels_per_all_tws(self, tool: str) -> Iterator[str]:
