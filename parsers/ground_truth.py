@@ -82,7 +82,8 @@ class GroundTruthParser(Parser):
 
         for field in (saddr, daddr, sport, dport, proto, ts):
             if field == None:
-                self.log(f"skipping flow. can't extract saddr, sport, daddr, dport from line:", line)
+                self.log(f"skipping flow. can't extract saddr, sport, "
+                         f"daddr, dport from line:", line)
                 # todo handle this
                 return False
 
@@ -98,7 +99,8 @@ class GroundTruthParser(Parser):
 
     def handle_icmp(self, flow: dict) -> dict:
         """
-        zeek sets the type of icmp to the sport field, and the code to the dport field, handle that
+        zeek sets the type of icmp to the sport field, and the code to the
+        dport field, handle that
         :return: same flow with the type and code fields
         """
         if flow['proto'].lower() != 'icmp':
@@ -111,8 +113,10 @@ class GroundTruthParser(Parser):
 
     def get_flow(self, line):
         """
-        given a tab or json line, extracts the src and dst addr, sport and proto from the line
-        :param line: is a str if the type of given file is tab separated, or a dict if it's json
+        given a tab or json line, extracts the src and dst addr, sport and
+        proto from the line
+        :param line: is a str if the type of given file is tab separated, or
+         a dict if it's json
         :return: dict with {'saddr', 'sport':.. , 'daddr', 'proto'}
         """
         if self.zeek_file_type == 'json':
@@ -194,7 +198,8 @@ class GroundTruthParser(Parser):
         # the data is either \t separated or space separated
         # zeek files that are space separated are either separated by 2 or 3
         # spaces so we can't use python's split()
-        # using regex split, split line when you encounter more than 2 spaces in a row
+        # using regex split, split line when you encounter more than 2 spaces
+        # in a row
         line = line.split('\t') if '\t' in line else split(r'\s{2,}', line)
 
         aid = self.handle_getting_aid(line)
@@ -229,14 +234,20 @@ class GroundTruthParser(Parser):
 
     def update_timewindow_limits(self, tw_number: int, tw_starttime: float):
         """
-        sets the start time of the current timewindow in the db
+        sets the start time of a timewindow in the db
          and updates the current tw start and end vars
         :param tw_number: number of twid to set the start to
         :param tw_starttime: start time of this timewindow
         """
         self.tw_number = tw_number
-        self.current_tw_start: float = float(self.timestamp_handler.remove_microseconds(tw_starttime))
-        self.current_tw_end: float = self.db.set_ts_of_tw(tw_number, self.current_tw_start)
+        self.current_tw_start: float = float(
+            self.timestamp_handler.remove_microseconds(tw_starttime)
+            )
+        self.current_tw_end: float = self.db.register_tw(
+            tw_number,
+            self.current_tw_start,
+            self.current_tw_start + self.twid_width
+            )
 
 
     def register_timewindow(self, ts):
@@ -249,20 +260,20 @@ class GroundTruthParser(Parser):
         if self.is_first_flow:
             self.is_first_flow = False
             self.update_timewindow_limits(0, ts)
-        elif ts > self.current_tw_end:
-            # we are done with the current timewindow
-            # register next twid
-            self.update_timewindow_limits(
-                self.tw_number + 1,
-                ts
-            )
+        else:
+            # let the db decide which tw this is and register it.
+            # tw number may be negative if a flow is found with a ts < ts
+            # of the first flow seen
+            tw: int = self.db.get_timewindow_of_ts(ts, 'ground_truth')
+            self.update_timewindow_limits(tw, ts)
 
     def get_full_path(self, filename: str) -> str:
         """
         returns the full path of a given filename
         """
         if not os.path.isabs(filename):
-            # this tool is given a zeek dir and we're now parsing 1 logfile from this dir
+            # this tool is given a zeek dir and we're now parsing 1 logfile
+            # from this dir
             # get the full path of the given log file
             return os.path.join(self.gt_zeek_dir, filename)
 
@@ -303,7 +314,8 @@ class GroundTruthParser(Parser):
         """
         extracts the label and community id from each flow and stores them in the db
         :param filename: the name of the logfile without the path, for example conn.log
-        this can be the file given to this tool using -gtf or 1 file from the zeek dir given to this tool
+        this can be the file given to this tool using -gtf or 1 file
+         from the zeek dir given to this tool
         """
 
         fullpath = self.get_full_path(filename)

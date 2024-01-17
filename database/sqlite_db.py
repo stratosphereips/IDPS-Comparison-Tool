@@ -320,24 +320,44 @@ class SQLiteDB(IDB, IObservable):
         return (start_time, end_time)
 
 
-    def get_timewindow_of_ts(self, ts: float) -> int:
+    def get_timewindow_of_ts(self, ts: float, tool: str) -> int:
         """
         returns the timewindow in which the given timestamp belongs to
+        if the returned tw is not registered, this function registers it
         :param ts: float unix timestamp
+        :param tool: options are slips, suricata, or ground_truth
         :return: the timewindow number
         """
-        results: list = self.select('timewindow_details', 'timewindow', condition=f"{ts} >= start_time AND {ts} <= end_time ")
+        # todo should be moved to twid handler
+        condition = f"{ts} >= start_time AND {ts} <= end_time "
+        results: list = self.select('timewindow_details',
+                                    'timewindow',
+                                    condition=condition)
         if results:
+            # tw was seen before and is there in the db
             return int(results[0][0])
+
+        # timewindow was not seen by the gt
+        # calc it manually
+        starttime_of_first_timewindow: float = self.select(
+            'timewindow_details',
+            'start_time',
+            condition=f"timewindow = 0",
+            fetch='one')[0]
+        if ts < starttime_of_first_timewindow:
+            # negative timewindow
+            tw = ceil(ts/self.twid_width) - 1
+            print(f"@@@@@@@@@@@@@@@@ just registered a negative twww!!!! "
+                  f"{tw}")
+        elif ts == starttime_of_first_timewindow:
+            tw = 0
         else:
-            # timewindow was not seen by the gt
-            # calc it manually
-            starttime_of_first_timewindow: float = self.select(
-                'timewindow_details',
-                'start_time',
-                condition=f"timewindow = 1",
-                fetch='one')[0]
-            return int((ts - starttime_of_first_timewindow)/self.twid_width)
+            # positive tw
+            tw = int((ts - starttime_of_first_timewindow)/self.twid_width)
+
+        twid_handler = TimewindowHandler(self.get_first_ts(tool))
+        tw_start, tw_end = twid_handler.get_start_and_end_ts(tw)
+        self.register_tw(tw, tw_start, tw_end)
 
 
     def set_tw_label(self, ip: str, tool: str, tw: int, label: str):
@@ -368,6 +388,10 @@ class SQLiteDB(IDB, IObservable):
         """
         tw = self.select('labels_per_tw', 'MAX(timewindow)', fetch='one')
         return int(tw[0])
+
+
+
+
 
 
     def get_all_labels_per_all_tws(self, tool: str) -> Iterator[str]:

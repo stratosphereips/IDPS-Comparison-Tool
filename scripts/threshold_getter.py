@@ -21,7 +21,8 @@ def is_tw_malicious(experiment: str, timewindow: int) -> bool:
         # If a timewindow was detected by one of the tools, and not detected
         # by the ground truth, for example negative timewindows in slips,
         # we consider the gt label of it as "benign"
-        return False
+        # return False
+        print(f"problem getting the label of {experiment} {timewindow}")
 
 
 def metrics_sum(metrics: dict):

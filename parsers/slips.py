@@ -98,7 +98,7 @@ class SlipsParser(Parser):
             """
             ts = float(ts)
             ip = ip.replace("profile_","")
-            if tw_number := self.db.get_timewindow_of_ts(ts):
+            if tw_number := self.db.get_timewindow_of_ts(ts, 'slips'):
                 self.db.set_tw_label(ip, 'slips', tw_number, 'malicious')
                 return True
 

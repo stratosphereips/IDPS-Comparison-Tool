@@ -105,7 +105,8 @@ the slips database given to this tool using -s contains a table called alerts wh
 
 
 #### Applying the timewindow concept for the ground truth
-we read 1h worth of flows, once we find one 'malicious' label, we consider their entire timewindow as malicious, if there is no malicious flows in there, we mark that timewindow as benign
+we read 1h worth of 
+flows, once we find one 'malicious' label, we consider their entire timewindow as malicious, if there is no malicious flows in there, we mark that timewindow as benign
 
 
 #### Applying the timewindow concept for suricata
@@ -148,6 +149,8 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 * we only read even_type= "flow" or "alert" in suricata eve.json files
 
 * the flows read by suricata, slips and the gt don't have to be the same, aka the final flows count don't have to match because each tool reads the pcap differently
+
+* timewindow number may be negative if a flow is found with a flow_ts < ts of the first flow seen
 
 ---
 
