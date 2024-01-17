@@ -3,6 +3,7 @@ from parsers.config import ConfigurationParser
 from abstracts.dbs import IDB
 from abstracts.observer import IObservable
 from typing import Iterator, Optional
+from math import ceil
 
 
 class SQLiteDB(IDB, IObservable):
@@ -283,21 +284,19 @@ class SQLiteDB(IDB, IObservable):
         return float(row[0])
 
 
-    def set_ts_of_tw(self, tw: int, tw_start_ts: float) -> float:
+    def register_tw(self, tw: int, tw_start_ts: float, tw_end_ts: float) -> \
+            float:
         """
-        calculates the end ts of the given timewindow
-        and fills the timewindow_details table with the start and end time of it
+        calculates the end ts of the given timewindow and stores in the
+         timewindow_details table
         :param tw_start_ts: the timestamp of the start of the given timewindow
         :param tw: number of the tw to set the timestamps to
-        :return: the timestamp of the end of this timewindow
+        :param tw_end_ts: the timestamp of the end of this timewindow
         """
-
-        tw_end_ts = tw_start_ts + self.twid_width
-        query = f'INSERT INTO timewindow_details (timewindow, start_time, end_time) VALUES (?, ?, ?);'
+        query = f'INSERT INTO timewindow_details ' \
+                f'(timewindow, start_time, end_time) VALUES (?, ?, ?);'
         params = (tw, tw_start_ts, tw_end_ts)
         self.execute(query, params=params)
-
-        return tw_end_ts
 
     def get_first_row(self, table: str):
         query = f'SELECT * FROM {table} LIMIT 1'
@@ -311,7 +310,8 @@ class SQLiteDB(IDB, IObservable):
 
     def get_timewindows_limit(self):
         """
-        returns the period of time that the ground truth knows about and has flows and labels for
+        returns the period of time that the ground truth knows about and has
+        flows and labels for
         :return: (the start timestamp of the first timewindow,  the end timestamp of the last timewindow)
         """
         start_time: dict = self.get_first_row('timewindow_details')[1]
