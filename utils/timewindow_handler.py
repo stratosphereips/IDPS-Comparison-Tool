@@ -31,7 +31,7 @@ class TimewindowHandler:
     def get_start_and_end_ts(self, tw: int):
         """
         returns the start ts and end ts of the given timewindow
-        :param tw: the tw that we wanna get the strat and end of
+        :param tw: the tw that we wanna get the start and end of
         """
         if tw == 0:
             start = self.ts_of_first_flow

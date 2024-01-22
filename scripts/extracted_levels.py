@@ -1,3 +1,7 @@
+"""
+this file containes the highest accumuated threat level detected by slips
+in all timewindows of an expirement
+"""
 extracted_threat_levels = {
 'CTU-Normal-40/Day1': {-4: 0.05,
                                                      0: 0.0,

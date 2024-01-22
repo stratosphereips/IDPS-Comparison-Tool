@@ -346,17 +346,14 @@ class SQLiteDB(IDB, IObservable):
         starttime_of_first_timewindow: float = self.select(
             'timewindow_details',
             'start_time',
-            condition=f"timewindow = 0",
+            condition=f"timewindow = 1",
             fetch='one')[0]
-        if ts < starttime_of_first_timewindow:
-            # negative timewindow
-            tw = ceil((ts - starttime_of_first_timewindow) /self.twid_width) - 1
-        elif ts == starttime_of_first_timewindow:
-            tw = 0
-        else:
-            # positive tw
-            tw = int((ts - starttime_of_first_timewindow)/self.twid_width)
 
+        if ts == starttime_of_first_timewindow:
+            tw = 1
+        else:
+            tw = int((ts - starttime_of_first_timewindow) /
+                       self.twid_width) +1
         return tw
 
 

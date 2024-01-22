@@ -1,6 +1,9 @@
 """
 calculates the TP TN FP FN for each threshold in the range 0..150
 this script tries all thresholds on all expirements on all tws
+
+Usage: python3 scripts/slips_threshold_getter.py
+
 """
 
 from typing import Dict
@@ -8,21 +11,23 @@ from pprint import pp
 from scripts.extracted_levels import extracted_threat_levels
 from scripts.extracted_gt_tw_labels import gt_tw_labels
 
-
 def is_tw_malicious(experiment: str, timewindow: int) -> bool:
     """
     checks whether the ground truth label of the given timewindow is malicious
     :param experiment: name of experiment to check
     :param timewindow: number of tw to check
     """
-    try:
-        return gt_tw_labels[experiment][timewindow] == 'malicious'
-    except:
-        # If a timewindow was detected by one of the tools, and not detected
+    if timewindow in gt_tw_labels[experiment]:
+        # we do have a label for this timewindow
+        # Note: If a timewindow was detected by one of the tools, and not
+        # detected
         # by the ground truth, for example negative timewindows in slips,
         # we consider the gt label of it as "benign"
-        # return False
-        print(f"problem getting the label of {experiment} {timewindow}")
+        return gt_tw_labels[experiment][timewindow] == 'malicious'
+    else:
+        # we don't have  lable for this timewindow, probably because there
+        # was no flows by host in this timewindow
+        print(f"problem getting the label of {experiment} {timewindow},")
 
 
 def metrics_sum(metrics: dict):

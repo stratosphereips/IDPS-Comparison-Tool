@@ -1,5 +1,5 @@
 import utils.timestamp_handler
-from typing import Tuple, List
+from typing import Tuple, Dict, List
 from re import findall
 from parsers.config import ConfigurationParser
 from utils.timewindow_handler import TimewindowHandler
@@ -36,7 +36,10 @@ class GroundTruthParser(Parser):
     unknown_labels = 0
     benign_labels = 0
     malicious_labels = 0
-    last_registered_tw = -1
+    # this should be number of first tw - 1 to be able to lael the first tw
+    last_registered_tw = 0
+    # every time a tw is registered, its' number will be saved here
+    registered_tws: List[int] = []
     tool_name = "ground_truth"
     is_first_flow = True
 
@@ -50,7 +53,8 @@ class GroundTruthParser(Parser):
         elif ground_truth_type == 'file':
             self.gt_zeek_file  = ground_truth
 
-        # check th etype of the given zeek file/dir with ground truth labels. 'tab-separated' or 'json'?
+        # check th etype of the given zeek file/dir with
+        # ground truth labels. 'tab-separated' or 'json'?
         self.zeek_file_type: str = self.check_type()
         self.read_config()
         self.timestamp_handler = utils.timestamp_handler.TimestampHandler()
@@ -229,7 +233,7 @@ class GroundTruthParser(Parser):
                'timestamp': flow[2],
                'srcip': flow[3],
             }
-        except IndexError:
+        except (IndexError, TypeError):
             # one of the above 2 methods returned an invalid line!
             return False
 
@@ -237,6 +241,7 @@ class GroundTruthParser(Parser):
     def register_timewindow(self, ts):
         """
         registers a new timewindow if the ts doesn't belong t an existing one
+        sets the current self.tw_number
         :param ts: unix ts of the flow being parsed
         """
         ts = float(ts)
@@ -244,7 +249,7 @@ class GroundTruthParser(Parser):
         if self.is_first_flow:
             self.is_first_flow = False
             self.twid_handler = TimewindowHandler(ts)
-            self.tw_number = 0
+            self.tw_number = 1
         else:
             # let the db decide which tw this is
             # tw number may be negative if a flow is found with a ts < ts
@@ -269,27 +274,25 @@ class GroundTruthParser(Parser):
         # this tool is given a zeek logfile and the path of it is abs
         return filename
 
-    def update_existing_label(self, flow: dict) -> bool:
-        """
-        update existing label f the tw is already registered (as benign by default)
-         but a flow was found in it with malicious label
-        """
-        return self.tw_number == self.last_registered_tw and flow['label'] == 'malicious'
 
     def label_tw(self, flow: dict):
-        """ labels gt by TW in the db"""
+        """ labels gt by TW in the db """
 
-        # register a tw as soon as it is encountered as benign,
+        # register a tw as soon as it is encountered with the label of the
+        # first flow,
+        # if it's benign, we will only change that label when a malicious
+        # flow is found
+        # if the first flow is malicious, then no need to change the label to
+        # benign when a benign flow is found
+
         # re-register it as malicious if one malicious flow was
         # found in an already registered tw
         if (
-                self.tw_number > self.last_registered_tw
+                self.tw_number not in self.registered_tws
                 or
-                self.update_existing_label(flow)
+                flow['label'] == 'malicious'
         ):
-
-            # update last registered tw
-            self.last_registered_tw = self.tw_number
+            self.registered_tws.append(self.tw_number)
 
             self.db.set_tw_label(
                 flow['srcip'],

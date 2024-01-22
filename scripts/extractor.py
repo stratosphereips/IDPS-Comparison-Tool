@@ -4,7 +4,7 @@ window in the given alerts.json. it only prints timewindows of the
  given host ip
 
 Usage:
-python3 extractor.py <slips' alerts.json> <host ip>
+python3 max_accumulated_score_extractor_for_slips.py <slips' alerts.json> <host ip>
 
 """
 
