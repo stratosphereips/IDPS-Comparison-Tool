@@ -170,5 +170,27 @@ command for labeling conn.log files
 
 ```zeek-files-labeler.py -l conn.log.labeled -f folder-with-zeek-log-files```
 
+command for extracting mac accumulated threat level for all timewindows from an alert.json 
+
+```python3 scripts/max_accumulated_score_extractor_for_slips.py alerts.json <host_ip>```
+
+
+command for getting the bet slips threshold given the extracted ground truth labels and max accumulated scores
+
+note: this script assumes the correct ground truth labels are in scripts/extracted_gt_tw_labels.py
+and the correct max accumulated scores of slips are in scripts/extracted_levels.py 
+
+```
+python3 scripts/slips_threshold_getter.py
+```
+
+
+command for extracting ground truth labels from a conn.log.labeled file
+note: we only extract the labels per timewindow per ip
+
+```
+git checkout origin/ground_truth_timewindow_label_extractor
+python3 main.py -gtf conn.log.labeled -i <host_ip>
+```
 
 
