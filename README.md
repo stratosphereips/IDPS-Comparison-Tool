@@ -157,25 +157,25 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 
 # Used cmds
 
-command for generating all zeek files in the dataset/
+* command for generating all zeek files in the dataset/
 
 ``` zeek -C -r <pcap>  tcp_inactivity_timeout=60mins tcp_attempt_delay=1min```
 
 
-command for labeling conn.log files
+* command for labeling conn.log files
 
 ``` python3 netflowlabeler.py -c labels.config -f /path/to/generated/conn.log ```
 
-(optional) To label the rest of the Zeek files using an already labeled conn.log file (conn.log.labeled)
+* (optional) To label the rest of the Zeek files using an already labeled conn.log file (conn.log.labeled)
 
 ```zeek-files-labeler.py -l conn.log.labeled -f folder-with-zeek-log-files```
 
-command for extracting mac accumulated threat level for all timewindows from an alert.json 
+* command for extracting mac accumulated threat level for all timewindows from an alert.json 
 
 ```python3 scripts/max_accumulated_score_extractor_for_slips.py alerts.json <host_ip>```
 
 
-command for getting the bet slips threshold given the extracted ground truth labels and max accumulated scores
+* command for getting the bet slips threshold given the extracted ground truth labels and max accumulated scores
 
 note: this script assumes the correct ground truth labels are in scripts/extracted_gt_tw_labels.py
 and the correct max accumulated scores of slips are in scripts/extracted_levels.py 
@@ -185,7 +185,7 @@ python3 scripts/slips_threshold_getter.py
 ```
 
 
-command for extracting ground truth labels from a conn.log.labeled file
+* command for extracting ground truth labels from a conn.log.labeled file
 note: we only extract the labels per timewindow per ip
 
 ```
