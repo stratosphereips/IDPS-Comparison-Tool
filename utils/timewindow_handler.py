@@ -30,13 +30,12 @@ class TimewindowHandler:
 
     def get_start_and_end_ts(self, tw: int):
         """
+        this function is responsible for getting the tw limits ,
+        later we'll store em in the db
         returns the start ts and end ts of the given timewindow
         :param tw: the tw that we wanna get the start and end of
         """
-        if tw == 0:
-            start = self.ts_of_first_flow
-        else:
-            start = self.ts_of_first_flow + (self.width * tw)
+        start = self.ts_of_first_flow + (self.width * (tw-1))
         end = start + self.width
         return start, end
 
