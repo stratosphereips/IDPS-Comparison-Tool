@@ -170,17 +170,21 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 
 ```zeek-files-labeler.py -l conn.log.labeled -f folder-with-zeek-log-files```
 
-* command for extracting mac accumulated threat level for all timewindows from an alert.json 
+* command for extracting max accumulated threat level for all timewindows from an alert.json 
 
-```python3 scripts/max_accumulated_score_extractor_for_slips.py alerts.json <host_ip>```
+```
+git checkout origin/ground_truth_timewindow_label_extractor
+python3 scripts/max_accumulated_score_extractor_for_slips.py alerts.json <host_ip>
+```
 
 
-* command for getting the bet slips threshold given the extracted ground truth labels and max accumulated scores
+* command for getting the best slips threshold given the extracted ground truth labels and max accumulated scores
 
 note: this script assumes the correct ground truth labels are in scripts/extracted_gt_tw_labels.py
 and the correct max accumulated scores of slips are in scripts/extracted_levels.py 
 
 ```
+git checkout origin/ground_truth_timewindow_label_extractor
 python3 scripts/slips_threshold_getter.py
 ```
 
