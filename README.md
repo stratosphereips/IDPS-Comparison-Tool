@@ -170,5 +170,6 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 
 ```zeek-files-labeler.py -l conn.log.labeled -f folder-with-zeek-log-files```
 
-Checkout the Utils branch @ https://github.com/stratosphereips/IDPS-Comparison-Tool/tree/utils for the scripts used to extract the ground truth labels, the slips scores, and more.
+Checkout the scripts used for the comparison 
+@ https://github.com/stratosphereips/Scripts-Used-for-Comparison
 
