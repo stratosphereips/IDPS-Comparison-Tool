@@ -11,10 +11,11 @@ class Calculator(IObservable):
     # will save the tp, tn, fp and fn for each tool in this dict
     metrics = {}
 
-    def __init__(self,
-                 tool: str,
-                 output_dir: str,
-                 ):
+    def __init__(
+             self,
+             tool: str,
+             output_dir: str,
+    ):
         super(Calculator, self).__init__()
 
         # init the logger
@@ -104,7 +105,7 @@ class Calculator(IObservable):
         self.metrics = cm
         return cm
 
-    def MCC(self):
+    def MCC(self) -> float:
         """
         Calculates the Matthews correlation coefficient (MCC) for a given tool
         """
@@ -125,7 +126,7 @@ class Calculator(IObservable):
 
         return  mcc
 
-    def recall(self):
+    def recall(self) -> float:
         """
         prints the recall of the given tool compared with the ground truth
         """
@@ -141,7 +142,7 @@ class Calculator(IObservable):
         return recall
 
 
-    def precision(self):
+    def precision(self) -> float:
         """
         prints the precision of the given tool compared with the ground truth
         """
@@ -156,7 +157,7 @@ class Calculator(IObservable):
         self.log(f"{self.tool}: precision: ", precision)
         return precision
 
-    def F1(self):
+    def F1(self) -> float:
         """
         prints the F1 of the given tool
         """
@@ -190,7 +191,7 @@ class Calculator(IObservable):
 
         return fpr
 
-    def TPR(self, log=True):
+    def TPR(self, log=True) -> float:
         """
         TPR = TP / (TP + FN)
         prints the true positive rate of a given tool
@@ -205,29 +206,31 @@ class Calculator(IObservable):
             self.log(f"{self.tool}: TPR: ", tpr)
         return tpr
 
-    def FNR(self):
+    def FNR(self) -> float:
         """
-        FNR = 1- TPR
+        FNR = FN / (FN + TP)
         prints the false negative rate of a given tool
-        :return: float
         """
-        fnr = 1 - self.TPR(log=False)
+        try:
+            fnr = self.metrics["FN"] / (self.metrics["FN"] + self.metrics["TP"])
+        except ZeroDivisionError:
+            fnr = 0
+
         self.log(f"{self.tool}: FNR: ", fnr)
         return fnr
 
-    def TNR(self, log=True):
+    def TNR(self, log=True) -> float:
         """
         FNR = 1 − FPR
         prints the true negative rate of a given tool
         :param log: logs the output to cli if set to true, we set it to false when we're using this function inside another one
-        :return: float
         """
         tnr = 1 - self.FPR(log=False)
         if log:
             self.log(f"{self.tool}: TNR: ", tnr)
         return tnr
 
-    def accuracy(self):
+    def accuracy(self) -> float:
         """
         :return: float
         """
