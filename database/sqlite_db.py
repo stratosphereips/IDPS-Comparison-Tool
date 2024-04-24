@@ -127,10 +127,13 @@ class SQLiteDB(IDB, IObservable):
 
 
     def get_flows_parsed(self, tool: str):
-        """reads the number of flows parsed so far by tool from the flows_count table"""
+        """reads the number of flows parsed so far
+        by tool from the flows_count table"""
         assert tool in ['suricata', 'ground_truth', 'slips']
 
-        res = self.select('flows_count', '*', condition=f"type_ = '{tool}';", fetch='one')
+        res = self.select('flows_count',
+                          '*',
+                          condition=f"type_ = '{tool}';", fetch='one')
         if res:
             return res[1]
         return 0
@@ -192,11 +195,10 @@ class SQLiteDB(IDB, IObservable):
         :param tool:  slips, suricata or ground_truth
         :param count: number of labeled flows
         """
-        query = f'INSERT OR REPLACE INTO flows_count (type_, count) VALUES (\'{tool}\', {count});'
+        query = (f'INSERT OR REPLACE INTO flows_count '
+                 f'(type_, count) VALUES (\'{tool}\', {count});')
         self.execute(query)
 
-
-    def store_flow(self, flow: dict, tool: str):
     
     def _store_gt_flow(self, flow_exists: bool, flow, label: str, aid: str)\
             -> bool:
@@ -266,59 +268,39 @@ class SQLiteDB(IDB, IObservable):
                  f"WHERE aid = \"{aid}\";")
         self.execute(query)
         return True
+        
+    def store_flow(self, flow: dict, tool: str) -> bool:
         """
         updates or inserts into the labels_flow_by_flow table,
         the flow and label detected by the
         label_type (which is either slips or suricata)
 
         :param flow: dict with aid and label
-        :param tool: the label can be the ground_truth , slips, or suricata
-        :return: True if the flow is stored in the db and False if it is discarded
+        :param tool: the label can be the ground_truth ,
+        slips, or suricata
+        :return: True if the flow is successfully added to the db (aka aid
+        collision) and
+        False if the flow was already there in the db, or flow was present
+        in a tool but not the gt
         """
         aid = flow["aid"]
         label = flow['label']
 
-        # check if the row already exists with a label
-        exists = self.select('labels_flow_by_flow', '*', condition=f'aid="{aid}"')
+        # check if the row already exists with a label, aka aid collision
+        exists = self.select('labels_flow_by_flow',
+                             '*',
+                             condition=f'aid="{aid}"')
+        
         if tool == 'ground_truth':
-            label_col: str = self.labels_map[tool]
-            if exists:
-                # aid collision in gt, replace the old flow
-                # TODO handle this
-                print(f"[Warning] Found collision in ground truth. 2 flows have the same aid."
-                      f" flow: {flow}. label_type: {tool} .. "
-                      f"discarded the first flow and stored the last one only.")
-                self.aid_collisions += 1
-                self.update('labels_flow_by_flow', f'{label_col}= "{label}"', condition=f'aid ="{aid}"')
-            else:
-                query = f'INSERT INTO labels_flow_by_flow (aid, {label_col}) VALUES (?, ?);'
-                params = (aid, label)
-                self.execute(query, params=params)
-        else:
-            # this flow is read by a tool, not the gt
-            # if the gt doesn't have the aid of this flow, we discard it
-            if exists:
-                # this flow is read by slips or suricata AND was read by one of them or the gt before
-                # now we update this flow's label to the latest label seen in the eve.json or the slips db
-                # TODO write this in the docs
-
-                # we have this problem of suricata logging the same flow many times, sometimes in an alert event,
-                # other times as a flow event
-                # the solution to this is, if a fow was found once as malicious, we don't change its' label
-                # to benign again. event if it was found many times as a "flow" event
-                # TODO write this in the docs
-                flow_old_label: Optional[str] = self.get_label_of_flow(aid, by=tool)
-                if flow_old_label == 'malicious':
-                    return True
-
-                # can be slips_vxxx_label or suricata_vxxx_label
-                label_col: str = self.labels_map[tool]
-                query = f"UPDATE labels_flow_by_flow SET {label_col} = \"{label}\" WHERE aid = \"{aid}\";"
-                self.execute(query)
-            else:
-                self.increase_discarded_flows(tool)
-                return False
-        return True
+            return self._store_gt_flow(exists, flow, label, aid)
+        
+        return self._store_tool_flow(
+            exists,
+             label,
+             aid,
+             tool
+        )
+        
 
     def get_aid_collisions(self):
         return self.aid_collisions
@@ -581,18 +563,27 @@ class SQLiteDB(IDB, IObservable):
         """
         given a specific flow, returns the label by the given tool
         if by=None, returns all labels of this flow
-        if by is given, the return value will either be 'benign', 'malicious' or None
+        if by is given, the return value will either be 'benign',
+        'malicious' or None
         if not, it will be something like this
         ('1:AI5bDcB9qLc3eAAZ2Mle9Nb+DNs=', None, 'benign', None)
         :param by: can be 'slips' , 'suricata', or 'ground_truth'
         :return: 'malicious' or 'benign'
         """
         if not by:
-            return self.select('labels_flow_by_flow', '*', condition=f' aid = "{aid}";', fetch='one')
+            return self.select('labels_flow_by_flow',
+                               '*',
+                               condition=f' aid = "{aid}";',
+                               fetch='one')
 
-        assert by in self.labels_map, f'trying to get the label set by an invalid tool {by}'
-        label_col = self.labels_map[by]
-        return self.select('labels_flow_by_flow', label_col, condition=f' aid = "{aid}";', fetch='one')[0]
+        assert by in self.labels_map, (f'trying to get the label set'
+                                       f' by an invalid tool {by}')
+        
+        label_col: str = self.labels_map[by]
+        return self.select('labels_flow_by_flow',
+                           label_col,
+                           condition=f' aid = "{aid}";',
+                           fetch='one')[0]
 
 
 
