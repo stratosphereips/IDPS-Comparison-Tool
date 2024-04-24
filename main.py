@@ -55,7 +55,8 @@ class Main(IObservable):
             # dir already empty
             return
 
-        self.log(f"Overwriting all files in {self.args.output_dir}",'')
+        self.log(f"Overwriting all files in "
+                 f"{self.args.output_dir}",'')
         # delete all old files in the output dir
         for file in files_in_the_dir:
             file_path = os.path.join(self.args.output_dir, file)
@@ -91,19 +92,21 @@ class Main(IObservable):
         # this has to be the path of the sqlite3 db generated
         # by slips with all the labels and community IDs
         slips_db: str = self.args.slips_db
-        if self.validate_path(slips_db):
-            self.log(f"Reading Slips db from: ", slips_db)
+        self.log(f"Reading Slips db from: ", slips_db)
         assert os.path.isfile(slips_db), f"Slips DB should be a file, not a dir"
-        SlipsParser(self.output_dir, self.results_path, slips_db=slips_db).parse()
+        SlipsParser(self.output_dir,
+                    self.results_path,
+                    slips_db=slips_db).parse()
 
     def start_suricata_parser(self):
         eve_file: str = self.args.eve_file
-        if self.validate_path(eve_file):
-            self.log(f"Using suricata: ", eve_file)
+        self.log(f"Using suricata: ", eve_file)
         assert os.path.isfile(eve_file), f"Suricata eve.json should be " \
                                          f"a file, not a dir"
         # read suricata eve.json
-        SuricataParser(self.output_dir, self.results_path, eve_file=eve_file).parse()
+        SuricataParser(self.output_dir,
+                       self.results_path,
+                       eve_file=eve_file).parse()
 
     def start_ground_truth_parser(self):
         self.log("Starting ground truth parser.", '')
@@ -128,17 +131,18 @@ class Main(IObservable):
 
     def validate_path(self, path):
         """make sure this path is abs and exists"""
-        if not os.path.isabs(path):
-            self.log(f"Invalid os.path. {path} must be absolute. Stopping.", '')
-            sys.exit()
+        assert os.path.isabs(path), (f"Invalid path. {path} must be "
+                                     f"absolute. Stopping.")
         assert os.path.exists(path), f"Path '{path}' doesn't exist"
         return True
 
     def start_parsers(self, print_stats_event):
         """
         runs each parser in a separate proc and returns when they're all done
-        :param print_stats_event: the thread will set this event when it's done reading the ground truth flows and
-        started reading slips and suricata flows so the print_stats thread can start printing
+        :param print_stats_event: the thread will set this event when it's
+        done reading the ground truth flows and
+        started reading slips and suricata flows so the print_stats
+        thread can start printing
         """
         gt_parser: multiprocessing.Process = multiprocessing.Process(
             target=self.start_ground_truth_parser, args=( )
@@ -151,17 +155,20 @@ class Main(IObservable):
             )
 
         gt_parser.start()
-        self.log(f"New process started for parsing: ", 'Ground Truth')
+        self.log(f"New process started for parsing: ",
+                 'Ground Truth')
         gt_parser.join()
 
         # since we discard slips and suricata's flows based on
         # the ground truth flows,
         # we need to make sure we're done  reading them first
         suricata_parser.start()
-        self.log(f"New process started for parsing: ", 'Suricata')
+        self.log(f"New process started for parsing: ",
+                 'Suricata')
 
         slips_parser.start()
-        self.log(f"New process started for parsing: ", 'Slips')
+        self.log(f"New process started for parsing: ",
+                 'Slips')
 
         print_stats_event.set()
 
@@ -291,11 +298,17 @@ class Main(IObservable):
             for row in  self.db.get_all_labels_per_all_tws(tool):
                 # each row is (ip, tw , gt_label, tool_label)
                 ip, tw , gt_label, tool_label = row
-                cm: dict = calc.get_confusion_matrix([(gt_label, tool_label)], log=False)
+                cm: dict = calc.get_confusion_matrix(
+                    [(gt_label, tool_label)], log=False)
                 self.db.store_performance_errors_per_tw(ip, tw, tool, cm)
 
         comparer.print_stats()
-
+        
+    def validate_given_paths(self):
+        for path in (self.args.slips_db, self.args.eve_file):
+            self.validate_path(path)
+        self.validate_gt()
+        
     def main(self):
 
         if self.args.confusion_matrix_db:
@@ -310,9 +323,11 @@ class Main(IObservable):
             # used to tell the print_stats thread to start
             print_stats_event = multiprocessing.Event()
 
-            stats_thread = Thread(target=self.print_stats, args=(print_stats_event,), daemon=True)
+            stats_thread = Thread(target=self.print_stats,
+                                  args=(print_stats_event,),
+                                  daemon=True)
             stats_thread.start()
-
+            self.validate_given_paths()
             self.start_parsers(print_stats_event)
             # now that the parses ended don't print more stats
             self.stop_stats_thread = True
@@ -321,12 +336,14 @@ class Main(IObservable):
 
             self.log(' ', ' ', log_to_results_file=False)
             self.log('', "-" * 30, log_to_results_file=False)
-            self.log(f"Total flows read by parsers (doesn't include discarded flows): ",'')
+            self.log(f"Total flows read by parsers (doesn't include "
+                     f"discarded flows): ",'')
             self.db.print_table('flows_count')
 
 
             self.log(' ', ' ')
-            self.log("Flows are discarded when they're found in a tool but not in the ground truth", '')
+            self.log("Flows are discarded when they're found in a "
+                     "tool but not in the ground truth", '')
             for tool in self.supported_tools:
                 self.print_flows_parsed_vs_discarded(tool)
 
