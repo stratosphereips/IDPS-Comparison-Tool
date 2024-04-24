@@ -1,7 +1,12 @@
 import os
 import sys
 from threading import Thread
-from typing import Tuple, List, Iterator, Optional
+from contextlib import suppress
+from shutil import rmtree
+import datetime
+import multiprocessing
+from time import time, sleep
+
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
 from parsers.cm_db import ConfusionMatrixDBParser
@@ -12,14 +17,9 @@ from parsers.ground_truth import GroundTruthParser
 from comparisons.flow_by_flow import FlowByFlow
 from comparisons.per_timewindow import PerTimewindow
 from metrics.calculator import Calculator
-from contextlib import suppress
-from shutil import rmtree
-from termcolor import colored
-import datetime
-import multiprocessing
-from time import time, sleep
 from abstracts.observer import IObservable
 from logger.logger import Logger
+
 class Main(IObservable):
     name = 'Main'
     starttime = time()
@@ -187,8 +187,11 @@ class Main(IObservable):
                   f"slips: {self.db.get_flows_parsed('slips')} "
                   f"suricata: {self.db.get_flows_parsed('suricata')} ",
                   end='\r')
-
-
+    
+    def get_human_readable_datetime(self) -> str:
+        now = datetime.datetime.now()
+        return now.strftime("%A, %B %d, %Y %H:%M:%S")
+        
     def add_metadata(self):
         """
         Adds tool versions and files used
@@ -203,13 +206,16 @@ class Main(IObservable):
         suricata_version = config.suricata_version()
 
         with open(metadata_file, 'w') as metadata:
-            metadata.write(f"Slips version: {slips_version} \n"
+            metadata.write(f"Timestamp: "
+                           f"{self.get_human_readable_datetime()}\n\n"
+                           f"Used cmd: {' '.join(sys.argv)}\n\n"
+                           f"Slips version: {slips_version} \n\n"
                            f"Suricata version: {suricata_version}\n\n"
                            f"Ground truth: "
                            f"{self.args.ground_truth_dir or self.args.ground_truth_file}\n"
-                           f"Slips DB: {self.args.slips_db}\n"
-                           f"Suricata file: {self.args.eve_file}\n"
-                           f"Output directory: {self.output_dir}")
+                           f"Slips DB: {self.args.slips_db}\n\n"
+                           f"Suricata file: {self.args.eve_file}\n\n"
+                           f"Output directory: {self.output_dir}\n\n")
 
     def print_flows_parsed_vs_discarded(self, tool: str):
         """
