@@ -197,6 +197,75 @@ class SQLiteDB(IDB, IObservable):
 
 
     def store_flow(self, flow: dict, tool: str):
+    
+    def _store_gt_flow(self, flow_exists: bool, flow, label: str, aid: str)\
+            -> bool:
+        tool = 'ground_truth'
+        label_col: str = self.labels_map[tool]
+        if flow_exists:
+            # aid collision in gt, replace the old flow
+            # TODO handle this
+            print(f"[Warning] Found collision in ground truth. "
+                  f"2 flows have the same aid."
+                  f" flow: {flow}. label_type: {tool} .. "
+                  f"discarded the first flow and stored the"
+                  f" last one only.")
+            self.aid_collisions += 1
+            self.update('labels_flow_by_flow',
+                        f'{label_col}= "{label}"',
+                        condition=f'aid ="{aid}"')
+            return True
+        
+        query = (f'INSERT INTO labels_flow_by_flow '
+                 f'(aid, {label_col}) VALUES (?, ?);')
+        params = (aid, label)
+        self.execute(query, params=params)
+        return True
+        
+        
+    def _store_tool_flow(self,
+                         flow_found_in_gt: bool,
+                         label: str,
+                         aid: str,
+                         tool:str):
+        """
+        stores a flow parsed by a tool parser, not read from the ground
+        truth
+        """
+        # if the gt doesn't have the aid of this flow, we discard it
+        if not flow_found_in_gt:
+            self.increase_discarded_flows(tool)
+            return False
+        
+        # this flow is read by slips or suricata AND was
+        # read by one of them or the gt before
+        
+        # now we update this flow's label to the latest
+        # label seen
+
+        # we have this problem of suricata logging the same
+        # flow many times, sometimes as an alert event,
+        # other times as a flow event
+        # the solution to this is, if a flow was found once as
+        # malicious, we don't change its' label
+        # to benign again. event if it was found many times
+        # as a "flow" event
+        # TODO write this in the docs
+        
+        flow_old_label: Optional[str] = self.get_label_of_flow(
+            aid, by=tool
+        )
+        if flow_old_label == 'malicious':
+            # this flow was practically never added to the db
+            return False
+
+        # can be slips_vxxx_label or suricata_vxxx_label
+        label_col: str = self.labels_map[tool]
+        query = (f"UPDATE labels_flow_by_flow "
+                 f"SET {label_col} = \"{label}\" "
+                 f"WHERE aid = \"{aid}\";")
+        self.execute(query)
+        return True
         """
         updates or inserts into the labels_flow_by_flow table,
         the flow and label detected by the
