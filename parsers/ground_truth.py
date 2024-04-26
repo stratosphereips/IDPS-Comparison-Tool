@@ -354,6 +354,9 @@ class GroundTruthParser(Parser):
         self.log(f"Total unknown labels: ", self.unknown_labels)
         self.log('', "-" * 30)
 
+        total_tws = self.db.get_tws_count()
+        self.log(f"Total registered timewindows by the ground truth: ",
+                 f"{total_tws}. ")
         print()
 
     def get_line_type(self, log_file_path: str):

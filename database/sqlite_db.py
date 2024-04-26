@@ -47,7 +47,8 @@ class SQLiteDB(IDB, IObservable):
             'flows_count': "type_ TEXT PRIMARY KEY, "
                            "count INT",
 
-            # this reads the ts of all groundtruth flows, and has the aid and gt_label in common with the "flows" table
+            # this reads the ts of all groundtruth flows, and has the aid
+            # and gt_label in common with the "flows" table
             'ground_truth_flows': "aid TEXT PRIMARY KEY, "
                                   "timestamp REAL, "
                                   "label TEXT,  "
@@ -410,7 +411,8 @@ class SQLiteDB(IDB, IObservable):
 
     def set_tw_label(self, ip: str, tool: str, tw: int, label: str):
         """
-        fills the labels_per_tw table with each tw and the label of it for the given tool
+        fills the labels_per_tw table with each tw and the label
+        of it for the given tool
         :param label: malicious or benign
         """
         if tool not in ['suricata', 'ground_truth', 'slips']:
@@ -418,10 +420,11 @@ class SQLiteDB(IDB, IObservable):
             return False
 
         label_col:str = self.labels_map[tool]
-        query = f'INSERT OR REPLACE INTO labels_per_tw (IP, timewindow, {label_col}) VALUES (?, ?, ?);'
+        query = (f'INSERT OR REPLACE INTO labels_per_tw'
+                 f' (IP, timewindow, {label_col}) VALUES (?, ?, ?);')
         params = (ip, tw, label)
         self.execute(query, params=params)
-
+        
         # set the gt label of this tw as benign if it wasn't found
         query = f"UPDATE labels_per_tw SET ground_truth_label = 'benign' " \
                 f"WHERE ground_truth_label IS NULL " \
@@ -434,7 +437,9 @@ class SQLiteDB(IDB, IObservable):
         returns the last timewindow read by the ground truth from the labels_per_tw table
         :return: timewindow number
         """
-        tw = self.select('labels_per_tw', 'MAX(timewindow)', fetch='one')
+        tw = self.select('labels_per_tw',
+                         'MAX(timewindow)',
+                         fetch='one')
         return int(tw[0])
 
 
@@ -469,7 +474,7 @@ class SQLiteDB(IDB, IObservable):
         cols = f'IP, timewindow, ground_truth_label, {label_col}'
 
         # IMPORTANT: don't use select() here, we'll fetch one by one
-        self.execute(f"SELECT {cols} from labels_per_tw ")
+        self.execute(f"SELECT {cols} from labels_per_tw")
 
         while True:
             row = self.fetchone()
@@ -542,7 +547,10 @@ class SQLiteDB(IDB, IObservable):
 
         column = self.labels_map[type_]
         return self.get_count('labels_flow_by_flow', condition=f'{column}="{label}"')
-
+    
+    def get_tws_count(self) -> int:
+        """returns the number of registered tws by the gt in the db"""
+        return self.get_count('timewindow_details')
 
     def get_labeled_flows_by(self, type_):
         """
@@ -555,7 +563,9 @@ class SQLiteDB(IDB, IObservable):
         # get the column name  of the given type
         label = self.labels_map[type_]
 
-        all_labeled_flows = self.select('labels_flow_by_flow', '*', condition=f' {label} IS NOT NULL AND {label} != "";')
+        all_labeled_flows = self.select('labels_flow_by_flow',
+                                        '*',
+                                        condition=f' {label} IS NOT NULL AND {label} != "";')
         return all_labeled_flows
 
 
