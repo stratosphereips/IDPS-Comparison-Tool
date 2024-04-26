@@ -95,7 +95,9 @@ for example
 3. labels are stored per flow and per timewindow
 4. the tool then retrieves the actual and predicted value of each of the given tools and passes them to the calculator for calculating the metrics
 
-## Comparison Method 1: How labels per timewindow are calculated
+## Comparison Method 1: Comparison per timewindow
+
+##### How labels per timewindow are calculated
 Timewindow labels are detected in the following way:
 
 A timewindow is 1h interval, the given pcap is split into as many 1h intervals as needed and each interval (timewindow) has 1 label, either malicious or benign
@@ -136,21 +138,25 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 
 # Limitations
 
-* the labels in ground truth zeek dir have to be 'Malicious' or 'Benign' only. if any other label is present this tool will consider it "benign"
+* the labels in ground truth zeek dir have to be 'Malicious' or 'Benign' only. if any other label is present this tool will consider it "Benign"
 * ground truth dirs can either be json or tab separated zeek dir or conn.log file
 
 * all paths given as parameters to this tool must be absolute paths.
 * if any flow doesn't have a label by suricata or slips, this tool considers the flow as benign 
 
-* slips now labels conn.log flows only, just like zeek does when zeel's community_id is enabled as a plugin
+* slips now labels conn.log flows only, just like zeek does when zeek's community_id is enabled as a plugin
 
-* all flows read by a tool, that don't have a matching flow in the ground truth file, are discarded. the number if discarded flows is written in the cli
+* all flows read by a tool, that don't have a matching flow in the ground truth file, are discarded. and the number of 
+discarded flows is written in the cli at the end of the analysis.
+* timewindows found in tools but not in the ground truth are NOT discarded when comparing by timewindow. 
+we add them to the database even though the ground truth has no label for them.
 
-* we only read even_type= "flow" or "alert" in suricata eve.json files
+* we only read event_type= "flow" or "alert" in suricata eve.json files
 
-* the flows read by suricata, slips and the gt don't have to be the same, aka the final flows count don't have to match because each tool reads the pcap differently
+* the flows read by suricata, slips and the gt don't have to be the same, meaning that, the final flows count don't have to match because each tool reads the pcap differently
 
-* timewindow number may be negative if a flow is found with a flow_ts < ts of the first flow seen
+* timewindow numbers may be negative if a flow is found with a flow timestamp < timestamp of the first flow seen
+
 
 ---
 
