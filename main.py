@@ -224,7 +224,7 @@ class Main(IObservable):
                            f"Suricata file: {self.args.eve_file}\n\n"
                            f"Output directory: {self.output_dir}\n\n")
 
-    def print_flows_parsed_vs_discarded(self, tool: str):
+    def print_discarded_flows_and_tws(self, tool: str):
         """
         print the flows parsed, discarded and
         actual flows taken into consideration in the calculations by the given
@@ -233,13 +233,12 @@ class Main(IObservable):
         """
         parsed_flows: int = self.db.get_flows_parsed(tool)
         discarded_flows: int = self.db.get_discarded_flows(tool)
-        used_flows: int =  parsed_flows - discarded_flows
-        if not discarded_flows:
-            used_flows = parsed_flows
+        discarded_tws: int = self.db.get_discarded_timewindows(tool)
 
         self.log(f"Total read flows by {tool} "
                  f"(doesn't include discarded flows): {parsed_flows}  -- "
-                 f"Discarded flows: {discarded_flows}", '')
+                 f"Discarded flows: {discarded_flows} -- "
+                 f"Discarded timewindows: {discarded_tws}", '')
 
     def validate_gt(self):
         # this should always be a labeled zeek json dir
@@ -345,7 +344,7 @@ class Main(IObservable):
             self.log("Flows are discarded when they're found in a "
                      "tool but not in the ground truth", '')
             for tool in self.supported_tools:
-                self.print_flows_parsed_vs_discarded(tool)
+                self.print_discarded_flows_and_tws(tool)
 
             # before calculating anything, fill out the missing labels with benign
             self.db.fill_null_labels()

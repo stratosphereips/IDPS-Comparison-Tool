@@ -3,19 +3,19 @@ from parsers.config import ConfigurationParser
 from abstracts.dbs import IDB
 from abstracts.observer import IObservable
 from typing import Iterator, Optional
-from math import ceil
-
+from .constants import Tables
 
 class SQLiteDB(IDB, IObservable):
     """Stores all the flows slips reads and handles labeling them"""
     # stores the ts of the first flow for each tool
     ts_tracker = {}
     aid_collisions = 0
-    discarded = 0
 
     def init(self):
         self.read_config()
-        # column names use the current version of the tool read from config.yaml
+        self.tables = Tables()
+        # column names use the current version of the tool
+        # read from config.yaml
         self.slips_label_col = f"slips_v{self.slips_version}_label"
         self.suricata_label_col = f"suricata_v{self.suricata_version}_label"
         self.labels_map = {
@@ -63,6 +63,9 @@ class SQLiteDB(IDB, IObservable):
             'discarded_flows': "tool TEXT PRIMARY KEY, "
                                "count INTEGER DEFAULT 0 ",
             
+            self.tables.DISCARDED_TIMEWINDOWS: "tool TEXT PRIMARY KEY, "
+                                               "count INTEGER DEFAULT 0 ",
+            
             # keeps track of registered tws by the ground truth only.
             'timewindow_details': "timewindow INTEGER PRIMARY KEY, "
                                   "start_time REAL, "
@@ -90,17 +93,18 @@ class SQLiteDB(IDB, IObservable):
             }
         for table_name, schema in table_schema.items():
             self.create_table(table_name, schema)
-        self.init_discarded_flows_table()
+            
+        for table in ("discarded_flows", self.tables.DISCARDED_TIMEWINDOWS):
+            for tool in ("slips", "suricata"):
+                self.execute(f"INSERT INTO {table} (tool, count) "
+                             f"VALUES ('{tool}', 0)")
+        
 
-
-    def init_discarded_flows_table(self):
-        # init the count of discarded_flows
-        self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('slips', 0)")
-        self.execute(f"INSERT INTO discarded_flows (tool, count) VALUES ('suricata', 0)")
 
     def store_performance_errors_flow_by_flow(self, tool, metrics: dict):
         """
-        stores the confusion matrix of each tool in performance_errors_flow_by_flow table
+        stores the confusion matrix of each tool in
+        performance_errors_flow_by_flow table
         :param tool: slips or suricata
         :param comparison_type: Per Timewindow or Flow By Flow
         :param metrics: dict with 'FP', 'FN', "TN", "TP"
@@ -108,14 +112,20 @@ class SQLiteDB(IDB, IObservable):
         query = f'INSERT OR REPLACE INTO performance_errors_flow_by_flow ' \
                 f'(tool, TP, FP, TN, FN) ' \
                 f'VALUES (?, ?, ?, ?, ?);'
-        params = (tool, int(metrics['TP']), int(metrics['FP']), int(metrics['TN']), int(metrics['FN']))
+        params = (tool,
+                  int(metrics['TP']),
+                  int(metrics['FP']),
+                  int(metrics['TN']),
+                  int(metrics['FN']))
         self.execute(query, params=params)
 
     def store_performance_errors_per_tw(self,  tool: str, cm: dict):
         """
-        stores the performance errors of each tool in performance_errors_per_tw table
+        stores the performance errors of each tool in
+        performance_errors_per_tw table
         :param tool: slips or suricata
-        :param cm: dict with tp tn fp and fp. if a value is not there we store it in the db as 0
+        :param cm: dict with tp tn fp and fp. if a value is not there
+         we store it in the db as 0
         """
         query = f"INSERT INTO performance_errors_per_tw " \
                 f"(tool, TP, FP, TN, FN) " \
@@ -140,12 +150,24 @@ class SQLiteDB(IDB, IObservable):
             return res[1]
         return 0
 
-    def get_discarded_flows(self, tool: str):
-        count = self.select('discarded_flows', '*',f" tool = '{tool}';", fetch='one')
+    def get_discarded_flows(self, tool: str) -> int:
+        count = self.select('discarded_flows',
+                            '*',
+                            f" tool = '{tool}';",
+                            fetch='one')
         if count:
             return count[1]
         return 0
-
+    
+    def get_discarded_timewindows(self, tool: str) -> int:
+        count = self.select(self.tables.DISCARDED_TIMEWINDOWS,
+                            '*',
+                            f" tool = '{tool}';",
+                            fetch='one')
+        if count:
+            return count[1]
+        return 0
+    
     def print_table(self, table_name):
         """For debugging :D"""
         rows = self.select(table_name, '*')
@@ -170,7 +192,8 @@ class SQLiteDB(IDB, IObservable):
 
     def fill_null_labels(self):
         """
-        iterates through all flows in the flows table, and fills the null labels with benign
+        iterates through all flows in the flows table,
+        and fills the null labels with benign
         """
         for table in ('labels_flow_by_flow', 'labels_per_tw'):
             for column in self.get_column_names(table):
@@ -178,7 +201,8 @@ class SQLiteDB(IDB, IObservable):
                 if column in ('aid', 'IP', 'timewindow', ''):
                     continue
 
-                query = f"UPDATE {table} SET {column} = 'benign' WHERE {column} IS NULL"
+                query = (f"UPDATE {table} SET {column} = 'benign' "
+                         f"WHERE {column} IS NULL")
                 self.execute(query)
 
 
@@ -186,14 +210,28 @@ class SQLiteDB(IDB, IObservable):
     def increase_discarded_flows(self, tool: str):
         """
         increments the number of discarded flows by a tool by 1
-        flows are discarded when they're found in a tool but not in the ground truth
+        flows are discarded when they're found in a tool but
+        not in the ground truth
         """
-        query = f"UPDATE discarded_flows SET count = count + 1 WHERE tool = '{tool}';"
+        query = (f"UPDATE discarded_flows SET count = count + 1 "
+                 f"WHERE tool = '{tool}';")
+        self.execute(query)
+        
+    def increase_discarded_timewindows(self, tool: str):
+        """
+        increments the number of discarded flows by a tool by 1
+        flows are discarded when they're found in a tool but
+        not in the ground truth
+        """
+        query = (f"UPDATE {self.tables.DISCARDED_TIMEWINDOWS} "
+                 f"SET count = count + 1 "
+                 f"WHERE tool = '{tool}';")
         self.execute(query)
 
     def store_flows_count(self, tool: str, count: int):
         """
-        store =s the total number of labeled flows by slips, suricata or ground_Truth
+        store =s the total number of labeled flows by slips,
+        suricata or ground_Truth
         :param tool:  slips, suricata or ground_truth
         :param count: number of labeled flows
         """
@@ -310,10 +348,13 @@ class SQLiteDB(IDB, IObservable):
 
     def store_ground_truth_flow(self, flow: dict):
         """
-        fills the ground_truth_flows table with the gt flow read from the zeek log
-        :param flow: contains timestamp(in unix format), aid and label of the flow
+        fills the ground_truth_flows table with the gt flow read
+        from the zeek log
+        :param flow: contains timestamp(in unix format),
+        aid and label of the flow
         """
-        query = f'INSERT OR REPLACE INTO ground_truth_flows (aid, timestamp, label) VALUES (?, ?, ?);'
+        query = (f'INSERT OR REPLACE INTO ground_truth_flows '
+                 f'(aid, timestamp, label) VALUES (?, ?, ?);')
         params = (flow['aid'], flow['timestamp'], flow['label'])
         self.execute(query, params=params)
 
@@ -323,7 +364,9 @@ class SQLiteDB(IDB, IObservable):
         :param tool: suricata or ground_truth
         :return: ts
         """
-        row = self.select(f"{tool}_flows", 'MIN(timestamp)', fetch='one')
+        row = self.select(f"{tool}_flows",
+                          'MIN(timestamp)',
+                          fetch='one')
         return float(row[0])
 
 
@@ -333,7 +376,9 @@ class SQLiteDB(IDB, IObservable):
         :param tool: suricata or ground_truth
         :return: ts
         """
-        row = self.select('MAX(timestamp)', f"{tool}_flows", fetch='one')
+        row = self.select('MAX(timestamp)',
+                          f"{tool}_flows",
+                          fetch='one')
         return float(row[0])
 
 
@@ -342,7 +387,7 @@ class SQLiteDB(IDB, IObservable):
         """
         calculates the end ts of the given timewindow and stores in the
          timewindow_details table
-         This function is only called by the GT. no tools should register
+         This function is only called by the GT. no tool should register
          TWs other than the GT.
         :param tw_start_ts: the timestamp of the start of the given timewindow
         :param tw: number of the tw to set the timestamps to
@@ -372,12 +417,13 @@ class SQLiteDB(IDB, IObservable):
         """
         returns the period of time that the ground truth knows about and has
         flows and labels for
-        :return: (the start timestamp of the first timewindow,  the end timestamp of the last timewindow)
+        :return: (the start timestamp of the first timewindow,
+         the end timestamp of the last timewindow)
         """
         start_time: dict = self.get_first_row('timewindow_details')[1]
         end_time: str = self.get_last_row('timewindow_details')[2]
 
-        return (start_time, end_time)
+        return start_time, end_time
 
 
     def get_timewindow_of_ts(self, ts: float) -> int:
@@ -425,7 +471,8 @@ class SQLiteDB(IDB, IObservable):
             return False
         
         if not self.is_registered_timewindow(tw):
-            # tw wasn't seen by the gt
+            # tw wasn't seen by the gt.
+            self.increase_discarded_timewindows(tool)
             return False
         
         label_col:str = self.labels_map[tool]
@@ -438,7 +485,8 @@ class SQLiteDB(IDB, IObservable):
 
     def get_last_registered_timewindow(self) -> int:
         """
-        returns the last timewindow read by the ground truth from the labels_per_tw table
+        returns the last timewindow read by the ground truth from the
+        labels_per_tw table
         :return: timewindow number
         """
         tw = self.select('labels_per_tw',
@@ -468,7 +516,8 @@ class SQLiteDB(IDB, IObservable):
 
         this method returns an iterator that iterates through all the rows in
          the labels_per_tw table
-        and returns the GT label + the given tool's label along with the IP and tw
+        and returns the GT label + the given tool's label along
+         with the IP and tw
         :param tool: slips or suricata
         :return: reurns an iterator that iterates through all rows by
         the given tool in the labels_per_Tw table
@@ -491,7 +540,8 @@ class SQLiteDB(IDB, IObservable):
     def get_labels_flow_by_flow(self, by='all') -> Iterator[str]:
         """
         yields actual and predicted labels from the labels_flow_by_flow table
-        :param by: do we want the labels for all tools? slips only? or suricata only?
+        :param by: do we want the labels for all tools? slips only?
+        or suricata only?
         """
         if by == 'all':
             cols = '*'
@@ -510,8 +560,10 @@ class SQLiteDB(IDB, IObservable):
 
     def is_tw_marked_as_malicious(self, tool: str, twid: int) -> bool:
         """
-        checks all the flows in a given twid and marks the tw as malicious if there's 1 malicious flow in this twid
-        tool can't be slips because it doesn't have the ts and labels in slips_flows like rest
+        checks all the flows in a given twid and marks the tw as malicious
+         if there's 1 malicious flow in this twid
+        tool can't be slips because it doesn't have the ts and labels in
+        slips_flows like rest
         slips parser will handle checking the malicious tws in slips
         :param tool: ground_truth or suricata
         :param twid: 1 or 2 or 3
@@ -538,7 +590,8 @@ class SQLiteDB(IDB, IObservable):
 
     def get_flows_count(self, type_:str, label="") -> int:
         """
-        returns all the malicious/benign labeled flows by slips, suricata, or ground truth from the
+        returns all the malicious/benign labeled flows by slips, suricata,
+         or ground truth from the
         labels_flow_by_flow timewindow
         if type_ is 'slips' returns all the flows with slips_label = 'malicious'
 
@@ -546,9 +599,11 @@ class SQLiteDB(IDB, IObservable):
         :param label: can be 'malicious' , 'benign'
         :return:
         """
-        assert label in ['benign', 'malicious'], "get_malicious_flows_count() was given an invalid label"
+        assert label in ['benign', 'malicious'], ("get_malicious_flows_count() "
+                                                  "was given an invalid label")
 
-        assert type_ in self.labels_map, "get_malicious_flows_count() was given an invalid type"
+        assert type_ in self.labels_map, ("get_malicious_flows_count() was "
+                                          "given an invalid type")
 
         column = self.labels_map[type_]
         return self.get_count('labels_flow_by_flow', condition=f'{column}="{label}"')
@@ -563,14 +618,16 @@ class SQLiteDB(IDB, IObservable):
          (by slips or suricata or a has a ground truth label)
         :param type_: can be 'slips' , 'suricata', or 'ground_truth'
         """
-        assert type_ in self.labels_map, f'Trying to get labeled flows by invalid type: {type_}'
+        assert type_ in self.labels_map, (f'Trying to get labeled flows by '
+                                          f'invalid type: {type_}')
 
         # get the column name  of the given type
         label = self.labels_map[type_]
 
         all_labeled_flows = self.select('labels_flow_by_flow',
                                         '*',
-                                        condition=f' {label} IS NOT NULL AND {label} != "";')
+                                        condition=f' {label} IS NOT NULL '
+                                                  f'AND {label} != "";')
         return all_labeled_flows
 
 
