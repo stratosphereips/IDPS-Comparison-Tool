@@ -90,24 +90,26 @@ class SlipsParser(Parser):
 
         print()
         
+        
+    def mark_tw_as_malicious(self, timestamp: str, ip: str) -> bool:
+        """
+        marks the tw of the given ts as malicious by slips in the db
+        :param timestamp: timestamp of the start or end of a malicious alert
+        :param ip: the source ip that was marked as malicious by slips
+        """
+        timestamp = float(timestamp)
+        ip = ip.replace("profile_","")
+        if tw_number := self.db.get_timewindow_of_ts(timestamp):
+            self.db.set_tw_label(ip, self.tool_name, tw_number, 'malicious')
+            return True
+        return False
+    
     def parse_alerts_table(self):
         """
         Handles the labeling of slips timewindows
         by parsing the labels set by slips for each timewindow,
         and marking them as malicious in this tools' db
         """
-        def mark_tw_as_malicious(ts: str, ip: str):
-            """
-            marks the tw of the given ts as malicious by slips in the db
-            :param ts: timestamp of the start or end of a malicious alert
-            :param ip: the source ip that was marked as malicious by slips
-            """
-            ts = float(ts)
-            ip = ip.replace("profile_","")
-            if tw_number := self.db.get_timewindow_of_ts(ts):
-                self.db.set_tw_label(ip, self.tool_name, tw_number, 'malicious')
-                return True
-
         for alert in self.iterate('alerts'):
             # what we're doing here is marking tw 1 and 2 as malicious if a slips alert exists in parts of both
             #                      1:30                           2:30
@@ -118,7 +120,7 @@ class SlipsParser(Parser):
             # │             tw 1                   │            tw 2                     │
 
             for ts in (alert['tw_start'], alert['tw_end']):
-                mark_tw_as_malicious(ts , alert['ip_alerted'])
+                self.mark_tw_as_malicious(ts , alert['ip_alerted'])
     
     
     def parse_flow_by_flow_labels(self):

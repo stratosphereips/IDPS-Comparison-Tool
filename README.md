@@ -146,10 +146,8 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 
 * slips now labels conn.log flows only, just like zeek does when zeek's community_id is enabled as a plugin
 
-* all flows read by a tool, that don't have a matching flow in the ground truth file, are discarded. and the number of 
-discarded flows is written in the cli at the end of the analysis.
-* timewindows found in tools but not in the ground truth are NOT discarded when comparing by timewindow. 
-we add them to the database even though the ground truth has no label for them.
+* all flows and timewindows read by a tool, that don't have a matching flow/timewindow in the ground truth file, 
+are discarded. The number of discarded flows is written in the cli at the end of the analysis.
 
 * we only read event_type= "flow" or "alert" in suricata eve.json files
 

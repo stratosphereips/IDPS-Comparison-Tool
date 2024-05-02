@@ -62,7 +62,8 @@ class SQLiteDB(IDB, IObservable):
                                                "FN INTEGER",
             'discarded_flows': "tool TEXT PRIMARY KEY, "
                                "count INTEGER DEFAULT 0 ",
-
+            
+            # keeps track of registered tws by the ground truth only.
             'timewindow_details': "timewindow INTEGER PRIMARY KEY, "
                                   "start_time REAL, "
                                   "end_time REAL ",
@@ -341,6 +342,8 @@ class SQLiteDB(IDB, IObservable):
         """
         calculates the end ts of the given timewindow and stores in the
          timewindow_details table
+         This function is only called by the GT. no tools should register
+         TWs other than the GT.
         :param tw_start_ts: the timestamp of the start of the given timewindow
         :param tw: number of the tw to set the timestamps to
         :param tw_end_ts: the timestamp of the end of this timewindow
@@ -407,30 +410,31 @@ class SQLiteDB(IDB, IObservable):
             tw = int((ts - starttime_of_first_timewindow) /
                        self.twid_width) +1
         return tw
-
+    
 
     def set_tw_label(self, ip: str, tool: str, tw: int, label: str):
         """
         fills the labels_per_tw table with each tw and the label
         of it for the given tool
+        discards the timewindow label if this timewindow wasn't registered
+        by the ground truth
         :param label: malicious or benign
         """
         if tool not in ['suricata', 'ground_truth', 'slips']:
             print("TRYING TO STORE THE LABEL FOR AN INVALID TOOL!!")
             return False
-
+        
+        if not self.is_registered_timewindow(tw):
+            # tw wasn't seen by the gt
+            return False
+        
         label_col:str = self.labels_map[tool]
         query = (f'INSERT OR REPLACE INTO labels_per_tw'
                  f' (IP, timewindow, {label_col}) VALUES (?, ?, ?);')
         params = (ip, tw, label)
         self.execute(query, params=params)
         
-        # set the gt label of this tw as benign if it wasn't found
-        query = f"UPDATE labels_per_tw SET ground_truth_label = 'benign' " \
-                f"WHERE ground_truth_label IS NULL " \
-                f"AND IP = '{ip}' " \
-                f"AND timewindow = '{tw}'"
-        self.execute(query)
+        
 
     def get_last_registered_timewindow(self) -> int:
         """
@@ -445,7 +449,8 @@ class SQLiteDB(IDB, IObservable):
 
     def is_registered_timewindow(self, tw: int) -> bool:
         """
-        checks if the tw is registered in the timewindow_details table
+        checks if the tw is registered by the ground truth.
+        by checking the timewindow_details table.
         :param tw: int
         """
         res = self.select(
