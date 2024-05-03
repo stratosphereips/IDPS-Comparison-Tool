@@ -17,13 +17,15 @@ class SuricataParser(Parser):
         self.hash = Hash()
         self.timestamp_handler = TimestampHandler()
         self.read_config()
-        self.tw_start = self.db.get_timewindows_limit()[0]
-        self.tw_end = self.tw_start + self.twid_width
+        self.tw_start, self.tw_end = map(
+            float, self.db.get_timewindows_limit()
+        )
 
 
     def read_config(self):
         config = ConfigurationParser('config.yaml')
         self.twid_width = float(config.timewindow_width())
+        
 
     def extract_flow(self, line: str) -> dict:
         """

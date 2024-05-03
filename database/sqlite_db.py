@@ -2,7 +2,11 @@ from utils.timewindow_handler import TimewindowHandler
 from parsers.config import ConfigurationParser
 from abstracts.dbs import IDB
 from abstracts.observer import IObservable
-from typing import Iterator, Optional
+from typing import (
+    Iterator,
+    Optional,
+    Tuple,
+    )
 from .constants import Tables
 
 class SQLiteDB(IDB, IObservable):
@@ -67,9 +71,12 @@ class SQLiteDB(IDB, IObservable):
                                                "count INTEGER DEFAULT 0 ",
             
             # keeps track of registered tws by the ground truth only.
-            'timewindow_details': "timewindow INTEGER PRIMARY KEY, "
-                                  "start_time REAL, "
-                                  "end_time REAL ",
+            # timestamps should be stored as text to prevent roubdubg up of
+            # decimals. check here
+            # https://www.b4x.com/android/forum/threads/prevent-automatic-rounding-in-sqlite.129246/
+            self.tables.TIMEWINDOW_DETAILS: "timewindow INTEGER PRIMARY KEY, "
+                                            "start_time TEXT, "
+                                            "end_time TEXT ",
 
             # this table will be used to store all the tools' labels per IP
             # per timewindow, not flow by flow
@@ -395,8 +402,8 @@ class SQLiteDB(IDB, IObservable):
         """
         if self.is_registered_timewindow(tw):
             return False
-
-        query = f'INSERT INTO timewindow_details ' \
+        tw_start_ts, tw_end_ts = str(tw_start_ts), str(tw_end_ts)
+        query = f'INSERT INTO {self.tables.TIMEWINDOW_DETAILS} ' \
                 f'(timewindow, start_time, end_time) VALUES (?, ?, ?);'
         params = (tw, tw_start_ts, tw_end_ts)
         self.execute(query, params=params)
@@ -413,15 +420,15 @@ class SQLiteDB(IDB, IObservable):
         self.execute(query)
         return self.fetchone()
 
-    def get_timewindows_limit(self):
+    def get_timewindows_limit(self) -> Tuple[str, str]:
         """
         returns the period of time that the ground truth knows about and has
         flows and labels for
         :return: (the start timestamp of the first timewindow,
          the end timestamp of the last timewindow)
         """
-        start_time: dict = self.get_first_row('timewindow_details')[1]
-        end_time: str = self.get_last_row('timewindow_details')[2]
+        start_time: dict = self.get_first_row(self.tables.TIMEWINDOW_DETAILS)[1]
+        end_time: str = self.get_last_row(self.tables.TIMEWINDOW_DETAILS)[2]
 
         return start_time, end_time
 
@@ -435,21 +442,24 @@ class SQLiteDB(IDB, IObservable):
         """
         # todo should be moved to twid handler
         condition = f"{ts} >= start_time AND {ts} <= end_time "
-        results: list = self.select('timewindow_details',
+        results: list = self.select(self.tables.TIMEWINDOW_DETAILS,
                                     'timewindow',
                                     condition=condition)
         if results:
             # tw was seen before and is there in the db
-            return int(results[0][0])
+            tw_number = int(results[0][0])
+            return tw_number
 
         # timewindow was not seen by the gt
         # calc it manually
-        starttime_of_first_timewindow: float = self.select(
-            'timewindow_details',
+        starttime_of_first_timewindow: str = self.select(
+            self.tables.TIMEWINDOW_DETAILS,
             'start_time',
             condition=f"timewindow = 1",
             fetch='one')[0]
-
+        starttime_of_first_timewindow: float = float(
+            starttime_of_first_timewindow)
+        
         if ts == starttime_of_first_timewindow:
             tw = 1
         else:
@@ -502,7 +512,7 @@ class SQLiteDB(IDB, IObservable):
         :param tw: int
         """
         res = self.select(
-            "timewindow_details",
+            self.tables.TIMEWINDOW_DETAILS,
             "*",
             condition=f"timewindow={tw}",
             fetch="one"
@@ -577,7 +587,7 @@ class SQLiteDB(IDB, IObservable):
             self.ts_tracker[tool] = self.get_first_ts(tool)
 
         twid_handler = TimewindowHandler(self.ts_tracker[tool])
-        tw_start, tw_end = twid_handler.get_start_and_end_ts(twid)
+        tw_start, tw_end = map(float, twid_handler.get_start_and_end_ts(twid))
 
         table_name = f"{tool}_flows"
         res = self.select(table_name,
@@ -606,11 +616,12 @@ class SQLiteDB(IDB, IObservable):
                                           "given an invalid type")
 
         column = self.labels_map[type_]
-        return self.get_count('labels_flow_by_flow', condition=f'{column}="{label}"')
+        return self.get_count('labels_flow_by_flow',
+                              condition=f'{column}="{label}"')
     
     def get_tws_count(self) -> int:
         """returns the number of registered tws by the gt in the db"""
-        return self.get_count('timewindow_details')
+        return self.get_count(self.tables.TIMEWINDOW_DETAILS)
 
     def get_labeled_flows_by(self, type_):
         """

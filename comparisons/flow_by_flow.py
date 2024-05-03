@@ -1,11 +1,11 @@
-from typing import Tuple, List
 from abstracts.comparison_methods import ComparisonMethod
 from metrics.calculator import Calculator
 from typing import Iterator
 
 class FlowByFlow(ComparisonMethod):
     """
-    responsible for grouping helper methods used for flow by flow comparison of tools
+    responsible for grouping helper methods used for flow by flow
+    comparison of tools
     """
     name = "Flow By Flow"
     supported_tools = ('slips', 'suricata')
@@ -29,9 +29,11 @@ class FlowByFlow(ComparisonMethod):
             calc.calc_all_metrics()
             self.log(' ', ' ')
 
+
     def get_labels(self, tool: str):
         """
-        yields the actual and predicted labels for each flow stored in the db
+        yields the actual and predicted labels for
+        each flow stored in the db
         :return: an iterator for all the flows' labels
         """
         # get the ground truth labels and the given tools' labels for all flows
