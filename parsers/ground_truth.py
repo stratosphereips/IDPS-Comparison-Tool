@@ -238,28 +238,39 @@ class GroundTruthParser(Parser):
             return False
 
 
-    def register_timewindow(self, ts):
+    def register_timewindow(self, ts) -> dict:
         """
         registers a new timewindow if the ts doesn't belong t an existing one
         sets the current self.tw_number
         :param ts: unix ts of the flow being parsed
+        returns the number of the registered tw and a bool indicating
+        whether the tw was registered before or not
         """
         ts = float(ts)
 
         if self.is_first_flow:
             self.is_first_flow = False
             self.twid_handler = TimewindowHandler(ts)
-            self.tw_number = 1
+            tw_number = 1
         else:
             # let the db decide which tw this is
             # tw number may be negative if a flow is found with a ts < ts
             # of the first flow seen
-            self.tw_number: int = self.db.get_timewindow_of_ts(ts)
+            tw_number: int = self.db.get_timewindow_of_ts(ts)
 
         tw_start, tw_end = self.twid_handler.get_start_and_end_ts(
-            self.tw_number
+            tw_number
             )
-        self.db.register_tw(self.tw_number, tw_start, tw_end)
+        
+        is_labeled_for_the_first_time: bool = self.db.register_tw(
+            tw_number,
+            tw_start,
+            tw_end)
+        
+        return {
+            'tw_number': tw_number,
+            'was_registered_before': not is_labeled_for_the_first_time
+            }
 
     def get_full_path(self, filename: str) -> str:
         """
@@ -273,33 +284,57 @@ class GroundTruthParser(Parser):
 
         # this tool is given a zeek logfile and the path of it is abs
         return filename
+    
+    
+    def was_tw_registered(self, tw: int) -> bool:
+        return self.db.is_registered_timewindow(tw)
+    
+    def should_label_tw(self, tw_registration_stats: dict, label: str) -> (
+            bool):
+        """
+        determines whteher to label the tw or not if:
+        1. tw wasnt labeled before
+        2. tw was labeled before as benign and now the label is malicious
+        
+        if the tw was labeled before as malicious and now it's benign,
+        we don't update the label.
+        
+        :param tw_registration_stats: fict with the following keys
+        tw: tw number
+        was_registered_before: bool indicating with whether the tw was
+        registered before in the db or not
+        :param label: the label we wanna set to the tw
+        :return: whether or not the current label of this tw should be
+        added to the db
+        """
+        registered_b4 = tw_registration_stats["was_registered_before"]
+        if not registered_b4:
+            # first label for this tw
+            return True
+        
+        if label == 'malicious':
+            return True
+        return False
+        
 
-
-    def label_tw(self, flow: dict):
-        """ labels gt by TW in the db """
-
-        # register a tw as soon as it is encountered with the label of the
-        # first flow,
-        # if it's benign, we will only change that label when a malicious
-        # flow is found
-        # if the first flow is malicious, then no need to change the label to
-        # benign when a benign flow is found
-
-        # re-register it as malicious if one malicious flow was
-        # found in an already registered tw
-        if (
-                self.tw_number not in self.registered_tws
-                or
-                flow['label'] == 'malicious'
-        ):
-            self.registered_tws.append(self.tw_number)
-
-            self.db.set_tw_label(
-                flow['srcip'],
-                self.tool_name,
-                self.tw_number,
-                flow['label']
-            )
+    def label_tw(self, flow: dict, tw_registration_stats: dict):
+        """
+        labels the timewindow in the db
+        :param flow: flow to extract the tw label from
+        :param tw_registration_stats: fict with the following keys
+             tw: tw number
+             was_registered_before: bool indicating with whether the tw was
+            registered before in the db or not
+        """
+        if not self.should_label_tw(tw_registration_stats, flow['label']):
+            return False
+        
+        self.db.set_tw_label(
+            flow['srcip'],
+            self.tool_name,
+            tw_registration_stats["tw_number"],
+            flow['label']
+        )
 
 
     def parse_file(self, filename: str):
@@ -323,8 +358,13 @@ class GroundTruthParser(Parser):
                 if not flow:
                     continue
 
-                self.register_timewindow(flow['timestamp'])
-                self.label_tw(flow)
+                tw_registration_stats: dict = self.register_timewindow(
+                    flow['timestamp']
+                    )
+                self.label_tw(
+                    flow,
+                    tw_registration_stats
+                    )
 
                 self.total_flows_read += 1
 

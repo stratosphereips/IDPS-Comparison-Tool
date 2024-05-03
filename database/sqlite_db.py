@@ -402,6 +402,7 @@ class SQLiteDB(IDB, IObservable):
         """
         if self.is_registered_timewindow(tw):
             return False
+        
         tw_start_ts, tw_end_ts = str(tw_start_ts), str(tw_end_ts)
         query = f'INSERT INTO {self.tables.TIMEWINDOW_DETAILS} ' \
                 f'(timewindow, start_time, end_time) VALUES (?, ?, ?);'
