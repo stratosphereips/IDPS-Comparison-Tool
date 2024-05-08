@@ -111,13 +111,14 @@ class SlipsParser(Parser):
         and marking them as malicious in this tools' db
         """
         for alert in self.iterate('alerts'):
-            # what we're doing here is marking tw 1 and 2 as malicious if a slips alert exists in parts of both
-            #                      1:30                           2:30
-            #                      │          slips alert          │
-            #                      ├───────────────────────────────┤
+            # what we're doing here is marking tw 1 and 2 as malicious if a
+            # slips alert exists in parts of both
+            #                1:30                  2:30
+            #                 │      slips alert     │
+            #                 ├──────────────────────┤
             # 1:00                                 2:00                                  3:00
-            # ├────────────────────────────────────┼─────────────────────────────────────┤
-            # │             tw 1                   │            tw 2                     │
+            # ├───────────────────────────┼────────────────────────────┤
+            # │             tw 1                 tw 2                  │
 
             for ts in (alert['tw_start'], alert['tw_end']):
                 self.mark_tw_as_malicious(ts , alert['ip_alerted'])

@@ -53,7 +53,7 @@ class GroundTruthParser(Parser):
         elif ground_truth_type == 'file':
             self.gt_zeek_file  = ground_truth
 
-        # check th etype of the given zeek file/dir with
+        # check the type of the given zeek file/dir with
         # ground truth labels. 'tab-separated' or 'json'?
         self.zeek_file_type: str = self.check_type()
         self.read_config()

@@ -107,6 +107,12 @@ class SQLiteDB(IDB, IObservable):
                              f"VALUES ('{tool}', 0)")
         
 
+    def init_discarded_flows_table(self):
+        # init the count of discarded_flows
+        self.execute(f"INSERT INTO discarded_flows (tool, count) "
+                     f"VALUES ('slips', 0)")
+        self.execute(f"INSERT INTO discarded_flows (tool, count) "
+                     f"VALUES ('suricata', 0)")
 
     def store_performance_errors_flow_by_flow(self, tool, metrics: dict):
         """
@@ -437,12 +443,15 @@ class SQLiteDB(IDB, IObservable):
     def get_timewindow_of_ts(self, ts: float) -> int:
         """
         returns the timewindow in which the given timestamp belongs to
+        DISCLAIMER
+        if the given ts ==the start of a tw, it will belong to this tw
+        if the given ts == the end of a tw, it will belong to the next tw
         :param ts: float unix timestamp
         :param tool: options are slips, suricata, or ground_truth
         :return: the timewindow number
         """
         # todo should be moved to twid handler
-        condition = f"{ts} >= start_time AND {ts} <= end_time "
+        condition = f"{ts} >= start_time AND {ts} < end_time "
         results: list = self.select(self.tables.TIMEWINDOW_DETAILS,
                                     'timewindow',
                                     condition=condition)
