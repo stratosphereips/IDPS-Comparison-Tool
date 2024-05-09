@@ -64,7 +64,7 @@ class SuricataParser(Parser):
         # if 1 flow is malicious, mark the whole tw as malicious by suricata
         # map this suricata flow to one of the existing(gt) timewindows
         if tw := self.db.get_timewindow_of_ts(ts):
-            self.db.set_tw_label(srcip, 'suricata', tw, label)
+            self.db.set_tool_label_for_tw(srcip, 'suricata', tw, label)
             return True
 
 
@@ -94,12 +94,10 @@ class SuricataParser(Parser):
                 original_ts = flow['timestamp']
                 timestamp = self.timestamp_handler.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                 flow['timestamp'] = timestamp
-
-                # suricata calculates the aid in a wrong way, we'll be calculating it on the fly until they fix it
                 aid: str = self.hash.get_aid(flow)
 
                 # we assume all flows with event_type=alert are marked as malicious by suricata
-                label =  'malicious' if line['event_type'] == 'alert' else 'benign'
+                label = 'malicious' if line['event_type'] == 'alert' else 'benign'
                 flow = {
                     'aid' : aid,
                     'label' : label,

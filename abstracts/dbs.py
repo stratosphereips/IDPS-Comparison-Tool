@@ -1,3 +1,4 @@
+import logging
 from abc import abstractmethod, ABC
 import sqlite3
 from os import path
@@ -69,7 +70,6 @@ class IDB(IObservable, ABC ):
     def init(self):
         """"""
 
-
     def create_table(self, table_name, schema):
         query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
         self.cursor.execute(query)
@@ -109,7 +109,8 @@ class IDB(IObservable, ABC ):
 
     def execute(self, query, params=None):
         """
-        wrapper for sqlite execute() To avoid 'Recursive use of cursors not allowed' error
+        wrapper for sqlite execute() To avoid 'Recursive use of
+        cursors not allowed' error
         and to be able to use a Lock()
         since sqlite is terrible with multi-process applications
         this should be used instead of all calls to commit() and execute()
@@ -117,7 +118,7 @@ class IDB(IObservable, ABC ):
 
         try:
             self.cursor_lock.acquire(True)
-            #start a transaction
+            # start a transaction
             self.cursor.execute('BEGIN')
 
             if not params:
@@ -129,20 +130,20 @@ class IDB(IObservable, ABC ):
 
             self.cursor_lock.release()
         except sqlite3.Error as e:
-            # An error occurred during execution
             self.conn.rollback()
-
+            
             if "database is locked" in str(e):
                 self.cursor_lock.release()
                 # Retry after a short delay
                 sleep(0.1)
                 self.execute(query, params=params)
             else:
-                # An error occurred during execution
-                print(f"Error executing query ({query}): {e} - params: {params}")
+                print(f"Error executing query ({query}): {e} "
+                      f"- params: {params}")
 
 
-    def select(self, table_name, columns="*", condition=None, fetch='all'):
+    def select(
+        self, table_name, columns="*", condition=None, fetch='all'):
         query = f"SELECT {columns} FROM {table_name}"
         if condition:
             query += f" WHERE {condition}"

@@ -100,7 +100,7 @@ class SlipsParser(Parser):
         timestamp = float(timestamp)
         ip = ip.replace("profile_","")
         if tw_number := self.db.get_timewindow_of_ts(timestamp):
-            self.db.set_tw_label(ip, self.tool_name, tw_number, 'malicious')
+            self.db.set_tool_label_for_tw(ip, self.tool_name, tw_number, 'malicious')
             return True
         return False
     
@@ -116,7 +116,7 @@ class SlipsParser(Parser):
             #                1:30                  2:30
             #                 │      slips alert     │
             #                 ├──────────────────────┤
-            # 1:00                                 2:00                                  3:00
+            # 1:00                       2:00                         3:00
             # ├───────────────────────────┼────────────────────────────┤
             # │             tw 1                 tw 2                  │
 

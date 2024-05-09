@@ -329,9 +329,8 @@ class GroundTruthParser(Parser):
         if not self.should_label_tw(tw_registration_stats, flow['label']):
             return False
         
-        self.db.set_tw_label(
+        self.db.set_gt_label_for_tw(
             flow['srcip'],
-            self.tool_name,
             tw_registration_stats["tw_number"],
             flow['label']
         )

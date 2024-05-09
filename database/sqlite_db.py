@@ -30,7 +30,7 @@ class SQLiteDB(IDB, IObservable):
         if self.db_newly_created:
             # only init tables if the db is newly created
             self.init_tables()
-
+        
     def read_config(self):
         config = ConfigurationParser('config.yaml')
         self.twid_width = config.timewindow_width()
@@ -210,7 +210,7 @@ class SQLiteDB(IDB, IObservable):
         """
         for table in ('labels_flow_by_flow', 'labels_per_tw'):
             for column in self.get_column_names(table):
-                # fill all columns except the community id
+                # fill all columns except the aid
                 if column in ('aid', 'IP', 'timewindow', ''):
                     continue
 
@@ -445,7 +445,7 @@ class SQLiteDB(IDB, IObservable):
         """
         returns the timewindow in which the given timestamp belongs to
         DISCLAIMER
-        if the given ts ==the start of a tw, it will belong to this tw
+        if the given ts == the start of a tw, it will belong to this tw
         if the given ts == the end of a tw, it will belong to the next tw
         :param ts: float unix timestamp
         :param tool: options are slips, suricata, or ground_truth
@@ -476,9 +476,27 @@ class SQLiteDB(IDB, IObservable):
                        self.twid_width) +1
         return tw
     
-
-    def set_tw_label(self, ip: str, tool: str, tw: int, label: str):
+    def set_gt_label_for_tw(
+        self, ip: str, tw: int, label: str
+    ):
         """
+        sets the label for a timewindow by the GT only.
+            doesn't handle tools' labels for tws
+        fills the labels_per_tw table with the gt label
+        :param label: malicious or benign
+        """
+        query = (f'INSERT OR REPLACE INTO labels_per_tw '
+                 f'(IP, timewindow, ground_truth_label) VALUES (?, ?, ?);')
+
+        params = (ip, tw, label)
+        self.execute(query, params=params)
+        
+    def set_tool_label_for_tw(
+        self, ip: str, tool: str, tw: int, label: str):
+        """
+        sets the label for a timewindow by a tool only.
+        doesn't handle the ground truth labels for tws
+        
         fills the labels_per_tw table with each tw and the label
         of it for the given tool
         discards the timewindow label if this timewindow wasn't registered
@@ -494,12 +512,14 @@ class SQLiteDB(IDB, IObservable):
             self.increase_discarded_timewindows(tool)
             return False
         
-        label_col:str = self.labels_map[tool]
-        query = (f'INSERT OR REPLACE INTO labels_per_tw'
-                 f' (IP, timewindow, {label_col}) VALUES (?, ?, ?);')
-        params = (ip, tw, label)
+        label_col: str = self.labels_map[tool]
+        query = f"""
+            UPDATE labels_per_tw
+            SET {label_col} = ?
+            WHERE IP = ? AND timewindow = ?
+        """
+        params = (label, ip, tw)
         self.execute(query, params=params)
-        
         
 
     def get_last_registered_timewindow(self) -> int:
