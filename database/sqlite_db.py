@@ -75,8 +75,8 @@ class SQLiteDB(IDB, IObservable):
             # decimals. check here
             # https://www.b4x.com/android/forum/threads/prevent-automatic-rounding-in-sqlite.129246/
             self.tables.TIMEWINDOW_DETAILS: "timewindow INTEGER PRIMARY KEY, "
-                                            "start_time TEXT, "
-                                            "end_time TEXT ",
+                                            "start_time REAL, "
+                                            "end_time REAL ",
 
             # this table will be used to store all the tools' labels per IP
             # per timewindow, not flow by flow
@@ -409,7 +409,6 @@ class SQLiteDB(IDB, IObservable):
         if self.is_registered_timewindow(tw):
             return False
         
-        tw_start_ts, tw_end_ts = str(tw_start_ts), str(tw_end_ts)
         query = f'INSERT INTO {self.tables.TIMEWINDOW_DETAILS} ' \
                 f'(timewindow, start_time, end_time) VALUES (?, ?, ?);'
         params = (tw, tw_start_ts, tw_end_ts)
@@ -427,15 +426,17 @@ class SQLiteDB(IDB, IObservable):
         self.execute(query)
         return self.fetchone()
 
-    def get_timewindows_limit(self) -> Tuple[str, str]:
+    def get_timewindows_limit(self) -> Tuple[float, float]:
         """
         returns the period of time that the ground truth knows about and has
-        flows and labels for
+        flow and tws for
         :return: (the start timestamp of the first timewindow,
          the end timestamp of the last timewindow)
         """
-        start_time: dict = self.get_first_row(self.tables.TIMEWINDOW_DETAILS)[1]
-        end_time: str = self.get_last_row(self.tables.TIMEWINDOW_DETAILS)[2]
+        start_time: float = self.get_first_row(
+            self.tables.TIMEWINDOW_DETAILS)[1]
+        end_time: float = self.get_last_row(
+            self.tables.TIMEWINDOW_DETAILS)[2]
 
         return start_time, end_time
 
@@ -462,14 +463,12 @@ class SQLiteDB(IDB, IObservable):
 
         # timewindow was not seen by the gt
         # calc it manually
-        starttime_of_first_timewindow: str = self.select(
+        starttime_of_first_timewindow: float = self.select(
             self.tables.TIMEWINDOW_DETAILS,
             'start_time',
             condition=f"timewindow = 1",
             fetch='one')[0]
-        starttime_of_first_timewindow: float = float(
-            starttime_of_first_timewindow)
-        
+
         if ts == starttime_of_first_timewindow:
             tw = 1
         else:

@@ -1,4 +1,6 @@
 from math import ceil
+from typing import Tuple
+
 
 class TimewindowHandler:
     """
@@ -28,7 +30,7 @@ class TimewindowHandler:
     def __init__(self, ts_of_first_flow):
         self.ts_of_first_flow = float(ts_of_first_flow)
 
-    def get_start_and_end_ts(self, tw: int):
+    def get_start_and_end_ts(self, tw: int) -> Tuple[float, float]:
         """
         this function is responsible for getting the tw limits ,
         later we'll store em in the db

@@ -121,7 +121,7 @@ class SlipsParser(Parser):
             # │             tw 1                 tw 2                  │
 
             for ts in (alert['tw_start'], alert['tw_end']):
-                self.mark_tw_as_malicious(ts , alert['ip_alerted'])
+                self.mark_tw_as_malicious(ts, alert['ip_alerted'])
     
     
     def parse_flow_by_flow_labels(self):
