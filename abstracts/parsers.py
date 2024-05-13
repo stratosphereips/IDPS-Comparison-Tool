@@ -33,7 +33,11 @@ class Parser(IObservable):
         this init will have access to all keyword args passes
          when initializing the module
         """
-
+    
+    def read_configuration(self):
+        """extracts the values the parser is going to use from config.yaml"""
+        ...
+    
     def log(self, green_txt, normal_txt, log_to_results_file=True, end="\n"):
         """
         gives the txt to the logger to log it to stdout and results.txt

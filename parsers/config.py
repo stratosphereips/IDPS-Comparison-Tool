@@ -1,8 +1,8 @@
 import yaml
 
 class ConfigurationParser:
-    def __init__(self, filename):
-        self.conf = self.load_config(filename)
+    def __init__(self):
+        self.conf = self.load_config('config.yaml')
 
     def load_config(self, file_path):
         with open(file_path, 'r') as file:

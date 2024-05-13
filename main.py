@@ -35,6 +35,8 @@ class Main(IObservable):
         # init the logger
         self.logger = Logger(self.name, self.output_dir)
         self.add_observer(self.logger)
+        
+        self.read_configuration()
 
         self.db = SQLiteDB(self.output_dir)
         self.add_metadata()
@@ -198,6 +200,11 @@ class Main(IObservable):
     def get_human_readable_datetime(self) -> str:
         now = datetime.datetime.now()
         return now.strftime("%A, %B %d, %Y %H:%M:%S")
+    
+    def read_configuration(self):
+        config = ConfigurationParser()
+        self.slips_version = config.slips_version()
+        self.suricata_version = config.suricata_version()
         
     def add_metadata(self):
         """
@@ -207,17 +214,12 @@ class Main(IObservable):
         metadata_file = os.path.join(self.output_dir, 'metadata.txt')
         self.log("Storing metadata in: ", metadata_file)
 
-        # Read the configuration file
-        config = ConfigurationParser('config.yaml')
-        slips_version = config.slips_version()
-        suricata_version = config.suricata_version()
-
         with open(metadata_file, 'w') as metadata:
             metadata.write(f"Timestamp: "
                            f"{self.get_human_readable_datetime()}\n\n"
                            f"Used cmd: {' '.join(sys.argv)}\n\n"
-                           f"Slips version: {slips_version} \n\n"
-                           f"Suricata version: {suricata_version}\n\n"
+                           f"Slips version: {self.slips_version} \n\n"
+                           f"Suricata version: {self.suricata_version}\n\n"
                            f"Ground truth: "
                            f"{self.args.ground_truth_dir or self.args.ground_truth_file}\n"
                            f"Slips DB: {self.args.slips_db}\n\n"

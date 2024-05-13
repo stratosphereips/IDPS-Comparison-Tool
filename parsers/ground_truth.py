@@ -60,7 +60,7 @@ class GroundTruthParser(Parser):
         self.timestamp_handler = utils.timestamp_handler.TimestampHandler()
 
     def read_config(self):
-        config = ConfigurationParser('config.yaml')
+        config = ConfigurationParser()
         self.twid_width = float(config.timewindow_width())
 
     def extract_tab_fields(self, line):

@@ -3,6 +3,7 @@ from threading import Lock
 from time import sleep
 
 from abstracts.parsers import Parser
+from parsers.config import ConfigurationParser
 from utils.timestamp_handler import TimestampHandler
 
 class SlipsParser(Parser):
@@ -19,7 +20,11 @@ class SlipsParser(Parser):
         # caches the labeled tws
         self.labeled_tws = []
         self.timestamp_handler = TimestampHandler()
-
+        self.read_configuration()
+    
+    def read_configuration(self):
+        config = ConfigurationParser()
+        self.version = config.slips_version()
     def connect(self):
         self.conn = sqlite3.connect(self.slips_db, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
@@ -149,7 +154,7 @@ class SlipsParser(Parser):
         reads the output db of slips with
         the labels and stores it in this tools' db
         """
-        # connect to the given db
+        self.log("Using Slips Version: ", self.version)
         self.connect()
         # labeling flows
         self.parse_flow_by_flow_labels()

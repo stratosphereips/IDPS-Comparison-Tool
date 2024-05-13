@@ -18,10 +18,8 @@ class SQLiteDB(IDB, IObservable):
     def init(self):
         self.read_config()
         self.tables = Tables()
-        # column names use the current version of the tool
-        # read from config.yaml
-        self.slips_label_col = f"slips_v{self.slips_version}_label"
-        self.suricata_label_col = f"suricata_v{self.suricata_version}_label"
+        self.slips_label_col = f"slips_label"
+        self.suricata_label_col = f"suricata_label"
         self.labels_map = {
             'slips': self.slips_label_col,
             'suricata': self.suricata_label_col,
@@ -32,11 +30,8 @@ class SQLiteDB(IDB, IObservable):
             self.init_tables()
         
     def read_config(self):
-        config = ConfigurationParser('config.yaml')
+        config = ConfigurationParser()
         self.twid_width = config.timewindow_width()
-        self.slips_version = config.slips_version().replace('.','')
-        self.suricata_version = config.suricata_version().replace('.','')
-
 
     def init_tables(self):
         """creates the tables we're gonna use"""

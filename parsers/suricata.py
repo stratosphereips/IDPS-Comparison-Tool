@@ -16,15 +16,17 @@ class SuricataParser(Parser):
         self.is_first_flow = True
         self.hash = Hash()
         self.timestamp_handler = TimestampHandler()
-        self.read_config()
+        self.read_configuration()
         self.tw_start, self.tw_end = map(
             float, self.db.get_timewindows_limit()
         )
+        
 
 
-    def read_config(self):
-        config = ConfigurationParser('config.yaml')
+    def read_configuration(self):
+        config = ConfigurationParser()
         self.twid_width = float(config.timewindow_width())
+        self.version = config.suricata_version()
         
 
     def extract_flow(self, line: str) -> dict:
@@ -79,6 +81,8 @@ class SuricataParser(Parser):
 
     def parse(self):
         """reads the given suricata eve.json"""
+        self.log("Using Suricata Version: ", self.version)
+        
         with open(self.eve_file, 'r') as f:
             flows_count = 0
             while line := f.readline():
