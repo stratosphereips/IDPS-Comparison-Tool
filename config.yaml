@@ -4,7 +4,7 @@ Slips:
 
 Suricata:
   # DO NOT use spaces in the version
-  version: 7.0.4_RELEASE
+  version: 7.0.5_RELEASE
 
 
 Params:

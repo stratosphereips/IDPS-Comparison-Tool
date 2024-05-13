@@ -100,7 +100,8 @@ class SlipsParser(Parser):
         timestamp = float(timestamp)
         ip = ip.replace("profile_","")
         if tw_number := self.db.get_timewindow_of_ts(timestamp):
-            self.db.set_tool_label_for_tw(ip, self.tool_name, tw_number, 'malicious')
+            self.db.set_tool_label_for_tw(
+                ip, self.tool_name, tw_number, 'malicious')
             return True
         return False
     
@@ -113,13 +114,12 @@ class SlipsParser(Parser):
         for alert in self.iterate('alerts'):
             # what we're doing here is marking tw 1 and 2 as malicious if a
             # slips alert exists in parts of both
-            #                1:30                  2:30
+            #                1:30                   2:30
             #                 │      slips alert     │
             #                 ├──────────────────────┤
             # 1:00                       2:00                         3:00
             # ├───────────────────────────┼────────────────────────────┤
             # │             tw 1                 tw 2                  │
-
             for ts in (alert['tw_start'], alert['tw_end']):
                 self.mark_tw_as_malicious(ts, alert['ip_alerted'])
     
