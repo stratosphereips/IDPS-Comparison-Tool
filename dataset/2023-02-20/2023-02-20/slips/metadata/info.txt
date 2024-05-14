@@ -1,6 +1,8 @@
-Slips version: 1.0.7
-File: /home/alya/Desktop/StratosphereLinuxIPS/Dataset/2023-02-20-00-00-03-192.168.1.109.pcap
-Branch: alya/use-aid_hash-package
-Commit: c47076299dee9b7192b8271474e00ed65fa31015
-Slips start date: 2023/10/30 13:39:07.209584
-Slips end date: 2023/10/30 13:49:34.216044
+Slips version: 1.0.13
+
+File: /data/Experiment-VM-Linux-Ubuntu2204-1/2023/02/20/CTU-Experiment-VM-Linux-Ubuntu2204-1-2023-02-20/2023-02-20-00-00-03-192.168.1.109.pcap
+Branch: None
+Commit: None
+Command: ./slips.py -e 1 -o output/2023-02-20-00-00-03-192.168.1.109/ -f /data/Experiment-VM-Linux-Ubuntu2204-1/2023/02/20/CTU-Experiment-VM-Linux-Ubuntu2204-1-2023-02-20/2023-02-20-00-00-03-192.168.1.109.pcap -m
+Slips start date: 2024/05/13 13:14:46.475852
+Slips end date: 2024/05/13 13:34:44.907071
