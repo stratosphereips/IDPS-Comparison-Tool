@@ -479,6 +479,8 @@ class SQLiteDB(IDB, IObservable):
             doesn't handle tools' labels for tws
         fills the labels_per_tw table with the gt label
         :param label: malicious or benign
+        :param ip: str ip of the host
+        :param tw: number of tw to label
         """
         query = (f'INSERT OR REPLACE INTO labels_per_tw '
                  f'(IP, timewindow, ground_truth_label) VALUES (?, ?, ?);')
@@ -591,35 +593,6 @@ class SQLiteDB(IDB, IObservable):
             if row is None:
                 break
             yield row
-
-    def is_tw_marked_as_malicious(self, tool: str, twid: int) -> bool:
-        """
-        checks all the flows in a given twid and marks the tw as malicious
-         if there's 1 malicious flow in this twid
-        tool can't be slips because it doesn't have the ts and labels in
-        slips_flows like rest
-        slips parser will handle checking the malicious tws in slips
-        :param tool: ground_truth or suricata
-        :param twid: 1 or 2 or 3
-        :return: bool
-        """
-        if tool not in ['suricata', 'ground_truth']:
-            return False
-
-        # only get the first ts once
-        if tool not in self.ts_tracker:
-            self.ts_tracker[tool] = self.get_first_ts(tool)
-
-        twid_handler = TimewindowHandler(self.ts_tracker[tool])
-        tw_start, tw_end = map(float, twid_handler.get_start_and_end_ts(twid))
-
-        table_name = f"{tool}_flows"
-        res = self.select(table_name,
-                    '*',
-                    f"timestamp >= {tw_start} "
-                    f"AND timestamp <= {tw_end} "
-                    f"AND label = 'malicious';")
-        return True if res else False
 
 
     def get_flows_count(self, type_:str, label="") -> int:
