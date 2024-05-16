@@ -487,7 +487,14 @@ class SQLiteDB(IDB, IObservable):
 
         params = (ip, tw, label)
         self.execute(query, params=params)
+    
+    def is_valid_tool(self, tool: str) -> bool:
+        if tool not in ['suricata', 'ground_truth', 'slips']:
+            print(f"{tool} not supported!!")
+            return False
+        return True
         
+    
     def set_tool_label_for_tw(
         self, ip: str, tool: str, tw: int, label: str):
         """
@@ -500,9 +507,8 @@ class SQLiteDB(IDB, IObservable):
         by the ground truth
         :param label: malicious or benign
         """
-        if tool not in ['suricata', 'ground_truth', 'slips']:
-            print("TRYING TO STORE THE LABEL FOR AN INVALID TOOL!!")
-            return False
+        if not self.is_valid_tool(tool):
+            return
         
         if not self.is_registered_timewindow(tw):
             # tw wasn't seen by the gt.
@@ -594,7 +600,25 @@ class SQLiteDB(IDB, IObservable):
                 break
             yield row
 
+    def was_tw_labeled_before(self, tw: int, ip: str, tool: str) -> bool:
+        """
+        checks if the given tw and ip combination was labeled before by the
+        given tool. checks the labels_per_tw table
+        :param tw: tw number to check
+        :param ip: str ip of the host to check
+        :param tool: slips, suricata or the ground truth
+        :return: bool
+        """
+        if not self.is_valid_tool(tool):
+            return False
 
+        return True if self.select(
+            'labels_per_tw',
+            f'{tool}_label',
+            condition=f'IP==\'{ip}\' AND timewindow=={tw}',
+            fetch='one'
+            ) else False
+        
     def get_flows_count(self, type_:str, label="") -> int:
         """
         returns all the malicious/benign labeled flows by slips, suricata,

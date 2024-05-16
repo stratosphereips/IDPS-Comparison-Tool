@@ -240,8 +240,8 @@ class GroundTruthParser(Parser):
 
     def register_timewindow(self, ts) -> dict:
         """
-        registers a new timewindow if the ts doesn't belong t an existing one
-        sets the current self.tw_number
+        registers a new timewindow if the ts doesn't belong to
+         an existing one.
         :param ts: unix ts of the flow being parsed
         returns the number of the registered tw and a bool indicating
         whether the tw was registered before or not
@@ -250,6 +250,8 @@ class GroundTruthParser(Parser):
 
         if self.is_first_flow:
             self.is_first_flow = False
+            # first timestamp ever seen in the gt conn.log will be
+            # the start of tw1
             self.twid_handler = TimewindowHandler(ts)
             tw_number = 1
         else:
@@ -285,34 +287,35 @@ class GroundTruthParser(Parser):
         # this tool is given a zeek logfile and the path of it is abs
         return filename
     
-    
+        
     def was_tw_registered(self, tw: int) -> bool:
         return self.db.is_registered_timewindow(tw)
     
-    def should_label_tw(self, tw_registration_stats: dict, label: str) -> (
+    def should_label_tw(self, tw: int, flow: dict) -> (
             bool):
         """
-        determines whteher to label the tw or not if:
-        1. tw wasnt labeled before
-        2. tw was labeled before as benign and now the label is malicious
+        determines whether to label the tw or not if:
+        1. tw wasnt labeled before for the same IP
+        2. twand ip was labeled before as benign and now the label is
+        malicious
         
         if the tw was labeled before as malicious and now it's benign,
         we don't update the label.
         
-        :param tw_registration_stats: fict with the following keys
-        tw: tw number
-        was_registered_before: bool indicating with whether the tw was
-        registered before in the db or not
-        :param label: the label we wanna set to the tw
+        :param tw: tw number
+        :param flow: dict with the srcip and label
         :return: whether or not the current label of this tw should be
         added to the db
         """
-        registered_b4 = tw_registration_stats["was_registered_before"]
-        if not registered_b4:
-            # first label for this tw
-            return True
+        labeled_b4 = self.db.was_tw_labeled_before(
+            tw, flow['srcip'], self.tool_name
+        )
         
-        if label == 'malicious':
+        if not labeled_b4:
+            # first label for this tw and this IP
+            return True
+
+        if flow['label'] == 'malicious':
             return True
         return False
         
@@ -326,7 +329,10 @@ class GroundTruthParser(Parser):
              was_registered_before: bool indicating with whether the tw was
             registered before in the db or not
         """
-        if not self.should_label_tw(tw_registration_stats, flow['label']):
+        if not self.should_label_tw(
+                tw_registration_stats["tw_number"],
+                flow
+            ):
             return False
         
         self.db.set_gt_label_for_tw(
