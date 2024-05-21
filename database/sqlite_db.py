@@ -444,7 +444,7 @@ class SQLiteDB(IDB, IObservable):
         return True if self.select(
             self.tables.TIMEWINDOW_DETAILS,
             "start_time",
-            f"start_time=='{ts}'",
+            f"start_time =='{ts}'",
         ) else False
 
     def get_timewindow_of_ts(self, ts: float) -> int:
