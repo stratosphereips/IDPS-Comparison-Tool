@@ -434,7 +434,18 @@ class SQLiteDB(IDB, IObservable):
             self.tables.TIMEWINDOW_DETAILS)[2]
 
         return start_time, end_time
-
+    
+    def does_ts_equals_to_start_of_a_tw(self, ts: str) -> bool:
+        """
+        checks i fthe given timestamp is == the start of any of the
+        registered gt timewindows.
+        :param ts: timestamp
+        """
+        return True if self.select(
+            self.tables.TIMEWINDOW_DETAILS,
+            "start_time",
+            f"start_time=='{ts}'",
+        ) else False
 
     def get_timewindow_of_ts(self, ts: float) -> int:
         """

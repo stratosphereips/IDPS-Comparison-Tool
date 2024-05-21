@@ -125,10 +125,17 @@ class SlipsParser(Parser):
             # 1:00                       2:00                         3:00
             # ├───────────────────────────┼────────────────────────────┤
             # │             tw 1                 tw 2                  │
-            for ts in (alert['tw_start'], alert['tw_end']):
-                self.mark_tw_as_malicious(ts, alert['ip_alerted'])
-    
-    
+            # for ts in (, alert['tw_end']):
+            self.mark_tw_as_malicious(alert['tw_start'], alert['ip_alerted'])
+            # the goal of this is the following:
+            # if slips has an alert from 1:00 to 2:00 then we shouldnt mark
+            # the tw starting with 2:00 as malicious
+            # but if slips has an alert from 1:00 to 2:30, then we should
+            # mark the timewindow that has the 2:30 as malicious
+            if not self.db.does_ts_equals_to_start_of_a_tw(alert['tw_end']):
+                self.mark_tw_as_malicious(alert['tw_end'], alert['ip_alerted'])
+
+
     def parse_flow_by_flow_labels(self):
         """
         parses the labels set by slips flow by flow
