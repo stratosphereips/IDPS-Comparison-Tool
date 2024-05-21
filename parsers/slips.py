@@ -147,8 +147,32 @@ class SlipsParser(Parser):
                 # used for printing the stats in the main.py
                 #TODO shouldn't be stored in a separate table!
                 self.db.store_flows_count(self.tool_name, flows_count)
-
-
+    
+    def print_number_of_alerts_slips_detected(self):
+        """
+        prints the number of alerts detected by slips from the alerts
+        table
+        """
+        self.execute("SELECT COUNT(*) FROM alerts")
+        alerts_number: int = self.fetchone()[0]
+        self.log(
+            f"Number of alerts found in Slips alerts table: ",
+            alerts_number
+            )
+        
+    def print_number_of_slips_mapped_malicious_timewindows(self):
+        """
+        prints the number of slips "malicious" timewindows as seen by the gt.
+        so this number is the answer to the following questions
+        to how many tws were the alerts in slips db mapped?
+        :return:
+        """
+        count: int = self.db.get_timewindow_count_by_label(
+            self.tool_name,
+            "malicious"
+            )
+        self.log(f"Slips alerts were mapped to: ",
+                 f"{count} GT timewindows")
     def parse(self):
         """
         reads the output db of slips with
@@ -160,4 +184,6 @@ class SlipsParser(Parser):
         self.parse_flow_by_flow_labels()
         self.print_stats()
         # labeling tws
+        self.print_number_of_alerts_slips_detected()
         self.parse_alerts_table()
+        self.print_number_of_slips_mapped_malicious_timewindows()

@@ -14,7 +14,7 @@ class SQLiteDB(IDB, IObservable):
     # stores the ts of the first flow for each tool
     ts_tracker = {}
     aid_collisions = 0
-
+    supported_labels = ('benign', 'malicious', 'unknown')
     def init(self):
         self.read_config()
         self.tables = Tables()
@@ -535,7 +535,19 @@ class SQLiteDB(IDB, IObservable):
                          'MAX(timewindow)',
                          fetch='one')
         return int(tw[0])
-
+    
+    def get_timewindow_count_by_label(self, tool:str, label:str) -> int:
+        """
+        returns the number of normal/malicious timewindows detected by the
+        given tool from the labes_per_tw tabel
+        :param tool: slips, suricata or the gt
+        :param label: malicious or normal
+        :return: the number of tws
+        """
+        assert label in self.supported_labels
+        label_col: str = self.labels_map[tool]
+        return self.get_count("labels_per_tw",
+                       condition=f"{label_col} == '{label}'")
 
     def is_registered_timewindow(self, tw: int) -> bool:
         """
@@ -630,7 +642,7 @@ class SQLiteDB(IDB, IObservable):
         :param label: can be 'malicious' , 'benign'
         :return:
         """
-        assert label in ['benign', 'malicious'], ("get_malicious_flows_count() "
+        assert label in self.supported_labels, ("get_malicious_flows_count() "
                                                   "was given an invalid label")
 
         assert type_ in self.labels_map, ("get_malicious_flows_count() was "
