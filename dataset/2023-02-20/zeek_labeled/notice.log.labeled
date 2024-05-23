@@ -1,0 +1,19 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	notice
+#open	2023-03-20-15-45-35
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	fuid	file_mime_type	file_desc	proto	note	msg	sub	src	dst	p	n	peer_descr	actions	email_dest	suppress_for	remote_location.country_code	remote_location.region	remote_location.city	remote_location.latitude	remote_location.longitude	label	detailedlabel
+#types	time	string	addr	port	addr	port	string	string	string	enum	enum	string	string	addr	addr	port	count	string	set[enum]	set[string]	interval	string	string	string	double	double	string	string
+1676851429.978424	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Little_Traffic	Only observed 0 TCP ACKs and was expecting at least 1.	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676885433.339476	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 14.555%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676888217.124756	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 33.003%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676890017.867994	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 10.849%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676890918.014835	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 29.181%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676891818.942685	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 42.339%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676897382.340452	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 24.073%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676898282.364886	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 34.607%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676899182.377475	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 10.146%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+1676900082.404887	-	-	-	-	-	-	-	-	-	CaptureLoss::Too_Much_Loss	The capture loss script detected an estimated loss rate above 13.333%	-	-	-	-	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-	(empty)	(empty)
+#close	2023-03-20-15-45-50

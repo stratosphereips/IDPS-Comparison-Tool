@@ -1,0 +1,8 @@
+Slips version: 1.0.13
+
+File: 2023-02-20-00-00-03-192.168.1.109.pcap
+Branch: None
+Commit: None
+Command: ./slips.py -e 1 -o output/2023-02-20-00-00-03-192.168.1.109/ -f 2023-02-20-00-00-03-192.168.1.109.pcap -m
+Slips start date: 2024/05/13 13:14:46.475852
+Slips end date: 2024/05/13 13:34:44.907071
