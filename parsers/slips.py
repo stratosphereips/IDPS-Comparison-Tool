@@ -125,7 +125,6 @@ class SlipsParser(Parser):
             # 1:00                       2:00                         3:00
             # ├───────────────────────────┼────────────────────────────┤
             # │             tw 1                 tw 2                  │
-            # for ts in (, alert['tw_end']):
             self.mark_tw_as_malicious(alert['tw_start'], alert['ip_alerted'])
             # the goal of this is the following:
             # if slips has an alert from 1:00 to 2:00 then we shouldnt mark

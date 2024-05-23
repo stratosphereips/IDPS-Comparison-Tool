@@ -149,7 +149,15 @@ are discarded. The number of discarded flows is written in the cli at the end of
 * the flows read by suricata, slips and the gt don't have to be the same, meaning that, the final flows count don't have to match because each tool reads the pcap differently
 
 * timewindow numbers may be negative if a flow is found with a flow timestamp < timestamp of the first flow seen
+* if a slips alert exists in parts of 2 timewindows
+* what we're doing here is marking bith timewindows as malicious 
 
+                1:30                   2:30
+                 │      slips alert     │
+                 ├──────────────────────┤
+ 1:00                       2:00                         3:00
+ ├───────────────────────────┼────────────────────────────┤
+ │             tw 1                 tw 2                  │
 
 ---
 
