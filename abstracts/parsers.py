@@ -12,7 +12,7 @@ class Parser(IObservable):
     def __init__(self,
                  output_dir: str,
                  results_path: Optional[str]=None,
-                 **kwargs):
+                 *args):
         super(Parser, self).__init__()
         # init the logger
         self.results_path = results_path
@@ -23,10 +23,10 @@ class Parser(IObservable):
         Process.__init__(self)
         self.db = SQLiteDB(output_dir)
 
-        self.init(**kwargs)
+        self.init(args)
 
     @abstractmethod
-    def init(self, **kwargs):
+    def init(self, *args):
         """
         the goal of this is to have one common __init__()
         for all modules, which is the one in this file

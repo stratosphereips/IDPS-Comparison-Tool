@@ -7,6 +7,9 @@ import datetime
 import multiprocessing
 from time import time, sleep
 
+from modes.tools_parser import (
+    ToolsParser,
+    )
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
 from parsers.cm_db import ConfusionMatrixDBParser
@@ -69,6 +72,11 @@ class Main(IObservable):
                     rmtree(file_path)
 
     def setup_output_dir(self):
+        """
+        create a new output dir for storing the results of this run.
+        either using the given -o or a new one with the date and time
+        :return:
+        """
         if self.args.output_dir:
             # -o is given
             self.prep_given_output_dir()
@@ -113,70 +121,19 @@ class Main(IObservable):
     def start_ground_truth_parser(self):
         self.log("Starting ground truth parser.", '')
         if self.args.ground_truth_dir:
-            # read the ground truth and store it in the db
             GroundTruthParser(
                 self.output_dir,
                 self.results_path,
                 ground_truth=self.args.ground_truth_dir,
-                ground_truth_type='dir',
                 ).parse()
 
         elif self.args.ground_truth_file:
-            # read the ground truth and store it in the db
             GroundTruthParser(
                 self.output_dir,
                 self.results_path,
                 ground_truth=self.args.ground_truth_file,
-                ground_truth_type='file',
                 ).parse()
 
-
-    def validate_path(self, path):
-        """make sure this path is abs and exists"""
-        assert os.path.isabs(path), (f"Invalid path. {path} must be "
-                                     f"absolute. Stopping.")
-        assert os.path.exists(path), f"Path '{path}' doesn't exist"
-        return True
-
-    def start_parsers(self, print_stats_event):
-        """
-        runs each parser in a separate proc and returns when they're all done
-        :param print_stats_event: the thread will set this event when it's
-        done reading the ground truth flows and
-        started reading slips and suricata flows so the print_stats
-        thread can start printing
-        """
-        gt_parser: multiprocessing.Process = multiprocessing.Process(
-            target=self.start_ground_truth_parser, args=( )
-            )
-        suricata_parser: multiprocessing.Process = multiprocessing.Process(
-            target=self.start_suricata_parser, args=( )
-            )
-        slips_parser: multiprocessing.Process = multiprocessing.Process(
-            target=self.start_slips_parser, args=( )
-            )
-
-        gt_parser.start()
-        self.log(f"New process started for parsing: ",
-                 'Ground Truth')
-        gt_parser.join()
-
-        # since we discard slips and suricata's flows based on
-        # the ground truth flows,
-        # we need to make sure we're done  reading them first
-        suricata_parser.start()
-        self.log(f"New process started for parsing: ",
-                 'Suricata')
-
-        slips_parser.start()
-        self.log(f"New process started for parsing: ",
-                 'Slips')
-
-        print_stats_event.set()
-
-        suricata_parser.join()
-        slips_parser.join()
-        self.log('', "-" * 30)
 
 
     def print_stats(self, print_stats_event):
@@ -242,24 +199,7 @@ class Main(IObservable):
                  f"Discarded flows: {discarded_flows} -- "
                  f"Discarded timewindows: {discarded_tws}", '')
 
-    def validate_gt(self):
-        # this should always be a labeled zeek json dir
-        if self.args.ground_truth_dir:
-            ground_truth_dir: str = self.args.ground_truth_dir
-            if self.validate_path(ground_truth_dir):
-                self.log(f"Using ground truth dir: ", ground_truth_dir)
-            assert os.path.isdir(ground_truth_dir),\
-                f"Invalid dir {ground_truth_dir}. ground truth has to be a dir"
-
-        elif self.args.ground_truth_file:
-            ground_truth_file: str = self.args.ground_truth_file
-            if self.validate_path(ground_truth_file):
-                self.log(f"Using ground truth file: ", ground_truth_file)
-            assert os.path.isfile(self.args.ground_truth_file), \
-                f"Invalid file given with -gtf {self.args.ground_truth_file}. "
-        else:
-            print("No ground truth file or dir was given. stopping.")
-            sys.exit()
+    
 
 
     def read_cm_db(self):
@@ -303,15 +243,8 @@ class Main(IObservable):
                     [(gt_label, tool_label)], log=False)
                 self.db.store_performance_errors_per_tw(ip, tw, tool, cm)
 
-        comparer.print_stats()
-        
-    def validate_given_paths(self):
-        for path in (self.args.slips_db, self.args.eve_file):
-            self.validate_path(path)
-        self.validate_gt()
         
     def main(self):
-
         if self.args.confusion_matrix_db:
             """
             given a db with pre-calculated TP, TN FP, FN for each tool
@@ -320,7 +253,6 @@ class Main(IObservable):
             self.read_cm_db()
 
         else:
-            self.validate_gt()
             # used to tell the print_stats thread to start
             print_stats_event = multiprocessing.Event()
 
@@ -328,12 +260,16 @@ class Main(IObservable):
                                   args=(print_stats_event,),
                                   daemon=True)
             stats_thread.start()
-            self.validate_given_paths()
-            self.start_parsers(print_stats_event)
+            
+            ToolsParser(
+                self.output_dir,
+                self.results_path,
+                print_stats_event
+                ).start_parsers()
+            
             # now that the parses ended don't print more stats
             self.stop_stats_thread = True
             stats_thread.join()
-
 
             self.log(' ', ' ', log_to_results_file=False)
             self.log('', "-" * 30, log_to_results_file=False)
