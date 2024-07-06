@@ -2,7 +2,10 @@ from multiprocessing import (
     Process,
     Event,
     )
-from typing import List
+from typing import (
+    List,
+    Tuple,
+    )
 
 from parsers.arg_parser import ArgsParser
 from parsers.ground_truth import GroundTruthParser
@@ -91,6 +94,18 @@ class ToolsParser:
             started_processes.append(proc)
         return started_processes
     
+    def get_supported_tools(self) -> Tuple[str]:
+        """
+        returns the tools given by the user
+        e.g. if -e and -s is given ,
+        will return ('slips', 'suricata')
+        :return: a tuple with the user-given tools
+        """
+        supported_tools: Tuple[str] = tuple()
+        for arg, parser in self.tools_map.items():
+            if arg:
+                supported_tools += parser.tool_name
+        return supported_tools
     
     def start_parsers(self):
         """

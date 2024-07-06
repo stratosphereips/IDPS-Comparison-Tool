@@ -1,6 +1,10 @@
 from abstracts.comparison_methods import ComparisonMethod
 from metrics.calculator import Calculator
-from typing import Iterator
+from typing import (
+    Iterator,
+    Tuple,
+    )
+
 
 class FlowByFlow(ComparisonMethod):
     """
@@ -8,10 +12,9 @@ class FlowByFlow(ComparisonMethod):
     comparison of tools
     """
     name = "Flow By Flow"
-    supported_tools = ('slips', 'suricata')
 
-    def init(self):
-        ...
+    def init(self, supported_tools: Tuple[str]):
+        self.supported_tools: Tuple[str] = supported_tools
 
     def handle_flow_by_flow_comparison(self):
         self.log('', "-" * 30)

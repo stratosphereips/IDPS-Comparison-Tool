@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from abstracts.comparison_methods import ComparisonMethod
 from metrics.calculator import Calculator
 
@@ -6,10 +8,10 @@ class PerTimewindow(ComparisonMethod):
     responsible for grouping helper methods used for timewindow comparison of tools
     """
     name = "Per Timewindow"
-    supported_tools = ('slips', 'suricata')
 
 
-    def init(self):
+    def init(self, supported_tools: Tuple[str]):
+        self.supported_tools: Tuple[str] = supported_tools
         self.last_registered_tw: int = self.db.get_last_registered_timewindow()
 
     def handle_per_tw_comparison(self):

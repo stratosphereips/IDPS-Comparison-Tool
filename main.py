@@ -6,6 +6,7 @@ from shutil import rmtree
 import datetime
 import multiprocessing
 from time import time, sleep
+from typing import Tuple
 
 from modes.tools_parser import (
     ToolsParser,
@@ -261,11 +262,12 @@ class Main(IObservable):
                                   daemon=True)
             stats_thread.start()
             
-            ToolsParser(
+            tools_parser = ToolsParser(
                 self.output_dir,
                 self.results_path,
                 print_stats_event
-                ).start_parsers()
+                )
+            tools_parser.start_parsers()
             
             # now that the parses ended don't print more stats
             self.stop_stats_thread = True
@@ -290,9 +292,9 @@ class Main(IObservable):
             self.log(f"Done. For labels db check: ", self.output_dir)
 
             self.log(' ', ' ', log_to_results_file=False)
-
-            FlowByFlow(self.output_dir).handle_flow_by_flow_comparison()
-            PerTimewindow(self.output_dir).handle_per_tw_comparison()
+            supported_tools: Tuple[str] = tools_parser.get_supported_tools()
+            FlowByFlow(self.output_dir, supported_tools).handle_flow_by_flow_comparison()
+            PerTimewindow(self.output_dir, supported_tools).handle_per_tw_comparison()
 
         self.db.close()
 
