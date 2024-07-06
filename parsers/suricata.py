@@ -1,17 +1,18 @@
 from utils.timestamp_handler import TimestampHandler
 from parsers.config import ConfigurationParser
 from utils.hash import Hash
+from utils.file_handler import validate_path
 from abstracts.parsers import Parser
-
 import json
 
 
 class SuricataParser(Parser):
     name = "SuricataParser"
 
-    def init(self,
-             eve_file=None):
-        self.eve_file: str = eve_file
+    def init(self, args: list):
+        self.eve_file: str = args[0]
+        if not validate_path(self.eve_file):
+            raise TypeError(f"Invalid suricata filepath {self.eve_file}")
         # to be able to get the ts of the first flow
         self.is_first_flow = True
         self.hash = Hash()
