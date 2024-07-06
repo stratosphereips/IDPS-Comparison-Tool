@@ -1,8 +1,11 @@
+import sys
+
 import utils.timestamp_handler
 from typing import Tuple, Dict, List
 from re import findall
 from parsers.config import ConfigurationParser
 from utils.timewindow_handler import TimewindowHandler
+from utils.file_handler import validate_path
 from utils.hash import Hash
 from abstracts.parsers import Parser
 from re import split
@@ -43,26 +46,29 @@ class GroundTruthParser(Parser):
     tool_name = "ground_truth"
     is_first_flow = True
 
-    def init(self,
-             ground_truth=None,
-             ground_truth_type=None):
-        # ground_truth_type can either be 'dir' or 'file'
-        if ground_truth_type == 'dir':
+    def init(self, args: list):
+        ground_truth = args[0]
+        self.gt_zeek_dir = None
+        self.gt_zeek_file = None
+        if os.path.isdir(ground_truth):
             # zeek dir with ground truth labels
             self.gt_zeek_dir: str = ground_truth
-        elif ground_truth_type == 'file':
+        else:
             self.gt_zeek_file  = ground_truth
-
+        if not validate_path(self.gt_zeek_dir or self.gt_zeek_file):
+            raise TypeError(f"Invalid GT path"
+                            f" {self.gt_zeek_dir or self.gt_zeek_file}")
         # check the type of the given zeek file/dir with
         # ground truth labels. 'tab-separated' or 'json'?
         self.zeek_file_type: str = self.check_type()
         self.read_config()
         self.timestamp_handler = utils.timestamp_handler.TimestampHandler()
 
+
     def read_config(self):
         config = ConfigurationParser()
         self.twid_width = float(config.timewindow_width())
-
+    
     def extract_tab_fields(self, line):
         try:
             return {
@@ -345,11 +351,11 @@ class GroundTruthParser(Parser):
     def parse_file(self, filename: str):
         """
         extracts the label and community id from each flow and stores them in the db
-        :param filename: the name of the logfile without the path, for example conn.log
+        :param filename: the name of the zeek logfile without the path,
+        for example conn.log
         this can be the file given to this tool using -gtf or 1 file
          from the zeek dir given to this tool
         """
-
         fullpath = self.get_full_path(filename)
 
         self.total_flows_read = 0
@@ -429,7 +435,7 @@ class GroundTruthParser(Parser):
         checks if the given dir is json or tab seperated zeek dir
         :Return: 'tab-separated' or 'json'
         """
-        if hasattr(self, 'gt_zeek_dir'):
+        if self.gt_zeek_dir:
             # open the first logfile you see in this dir
             for f in os.listdir(self.gt_zeek_dir):
                 if self.is_ignored(f):
@@ -439,7 +445,7 @@ class GroundTruthParser(Parser):
                 if os.path.isfile(full_path):
                     type_ = self.get_line_type(full_path)
                     break
-        elif hasattr(self, 'gt_zeek_file'):
+        elif self.gt_zeek_file:
             type_ = self.get_line_type(self.gt_zeek_file)
 
         return type_
@@ -457,14 +463,14 @@ class GroundTruthParser(Parser):
         """
         parses the given zeek dir or zeek logfile
         """
-        if hasattr(self, 'gt_zeek_dir'):
+        if self.gt_zeek_dir:
             for log_file in os.listdir(self.gt_zeek_dir):
                 if self.is_ignored(log_file):
                     continue
                 # extract fields and store them in the db
                 self.parse_file(log_file)
 
-        elif hasattr(self, 'gt_zeek_file'):
+        elif self.gt_zeek_file:
             # extract fields and store them in the db
             self.parse_file(self.gt_zeek_file)
 
