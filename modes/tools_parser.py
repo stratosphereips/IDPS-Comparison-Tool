@@ -101,10 +101,10 @@ class ToolsParser:
         will return ('slips', 'suricata')
         :return: a tuple with the user-given tools
         """
-        supported_tools: Tuple[str] = tuple()
+        supported_tools: set[str] = set()
         for arg, parser in self.tools_map.items():
             if arg:
-                supported_tools += parser.tool_name
+                supported_tools.add(parser.tool_name)
         return supported_tools
     
     def start_parsers(self):

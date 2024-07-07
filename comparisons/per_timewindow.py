@@ -10,8 +10,8 @@ class PerTimewindow(ComparisonMethod):
     name = "Per Timewindow"
 
 
-    def init(self, supported_tools: Tuple[str]):
-        self.supported_tools: Tuple[str] = supported_tools
+    def init(self, args: list):
+        self.supported_tools: Tuple[str] = args[0]
         self.last_registered_tw: int = self.db.get_last_registered_timewindow()
 
     def handle_per_tw_comparison(self):

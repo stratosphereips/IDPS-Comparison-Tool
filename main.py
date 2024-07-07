@@ -150,10 +150,10 @@ class Main(IObservable):
             sleep(5)
             current_datetime = datetime.datetime.now()
             now = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
-            print(f"{now} - Total parsed flows by "
-                  f"slips: {self.db.get_flows_parsed('slips')} "
-                  f"suricata: {self.db.get_flows_parsed('suricata')} ",
-                  end='\r')
+            to_print = f"{now} - Total parsed flows by "
+            for tool in self.supported_tools:
+                to_print += f"{tool}: {self.db.get_flows_parsed('slips')}"
+            print(to_print, end='\r')
     
     def get_human_readable_datetime(self) -> str:
         now = datetime.datetime.now()
@@ -256,20 +256,21 @@ class Main(IObservable):
         else:
             # used to tell the print_stats thread to start
             print_stats_event = multiprocessing.Event()
-
-            stats_thread = Thread(target=self.print_stats,
-                                  args=(print_stats_event,),
-                                  daemon=True)
-            stats_thread.start()
             
             tools_parser = ToolsParser(
                 self.output_dir,
                 self.results_path,
                 print_stats_event
                 )
+            self.supported_tools: Tuple[str] = (
+                tools_parser.get_supported_tools()
+            )
+            stats_thread = Thread(target=self.print_stats,
+                                  args=(print_stats_event,),
+                                  daemon=True)
+            stats_thread.start()
             tools_parser.start_parsers()
-            
-            # now that the parses ended don't print more stats
+            # now that the parsers ended don't print more stats
             self.stop_stats_thread = True
             stats_thread.join()
 
@@ -292,9 +293,13 @@ class Main(IObservable):
             self.log(f"Done. For labels db check: ", self.output_dir)
 
             self.log(' ', ' ', log_to_results_file=False)
-            supported_tools: Tuple[str] = tools_parser.get_supported_tools()
-            FlowByFlow(self.output_dir, supported_tools).handle_flow_by_flow_comparison()
-            PerTimewindow(self.output_dir, supported_tools).handle_per_tw_comparison()
+            
+            FlowByFlow(self.output_dir,
+                       self.supported_tools
+                       ).handle_flow_by_flow_comparison()
+            PerTimewindow(self.output_dir,
+                          self.supported_tools
+                          ).handle_per_tw_comparison()
 
         self.db.close()
 

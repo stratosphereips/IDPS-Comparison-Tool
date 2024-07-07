@@ -9,16 +9,17 @@ class ComparisonMethod(IObservable, ABC):
     name = ''
     def __init__(self,
                  output_dir,
-                 **kwargs):
+                 *args):
         self.output_dir = output_dir
         Process.__init__(self)
         IObservable.__init__(self)
         self.logger = Logger(self.name, self.output_dir)
-        # add the logger as an observer so each msg printed to the cli will be sent to it too
+        # add the logger as an observer so each msg printed to the
+        # cli will be sent to it too
         self.add_observer(self.logger)
 
         self.db = SQLiteDB(self.output_dir)
-        self.init(**kwargs)
+        self.init(args)
 
     @abstractmethod
     def init(self, **kwargs):

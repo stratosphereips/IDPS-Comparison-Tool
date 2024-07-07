@@ -13,8 +13,8 @@ class FlowByFlow(ComparisonMethod):
     """
     name = "Flow By Flow"
 
-    def init(self, supported_tools: Tuple[str]):
-        self.supported_tools: Tuple[str] = supported_tools
+    def init(self, args: list):
+        self.supported_tools: Tuple[str] = args[0]
 
     def handle_flow_by_flow_comparison(self):
         self.log('', "-" * 30)
