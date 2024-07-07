@@ -8,6 +8,7 @@ import json
 
 class SuricataParser(Parser):
     name = "SuricataParser"
+    tool_name = "suricata"
 
     def init(self, args: list):
         self.eve_file: str = args[0]
