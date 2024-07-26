@@ -6,14 +6,14 @@ from typing import (
     List,
     Tuple,
     )
-
+import os
 from parsers.arg_parser import ArgsParser
 from parsers.ground_truth import GroundTruthParser
 from parsers.slips import SlipsParser
 from parsers.suricata import SuricataParser
 
 
-class ToolsParser:
+class ParserHandler:
     """responsible for starting parsers for each given tool/gt"""
     def __init__(self,
                  output_dir: str,
@@ -35,17 +35,17 @@ class ToolsParser:
             args.eve_file: SuricataParser,
             }
         
-    def start(self, parser, *args):
+    def start(self, parser, *args) -> int:
         """
         this function starts in a new Process
         used to init the given parser with the given args
         :param parser: An obj of any parser in parsers/
         :param args: args required for starting the given parser
-        :return: None
+        :return: 0 if all good, 1 if an error occured
         """
         p = parser(*args)
         p.log(f"Starting {p.name}:", f" {args[-1]}")
-        p.parse()
+        return p.parse()
         
     def start_gt_parsers(self) -> List[Process]:
         """
@@ -114,18 +114,26 @@ class ToolsParser:
         done reading the ground truth flows and
         started reading slips and suricata flows so the print_stats
         thread can start printing
+        :return: 0 if all good, 1 if an error occured
         """
         # the gt parsers should finish first before starting tool parsers
-        
         processes: List[Process] = self.start_gt_parsers()
         for proc in processes:
             proc.join()
+            if proc.exitcode != 0:
+                # terminate, dont start the rest of the parsers
+                os._exit(1)
             
         self.print_stats_event.set()
         
         processes: List[Process] = self.start_tool_parsers()
         for proc in processes:
             proc.join()
+            if proc.exitcode != 0:
+                # terminate, dont start the rest of the parsers
+                os._exit(1)
+            
+        os._exit(0)
             
         
             
