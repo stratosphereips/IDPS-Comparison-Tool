@@ -38,11 +38,13 @@ class Parser(IObservable):
         """extracts the values the parser is going to use from config.yaml"""
         ...
     
-    def log(self, green_txt, normal_txt, log_to_results_file=True, end="\n"):
+    def log(self, colored_txt, normal_txt, log_to_results_file=True,
+            end="\n", error=False):
         """
         gives the txt to the logger to log it to stdout and results.txt
         """
-        self.notify_observers((normal_txt, green_txt, log_to_results_file, end))
+        self.notify_observers((normal_txt, colored_txt, log_to_results_file,
+                               end, error))
 
     @abstractmethod
     def parse(self):

@@ -1,4 +1,5 @@
 import sqlite3
+import traceback
 from threading import Lock
 from time import sleep
 
@@ -82,8 +83,9 @@ class SlipsParser(Parser):
                 sleep(0.1)
                 self.execute(query, params=params)
             else:
-                # An error occurred during execution
-                print(f"Error executing query ({query}): {e}")
+                self.log(f"Error executing query",
+                         f"({query}): {e}",
+                         error=True)
 
 
     def print_stats(self):
@@ -143,17 +145,28 @@ class SlipsParser(Parser):
         """
         flows_count = 0
         for row in self.iterate('flows'):
-            row: dict
-            flow = {
-                'aid': row['aid'],
-                'label' : row['label']
-            }
-            
-            if self.db.store_flow(flow, self.tool_name):
-                flows_count += 1
-                # used for printing the stats in the main.py
-                #TODO shouldn't be stored in a separate table!
-                self.db.store_flows_count(self.tool_name, flows_count)
+            try:
+                row: dict
+                flow = {
+                    'aid': row['aid'],
+                    'label' : row['label']
+                }
+                
+                if self.db.store_flow(flow, self.tool_name):
+                    flows_count += 1
+                    # used for printing the stats in the main.py
+                    #TODO shouldn't be stored in a separate table!
+                    self.db.store_flows_count(self.tool_name, flows_count)
+            except Exception as e:
+                try:
+                    aid_causing_issues = flow.get('aid', '')
+                except NameError:
+                    aid_causing_issues = ""
+                    
+                self.log("Problem parsing 1 flow: ",
+                         f"AID : {aid_causing_issues}. "
+                         f"discarding it. {e}",
+                         error=True)
     
     def print_number_of_alerts_slips_detected(self):
         """
@@ -180,17 +193,22 @@ class SlipsParser(Parser):
             )
         self.log(f"Slips alerts were mapped to: ",
                  f"{count} GT timewindows")
+        
     def parse(self):
         """
         reads the output db of slips with
         the labels and stores it in this tools' db
         """
-        self.log("Using Slips Version: ", self.version)
-        self.connect()
-        # labeling flows
-        self.parse_flow_by_flow_labels()
-        self.print_stats()
-        # labeling tws
-        self.print_number_of_alerts_slips_detected()
-        self.parse_alerts_table()
-        self.print_number_of_slips_mapped_malicious_timewindows()
+        try:
+            self.log("Using Slips Version: ", self.version)
+            self.connect()
+            # labeling flows
+            self.parse_flow_by_flow_labels()
+            self.print_stats()
+            # labeling tws
+            self.print_number_of_alerts_slips_detected()
+            self.parse_alerts_table()
+            self.print_number_of_slips_mapped_malicious_timewindows()
+        except Exception as e:
+            self.log("An error occurred: ", e, error=True)
+            self.log("",f"{traceback.format_exc()}", error=True)

@@ -1,3 +1,5 @@
+import traceback
+
 from utils.timestamp_handler import TimestampHandler
 from parsers.config import ConfigurationParser
 from utils.hash import Hash
@@ -84,57 +86,59 @@ class SuricataParser(Parser):
     def parse(self):
         """reads the given suricata eve.json"""
         self.log("Using Suricata Version: ", self.version)
+        try:
+            with open(self.eve_file, 'r') as f:
+                flows_count = 0
+                while line := f.readline():
+                    line = json.loads(line)
+                    event_type = line['event_type']
+    
+                    if event_type not in ('flow', 'alert'):
+                        # only read benign flows and alert events
+                        continue
+    
+    
+                    flow: dict = self.extract_flow(line)
+                    original_ts = flow['timestamp']
+                    timestamp = self.timestamp_handler.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
+                    flow['timestamp'] = timestamp
+                    aid: str = self.hash.get_aid(flow)
+    
+                    # we assume all flows with event_type=alert are marked as malicious by suricata
+                    label = 'malicious' if line['event_type'] == 'alert' else 'benign'
+                    flow = {
+                        'aid' : aid,
+                        'label' : label,
+                        'timestamp': timestamp,
+                        'original_ts': original_ts,
+                        }
+    
+    
+                    # if a flow is not stored in the db, it's because it
+                    # was found in suricata but not in the gt
+                    if self.db.store_flow(flow, 'suricata'):
+                        if self.is_first_flow:
+                            # set the first tw as benign by default
+                            self.label_tw(timestamp, line['src_ip'], 'benign')
+                            self.is_first_flow = False
+    
+                        flows_count += 1
+                        # used for printing the stats in the main.py
+                        self.db.store_flows_count('suricata', flows_count)
+    
+                        if flow['timestamp'] > self.tw_end:
+                            # this is a new tw. add the label for it in the db
+                            self.label_tw(timestamp, line['src_ip'], 'benign')
+                            # update the start and end of this tw
+                            self.tw_start = self.tw_end
+                            self.tw_end = self.tw_start + self.twid_width
+    
+                        if 'malicious' in label.lower():
+                            self.label_tw(timestamp, line['src_ip'], 'malicious')
+    
+                self.print_stats()
+        except Exception as e:
+            self.log("An error occurred: ", e, error=True)
+            self.log("",f"{traceback.format_exc()}", error=True)
         
-        with open(self.eve_file, 'r') as f:
-            flows_count = 0
-            while line := f.readline():
-                line = json.loads(line)
-                event_type = line['event_type']
-
-                if event_type not in ('flow', 'alert'):
-                    # only read benign flows and alert events
-                    continue
-
-
-                flow: dict = self.extract_flow(line)
-                original_ts = flow['timestamp']
-                timestamp = self.timestamp_handler.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
-                flow['timestamp'] = timestamp
-                aid: str = self.hash.get_aid(flow)
-
-                # we assume all flows with event_type=alert are marked as malicious by suricata
-                label = 'malicious' if line['event_type'] == 'alert' else 'benign'
-                flow = {
-                    'aid' : aid,
-                    'label' : label,
-                    'timestamp': timestamp,
-                    'original_ts': original_ts,
-                    }
-
-
-                # if a flow is not stored in the db, it's because it
-                # was found in suricata but not in the gt
-                if self.db.store_flow(flow, 'suricata'):
-                    if self.is_first_flow:
-                        # set the first tw as benign by default
-                        self.label_tw(timestamp, line['src_ip'], 'benign')
-                        self.is_first_flow = False
-
-                    flows_count += 1
-                    # used for printing the stats in the main.py
-                    self.db.store_flows_count('suricata', flows_count)
-
-                    if flow['timestamp'] > self.tw_end:
-                        # this is a new tw. add the label for it in the db
-                        self.label_tw(timestamp, line['src_ip'], 'benign')
-                        # update the start and end of this tw
-                        self.tw_start = self.tw_end
-                        self.tw_end = self.tw_start + self.twid_width
-
-                    if 'malicious' in label.lower():
-                        self.label_tw(timestamp, line['src_ip'], 'malicious')
-
-            self.print_stats()
-
-
 

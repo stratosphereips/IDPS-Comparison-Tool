@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 import utils.timestamp_handler
 from typing import Tuple, Dict, List
@@ -179,7 +180,7 @@ class GroundTruthParser(Parser):
         try:
             line = json.loads(line)
         except json.decoder.JSONDecodeError:
-            self.log(f"Error loading line: \n{line}",'')
+            self.log(f"Error loading line: \n",'line', error=True)
             return False
 
         aid = self.handle_getting_aid(line)
@@ -357,18 +358,18 @@ class GroundTruthParser(Parser):
          from the zeek dir given to this tool
         """
         fullpath = self.get_full_path(filename)
-
         self.total_flows_read = 0
-        with open(fullpath, 'r') as f:
-            while line := f.readline():
+        gt_file = open(fullpath)
+        try:
+            while line := gt_file.readline():
                 # skip comments
                 if line.startswith('#'):
                     continue
-
+                
                 flow = self.extract_fields(line)
                 if not flow:
                     continue
-
+                
                 tw_registration_stats: dict = self.register_timewindow(
                     flow['timestamp']
                     )
@@ -389,9 +390,12 @@ class GroundTruthParser(Parser):
                              self.total_flows_read,
                              log_to_results_file=False,
                              end="\r")
-
-
-
+                    print(1/0)
+        except Exception as e:
+            self.log("An error occurred: ", e, error=True)
+            self.log("",f"{traceback.format_exc()}", error=True)
+        gt_file.close()
+        
     def log_stats(self):
         print('\n')
         self.log('', "-" * 30)
@@ -463,18 +467,22 @@ class GroundTruthParser(Parser):
         """
         parses the given zeek dir or zeek logfile
         """
-        if self.gt_zeek_dir:
-            for log_file in os.listdir(self.gt_zeek_dir):
-                if self.is_ignored(log_file):
-                    continue
+        try:
+            if self.gt_zeek_dir:
+                for log_file in os.listdir(self.gt_zeek_dir):
+                    if self.is_ignored(log_file):
+                        continue
+                    # extract fields and store them in the db
+                    self.parse_file(log_file)
+    
+            elif self.gt_zeek_file:
                 # extract fields and store them in the db
-                self.parse_file(log_file)
-
-        elif self.gt_zeek_file:
-            # extract fields and store them in the db
-            self.parse_file(self.gt_zeek_file)
-
-        self.log_stats()
+                self.parse_file(self.gt_zeek_file)
+    
+            self.log_stats()
+        except Exception as e:
+            self.log("An error occurred: ", e, error=True)
+            self.log("",f"{traceback.format_exc()}", error=True)
 
 
 

@@ -16,12 +16,13 @@ class Logger(IObserver):
         self.name = name
         self.results_path = os.path.join(output_dir, 'results.txt')
 
-    def print_to_cli(self, normal_txt, green_txt, end):
+    def print_to_cli(
+        self, normal_txt: str, colored_txt: str, end: str, color: str):
         normal_txt = str(normal_txt)
-        green_txt = colored(str(green_txt), 'green')
+        colored_txt = colored(str(colored_txt), color)
         blue_name = colored(f'[{self.name}] ', 'blue')
         print(f"{blue_name}"
-              f"{green_txt}"
+              f"{colored_txt}"
               f"{normal_txt}",
               end=end)
 
@@ -39,12 +40,12 @@ class Logger(IObserver):
             it will only be written in the CLI, used when regularly printing the number of flows parsed etc.
         end: \n \r "" etc. same as print()'s end
         """
-        normal_txt, green_txt, log_to_results_file, end = msg
-
-        self.print_to_cli(normal_txt, green_txt, end)
-
+        normal_txt, colored_txt, log_to_results_file, end, error = msg
+        color = "red" if error else "green"
+        self.print_to_cli(normal_txt, colored_txt, end, color)
+            
         if not log_to_results_file:
             return
-        self.log_to_results_file(normal_txt, green_txt)
+        self.log_to_results_file(normal_txt, colored_txt)
 
 

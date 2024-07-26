@@ -93,9 +93,10 @@ class Main(IObservable):
         return output_dir
 
 
-    def log(self, green_txt, normal_txt, log_to_results_file=True, end="\n"):
+    def log(self, green_txt, normal_txt, log_to_results_file=True,
+            end="\n", error=False):
         self.notify_observers(
-            (normal_txt, green_txt, log_to_results_file, end)
+            (normal_txt, green_txt, log_to_results_file, end, error)
             )
 
 
