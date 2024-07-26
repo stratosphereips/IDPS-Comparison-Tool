@@ -14,7 +14,8 @@ class Logger(IObserver):
         :param output_dir: path where results.txt will be to log the txt to it
         """
         self.name = name
-        self.results_path = os.path.join(output_dir, 'results.txt')
+        self.results_file_path = os.path.join(output_dir, 'results.txt')
+        self.errors_file_path = os.path.join(output_dir, 'errors.log')
 
     def print_to_cli(
         self, normal_txt: str, colored_txt: str, end: str, color: str):
@@ -26,9 +27,9 @@ class Logger(IObserver):
               f"{normal_txt}",
               end=end)
 
-    def log_to_results_file(self, normal_txt, green_txt):
-        with open(self.results_path, 'a') as results:
-            results.write(f"[{self.name}] {green_txt} {normal_txt}\n")
+    def log_to_file(self, normal_txt, green_txt, file_path: str):
+        with open(file_path, 'a') as f:
+            f.write(f"[{self.name}] {green_txt} {normal_txt}\n")
 
     def update(self, msg: Tuple[str,str]):
         """
@@ -36,16 +37,18 @@ class Logger(IObserver):
         each msg should consist of the following
         normal_txt: not colored text to be written in the CLI
         green_txt: text to be written in green in the CLI
-        log_to_results_file: bool. if False, we won't log the text to results.txt and
-            it will only be written in the CLI, used when regularly printing the number of flows parsed etc.
+        log_to_results_file: bool. if False, we won't log the text to
+        results.txt and
+        it will only be written in the CLI, used when regularly printing
+        the number of flows parsed etc.
         end: \n \r "" etc. same as print()'s end
         """
         normal_txt, colored_txt, log_to_results_file, end, error = msg
         color = "red" if error else "green"
         self.print_to_cli(normal_txt, colored_txt, end, color)
             
-        if not log_to_results_file:
-            return
-        self.log_to_results_file(normal_txt, colored_txt)
-
+        if log_to_results_file:
+            self.log_to_file(normal_txt, colored_txt, self.results_file_path)
+        if error:
+            self.log_to_file(normal_txt, colored_txt, self.errors_file_path)
 

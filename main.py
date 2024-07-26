@@ -36,6 +36,7 @@ class Main(IObservable):
         super(Main, self).__init__()
         self.output_dir = self.setup_output_dir()
         self.results_path = os.path.join(self.output_dir, 'results.txt')
+        self.errors_file_path = os.path.join(self.output_dir, 'errors.log')
         # init the logger
         self.logger = Logger(self.name, self.output_dir)
         self.add_observer(self.logger)
@@ -45,6 +46,7 @@ class Main(IObservable):
         self.db = SQLiteDB(self.output_dir)
         self.add_metadata()
         self.log(f"Storing results in: ", self.results_path)
+        self.log(f"Logging errors to: ", self.errors_file_path)
 
     def prep_given_output_dir(self):
         """
