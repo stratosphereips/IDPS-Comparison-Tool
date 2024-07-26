@@ -1,7 +1,9 @@
 import sqlite3
 import traceback
+import os
 from threading import Lock
 from time import sleep
+
 
 from abstracts.parsers import Parser
 from parsers.config import ConfigurationParser
@@ -198,6 +200,7 @@ class SlipsParser(Parser):
         """
         reads the output db of slips with
         the labels and stores it in this tools' db
+        :return: 0 if all good, 1 if an error occured
         """
         try:
             self.log("Using Slips Version: ", self.version)
@@ -209,6 +212,8 @@ class SlipsParser(Parser):
             self.print_number_of_alerts_slips_detected()
             self.parse_alerts_table()
             self.print_number_of_slips_mapped_malicious_timewindows()
+            os._exit(0)
         except Exception as e:
             self.log("An error occurred: ", e, error=True)
             self.log("",f"{traceback.format_exc()}", error=True)
+            os._exit(1)

@@ -84,10 +84,13 @@ class SuricataParser(Parser):
 
 
     def parse(self):
-        """reads the given suricata eve.json"""
+        """
+        reads the given suricata eve.json
+        :return: 0 if all good, 1 if an error occured
+        """
         self.log("Using Suricata Version: ", self.version)
         try:
-            with open(self.eve_file, 'r') as f:
+            with open(self.eve_file) as f:
                 flows_count = 0
                 while line := f.readline():
                     line = json.loads(line)
@@ -137,8 +140,9 @@ class SuricataParser(Parser):
                             self.label_tw(timestamp, line['src_ip'], 'malicious')
     
                 self.print_stats()
+            os._exit(0)
         except Exception as e:
             self.log("An error occurred: ", e, error=True)
             self.log("",f"{traceback.format_exc()}", error=True)
-        
+            os._exit(1)
 

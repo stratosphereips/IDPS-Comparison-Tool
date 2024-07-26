@@ -360,40 +360,35 @@ class GroundTruthParser(Parser):
         fullpath = self.get_full_path(filename)
         self.total_flows_read = 0
         gt_file = open(fullpath)
-        try:
-            while line := gt_file.readline():
-                # skip comments
-                if line.startswith('#'):
-                    continue
-                
-                flow = self.extract_fields(line)
-                if not flow:
-                    continue
-                
-                tw_registration_stats: dict = self.register_timewindow(
-                    flow['timestamp']
-                    )
-                self.label_tw(
-                    flow,
-                    tw_registration_stats
-                    )
+        while line := gt_file.readline():
+            # skip comments
+            if line.startswith('#'):
+                continue
+            
+            flow = self.extract_fields(line)
+            if not flow:
+                continue
+            
+            tw_registration_stats: dict = self.register_timewindow(
+                flow['timestamp']
+                )
+            self.label_tw(
+                flow,
+                tw_registration_stats
+                )
 
-                self.total_flows_read += 1
+            self.total_flows_read += 1
 
-                self.db.store_ground_truth_flow(flow)
-                self.db.store_flow(flow, self.tool_name)
-                # used for printing the stats in the main.py
-                self.db.store_flows_count(self.tool_name, self.total_flows_read)
+            self.db.store_ground_truth_flow(flow)
+            self.db.store_flow(flow, self.tool_name)
+            # used for printing the stats in the main.py
+            self.db.store_flows_count(self.tool_name, self.total_flows_read)
 
-                if self.total_flows_read % 180 == 0:
-                    self.log("Parsed ground truth flows so far: ",
-                             self.total_flows_read,
-                             log_to_results_file=False,
-                             end="\r")
-                    print(1/0)
-        except Exception as e:
-            self.log("An error occurred: ", e, error=True)
-            self.log("",f"{traceback.format_exc()}", error=True)
+            if self.total_flows_read % 180 == 0:
+                self.log("Parsed ground truth flows so far: ",
+                         self.total_flows_read,
+                         log_to_results_file=False,
+                         end="\r")
         gt_file.close()
         
     def log_stats(self):
@@ -466,6 +461,7 @@ class GroundTruthParser(Parser):
     def parse(self):
         """
         parses the given zeek dir or zeek logfile
+        :return: 0 if all good, 1 if an error occured
         """
         try:
             if self.gt_zeek_dir:
@@ -480,9 +476,10 @@ class GroundTruthParser(Parser):
                 self.parse_file(self.gt_zeek_file)
     
             self.log_stats()
+            os._exit(0)
         except Exception as e:
             self.log("An error occurred: ", e, error=True)
             self.log("",f"{traceback.format_exc()}", error=True)
-
+            os._exit(1)
 
 

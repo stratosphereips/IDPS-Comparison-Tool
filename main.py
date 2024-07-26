@@ -9,7 +9,7 @@ from time import time, sleep
 from typing import Tuple
 
 from modes.tools_parser import (
-    ToolsParser,
+    ParserHandler,
     )
 from parsers.config import ConfigurationParser
 from parsers.suricata import SuricataParser
@@ -102,44 +102,6 @@ class Main(IObservable):
             )
 
 
-    def start_slips_parser(self):
-        # this has to be the path of the sqlite3 db generated
-        # by slips with all the labels and community IDs
-        slips_db: str = self.args.slips_db
-        self.log(f"Reading Slips db from: ", slips_db)
-        assert os.path.isfile(slips_db), f"Slips DB should be a file, not a dir"
-        SlipsParser(self.output_dir,
-                    self.results_path,
-                    slips_db=slips_db).parse()
-
-    def start_suricata_parser(self):
-        eve_file: str = self.args.eve_file
-        self.log(f"Using suricata: ", eve_file)
-        assert os.path.isfile(eve_file), f"Suricata eve.json should be " \
-                                         f"a file, not a dir"
-        # read suricata eve.json
-        SuricataParser(self.output_dir,
-                       self.results_path,
-                       eve_file=eve_file).parse()
-
-    def start_ground_truth_parser(self):
-        self.log("Starting ground truth parser.", '')
-        if self.args.ground_truth_dir:
-            GroundTruthParser(
-                self.output_dir,
-                self.results_path,
-                ground_truth=self.args.ground_truth_dir,
-                ).parse()
-
-        elif self.args.ground_truth_file:
-            GroundTruthParser(
-                self.output_dir,
-                self.results_path,
-                ground_truth=self.args.ground_truth_file,
-                ).parse()
-
-
-
     def print_stats(self, print_stats_event):
         """
         thread that prints the total parsed flows by all parsers
@@ -203,8 +165,6 @@ class Main(IObservable):
                  f"Discarded flows: {discarded_flows} -- "
                  f"Discarded timewindows: {discarded_tws}", '')
 
-    
-
 
     def read_cm_db(self):
         """
@@ -260,7 +220,7 @@ class Main(IObservable):
             # used to tell the print_stats thread to start
             print_stats_event = multiprocessing.Event()
             
-            tools_parser = ToolsParser(
+            tools_parser = ParserHandler(
                 self.output_dir,
                 self.results_path,
                 print_stats_event
@@ -272,7 +232,11 @@ class Main(IObservable):
                                   args=(print_stats_event,),
                                   daemon=True)
             stats_thread.start()
-            tools_parser.start_parsers()
+            
+            all_good: bool = tools_parser.start_parsers()
+            if not all_good:
+                return
+            
             # now that the parsers ended don't print more stats
             self.stop_stats_thread = True
             stats_thread.join()
