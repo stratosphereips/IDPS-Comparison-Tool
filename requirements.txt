@@ -1,7 +1,6 @@
 joblib==1.3.2
-numpy==1.26.4
-pyyaml==23.9.5
-PyYAML==6.0.1
+numpy
+pyyaml
 scikit-learn==1.5.1
 scipy==1.14.0
 termcolor==2.4.0
