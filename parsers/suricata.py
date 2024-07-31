@@ -1,11 +1,12 @@
 import traceback
+import json
+import os
 
 from utils.timestamp_handler import TimestampHandler
 from parsers.config import ConfigurationParser
 from utils.hash import Hash
 from utils.file_handler import validate_path
 from abstracts.parsers import Parser
-import json
 
 
 class SuricataParser(Parser):
