@@ -40,6 +40,8 @@ class SuricataParser(Parser):
         or icmp type and code from icmp flows from the given line
         :param line: suricata line as read from the file
         """
+        if not "flow" in line:
+            return {}
         proto = line['proto'].lower()
         flow = {
             'timestamp':  line['flow']['start'],
@@ -101,8 +103,14 @@ class SuricataParser(Parser):
                         # only read benign flows and alert events
                         continue
     
-    
                     flow: dict = self.extract_flow(line)
+                    if not flow:
+                        self.log("",
+                                 f"Problem extracting suricata flow "
+                                 f"from line: {line} .. Skipping line.",
+                                 error=True)
+                        continue
+                        
                     original_ts = flow['timestamp']
                     timestamp = self.timestamp_handler.convert_iso_8601_to_unix_timestamp(flow['timestamp'])
                     flow['timestamp'] = timestamp
