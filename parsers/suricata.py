@@ -140,7 +140,7 @@ class SuricataParser(Parser):
                         if 'malicious' in label.lower():
                             self.label_tw(timestamp, line['src_ip'], 'malicious')
     
-                self.print_stats()
+            self.print_stats()
             os._exit(0)
         except Exception as e:
             self.log("An error occurred: ", e, error=True)

@@ -95,10 +95,10 @@ class Main(IObservable):
         return output_dir
 
 
-    def log(self, green_txt, normal_txt, log_to_results_file=True,
+    def log(self, colored_txt, normal_txt, log_to_results_file=True,
             end="\n", error=False):
         self.notify_observers(
-            (normal_txt, green_txt, log_to_results_file, end, error)
+            (normal_txt, colored_txt, log_to_results_file, end, error)
             )
 
 
@@ -117,7 +117,7 @@ class Main(IObservable):
             now = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
             to_print = f"{now} - Total parsed flows by "
             for tool in self.supported_tools:
-                to_print += f"{tool}: {self.db.get_flows_parsed('slips')}"
+                to_print += f"{tool}: {self.db.get_flows_parsed('slips')} "
             print(to_print, end='\r')
     
     def get_human_readable_datetime(self) -> str:
@@ -235,6 +235,9 @@ class Main(IObservable):
             
             all_good: bool = tools_parser.start_parsers()
             if not all_good:
+                self.log("",
+                         "Problem occurred with parsers. Stopping.",
+                         error=True)
                 return
             
             # now that the parsers ended don't print more stats
