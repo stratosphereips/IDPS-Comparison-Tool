@@ -107,14 +107,14 @@ class ParserHandler:
                 supported_tools.add(parser.tool_name)
         return supported_tools
     
-    def start_parsers(self):
+    def start_parsers(self) -> bool:
         """
         runs each parser in a separate proc and returns when they're all done
         :param print_stats_event: the thread will set this event when it's
         done reading the ground truth flows and
         started reading slips and suricata flows so the print_stats
         thread can start printing
-        :return: 0 if all good, 1 if an error occured
+        returns True if all parsers started and ended successfully
         """
         # the gt parsers should finish first before starting tool parsers
         processes: List[Process] = self.start_gt_parsers()
@@ -122,7 +122,7 @@ class ParserHandler:
             proc.join()
             if proc.exitcode != 0:
                 # terminate, dont start the rest of the parsers
-                os._exit(1)
+                return False
             
         self.print_stats_event.set()
         
@@ -131,9 +131,10 @@ class ParserHandler:
             proc.join()
             if proc.exitcode != 0:
                 # terminate, dont start the rest of the parsers
-                os._exit(1)
+                return False
+        return True
             
-        os._exit(0)
+        
             
         
             
