@@ -28,6 +28,8 @@ from comparisons.per_timewindow import PerTimewindow
 from metrics.calculator import Calculator
 from abstracts.observer import IObservable
 from logger.logger import Logger
+from utils.metadata_handler import MetadataHandler
+
 
 class Main(IObservable):
     name = 'Main'
@@ -49,7 +51,8 @@ class Main(IObservable):
         self.read_configuration()
 
         self.db = SQLiteDB(self.output_dir)
-        self.add_metadata()
+        self.metadata_handler = MetadataHandler(self)
+        self.metadata_handler.add_metadata()
         self.log(f"Storing results in: ", self.results_path)
         self.log(f"Logging errors to: ", self.errors_file_path)
 
@@ -125,54 +128,13 @@ class Main(IObservable):
                 to_print += f"{tool}: {self.db.get_flows_parsed('slips')} "
             print(to_print, end='\r')
     
-    def get_human_readable_datetime(self) -> str:
-        now = datetime.datetime.now()
-        return now.strftime("%A, %B %d, %Y %H:%M:%S")
+
     
     def read_configuration(self):
         config = ConfigurationParser()
         self.slips_version = config.slips_version()
         self.suricata_version = config.suricata_version()
-    
-    def get_git_info(self) -> Optional[Tuple[str, str]]:
-        """
-        Returns a tuple containing (commit,branch)
-        """
-        try:
-            repo = Repo(".")
-            # add branch name and commit
-            branch = repo.active_branch.name
-            commit = repo.active_branch.commit.hexsha
-            return commit, branch
-        except Exception:
-            # for when there's no .git files for any reason
-            return
-    
-    def add_metadata(self):
-        """
-        Adds tool versions and files used
-        to metadata.txt in the outupt dir
-        """
-        metadata_file = os.path.join(self.output_dir, 'metadata.txt')
-        self.log("Storing metadata in: ", metadata_file)
-        gt = self.args.ground_truth_dir or self.args.ground_truth_file
-        metadata_to_log = (f"Timestamp: "
-                   f"{self.get_human_readable_datetime()}\n\n"
-                   f"Used cmd: {' '.join(sys.argv)}\n\n"
-                   f"Slips version: {self.slips_version} \n\n"
-                   f"Suricata version: {self.suricata_version}\n\n"
-                   f"Ground truth: {gt}\n\n"
-                   f"Slips DB: {self.args.slips_db}\n\n"
-                   f"Suricata file: {self.args.eve_file}\n\n"
-                   f"Output directory: {self.output_dir}\n\n")
         
-        if git_into := self.get_git_info():
-            commit, branch = git_into
-            metadata_to_log += (f"Branch: {branch}\n\n"
-                                f"Commit: {commit}")
-            
-        with open(metadata_file, 'w') as metadata:
-            metadata.write(metadata_to_log)
 
     def print_discarded_flows_and_tws(self, tool: str):
         """
