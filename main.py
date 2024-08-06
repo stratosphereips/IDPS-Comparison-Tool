@@ -6,7 +6,12 @@ from shutil import rmtree
 import datetime
 import multiprocessing
 from time import time, sleep
-from typing import Tuple
+from typing import (
+    Tuple,
+    Optional,
+    )
+
+from git import Repo
 
 from modes.tools_parser import (
     ParserHandler,
@@ -128,7 +133,21 @@ class Main(IObservable):
         config = ConfigurationParser()
         self.slips_version = config.slips_version()
         self.suricata_version = config.suricata_version()
-        
+    
+    def get_git_info(self) -> Optional[Tuple[str, str]]:
+        """
+        Returns a tuple containing (commit,branch)
+        """
+        try:
+            repo = Repo(".")
+            # add branch name and commit
+            branch = repo.active_branch.name
+            commit = repo.active_branch.commit.hexsha
+            return commit, branch
+        except Exception:
+            # for when there's no .git files for any reason
+            return
+    
     def add_metadata(self):
         """
         Adds tool versions and files used
@@ -136,18 +155,24 @@ class Main(IObservable):
         """
         metadata_file = os.path.join(self.output_dir, 'metadata.txt')
         self.log("Storing metadata in: ", metadata_file)
-
+        gt = self.args.ground_truth_dir or self.args.ground_truth_file
+        metadata_to_log = (f"Timestamp: "
+                   f"{self.get_human_readable_datetime()}\n\n"
+                   f"Used cmd: {' '.join(sys.argv)}\n\n"
+                   f"Slips version: {self.slips_version} \n\n"
+                   f"Suricata version: {self.suricata_version}\n\n"
+                   f"Ground truth: {gt}\n\n"
+                   f"Slips DB: {self.args.slips_db}\n\n"
+                   f"Suricata file: {self.args.eve_file}\n\n"
+                   f"Output directory: {self.output_dir}\n\n")
+        
+        if git_into := self.get_git_info():
+            commit, branch = git_into
+            metadata_to_log += (f"Branch: {branch}\n\n"
+                                f"Commit: {commit}")
+            
         with open(metadata_file, 'w') as metadata:
-            metadata.write(f"Timestamp: "
-                           f"{self.get_human_readable_datetime()}\n\n"
-                           f"Used cmd: {' '.join(sys.argv)}\n\n"
-                           f"Slips version: {self.slips_version} \n\n"
-                           f"Suricata version: {self.suricata_version}\n\n"
-                           f"Ground truth: "
-                           f"{self.args.ground_truth_dir or self.args.ground_truth_file}\n"
-                           f"Slips DB: {self.args.slips_db}\n\n"
-                           f"Suricata file: {self.args.eve_file}\n\n"
-                           f"Output directory: {self.output_dir}\n\n")
+            metadata.write(metadata_to_log)
 
     def print_discarded_flows_and_tws(self, tool: str):
         """
