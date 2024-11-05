@@ -256,7 +256,8 @@ class GroundTruthParser(Parser):
         
         try:
             if flow[0] == "unknown":
-                return False, f"Unsupported flow label '{flow[0]}'"
+                label = "background" if "Background" in line else ""
+                return False, f"Unsupported flow label {label}"
 
             return {
                'label':  flow[0],
@@ -396,7 +397,7 @@ class GroundTruthParser(Parser):
             
             flow, err = self.extract_fields(line)
             if not flow:
-                self.log(f"{err}. Skipping flow at line",
+                self.log(f"{err}. Skipping flow at line: ",
                          line_number,
                          error=True)
                 continue
