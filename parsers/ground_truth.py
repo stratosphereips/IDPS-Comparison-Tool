@@ -4,9 +4,9 @@ import traceback
 import utils.timestamp_handler
 from typing import (
     Tuple,
-    Dict,
     List,
     Optional,
+    Union,
     )
 from re import findall
 from parsers.config import ConfigurationParser
@@ -161,15 +161,13 @@ class GroundTruthParser(Parser):
         :return: malicious, benign or unknown
         """
         pattern = r"Malicious[\s\t]+"
-        matches = findall(pattern, line)
-        if matches:
+        if findall(pattern, line):
             return 'malicious'
 
         pattern = r"Benign[\s\t]+"
-        matches = findall(pattern, line)
-        if matches:
+        if findall(pattern, line):
             return 'benign'
-
+        
         return 'unknown'
 
     def update_labels_ctr(self, label: str):
@@ -199,7 +197,7 @@ class GroundTruthParser(Parser):
         if not aid:
             return False
 
-        label =  line.get('label', '')
+        label = line.get('label', '')
         self.update_labels_ctr(label)
 
         return label, aid, line['ts'], line['id.orig_h']
@@ -225,37 +223,50 @@ class GroundTruthParser(Parser):
         # spaces so we can't use python's split()
         # using regex split, split line when you encounter more than 2 spaces
         # in a row
-        line = line.split('\t') if '\t' in line else split(r'\s{2,}', line)
+        line: List[str] = line.split('\t') if (
+                '\t' in line) \
+            else split(r'\s{2,'r'}', line)
 
         aid = self.handle_getting_aid(line)
         if not aid:
             return
 
         return label, aid, line[0], line[2]
-
-    def extract_fields(self, line: str) -> Optional[dict]:
+        
+    def extract_fields(self, line: str) -> Tuple[Union[bool,dict], str]:
         """
         extracts the label and community id from the given line
-        uses zeek_file_type to extract fields based on the type of the given zeek dir
+        uses zeek_file_type to extract fields based on the type of the given
+         zeek dir
+        completely ignores gt flows that have labels other than benign or
+        malicious
         :param line: line as read from the zeek log file
-        :return: returns a flow dict with {'aid': ..., 'label':...}
+        :return:
+        If it managed to extract the flow, returns the
+            extracted flow dict and no errors
+        If not, returns False and the error
         """
         if self.zeek_file_type == 'json':
-            #TODO this wasn't tested before ok?
             flow = self.handle_zeek_json(line)
         elif self.zeek_file_type == 'tab-separated':
             flow = self.handle_zeek_tabs(line)
-
+        
+        if not flow:
+            return False, "Invalid flow"
+        
         try:
+            if flow[0] == "unknown":
+                return False, f"Unsupported flow label '{flow[0]}'"
+
             return {
                'label':  flow[0],
                'aid': flow[1],
                'timestamp': flow[2],
                'srcip': flow[3],
-            }
-        except (IndexError, TypeError):
+            }, ""
+        except (IndexError, TypeError) as e:
             # one of the above 2 methods failed to parse the given line
-            return
+            return False, f"Problem extracting flow: {line} .. {e}"
 
 
     def register_timewindow(self, ts) -> dict:
@@ -364,7 +375,10 @@ class GroundTruthParser(Parser):
 
     def parse_file(self, filename: str):
         """
-        extracts the label and community id from each flow and stores them in the db
+        extracts the label and community id from each flow and stores them
+         in the db
+        Completely ignores flows that dont have benign or malicious in
+        their labels, e.g background flows
         :param filename: the name of the zeek logfile without the path,
         for example conn.log
         this can be the file given to this tool using -gtf or 1 file
@@ -380,11 +394,10 @@ class GroundTruthParser(Parser):
             if line.startswith('#'):
                 continue
             
-            flow = self.extract_fields(line)
+            flow, err = self.extract_fields(line)
             if not flow:
-                self.log(f"Problem extracting flow "
-                         f"from line number {line_number}: ",
-                         line,
+                self.log(f"{err}. Skipping flow at line",
+                         line_number,
                          error=True)
                 continue
             
@@ -498,7 +511,8 @@ class GroundTruthParser(Parser):
             os._exit(0)
         except Exception as e:
             self.log("An error occurred: ", e, error=True)
-            self.log("",f"{traceback.format_exc()}", error=True)
+            self.log("",f"{traceback.format_exc()}",
+                     error=True)
             os._exit(1)
 
 

@@ -133,7 +133,7 @@ Ground truth flows are labeled using the netflow labeler. so each flow has a lab
 
 # Limitations
 
-* the labels in ground truth zeek dir have to be 'Malicious' or 'Benign' only. if any other label is present this tool will consider it "Benign"
+* the labels in ground truth zeek dir have to be 'Malicious' or 'Benign' only. if any other label is present this tool will completely discard the flow. 
 * ground truth dirs can either be json or tab separated zeek dir or conn.log file
 
 * all paths given as parameters to this tool must be absolute paths.
