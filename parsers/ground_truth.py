@@ -397,9 +397,9 @@ class GroundTruthParser(Parser):
             
             flow, err = self.extract_fields(line)
             if not flow:
-                self.log(f"{err}. Skipping flow at line: ",
-                         line_number,
-                         error=True)
+                # self.log(f"{err}. Skipping flow at line: ",
+                #          line_number,
+                #          error=True)
                 continue
             
             tw_registration_stats: dict = self.register_timewindow(
