@@ -1,5 +1,6 @@
 import sys
 import traceback
+from pprint import pp
 
 import utils.timestamp_handler
 from typing import (
@@ -160,14 +161,16 @@ class GroundTruthParser(Parser):
         :param line: a zeek tab separated line
         :return: malicious, benign or unknown
         """
-        pattern = r"Malicious[\s\t]+"
-        if findall(pattern, line):
-            return 'malicious'
-
-        pattern = r"Benign[\s\t]+"
-        if findall(pattern, line):
-            return 'benign'
+        patterns = {
+            r"Malicious[\s\t]+": 'malicious',
+            r"Benign[\s\t]+": 'benign',
+            r"Background[\s\t]+": 'background',
+            }
         
+        for pattern, label in patterns.items():
+            if findall(pattern, line):
+                return label
+
         return 'unknown'
 
     def update_labels_ctr(self, label: str):
@@ -255,9 +258,8 @@ class GroundTruthParser(Parser):
             return False, "Invalid flow"
         
         try:
-            if flow[0] == "unknown":
-                label = "background" if "Background" in line else ""
-                return False, f"Unsupported flow label {label}"
+            if flow[0] in ("unknown", "background"):
+                return False, f"Unsupported flow label {flow[0]}"
 
             return {
                'label':  flow[0],
@@ -391,15 +393,13 @@ class GroundTruthParser(Parser):
         line_number = 0
         while line := gt_file.readline():
             line_number += 1
+            
             # skip comments
             if line.startswith('#'):
                 continue
             
             flow, err = self.extract_fields(line)
             if not flow:
-                # self.log(f"{err}. Skipping flow at line: ",
-                #          line_number,
-                #          error=True)
                 continue
             
             tw_registration_stats: dict = self.register_timewindow(
