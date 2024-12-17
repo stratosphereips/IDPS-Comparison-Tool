@@ -161,6 +161,19 @@ are discarded. The number of discarded flows is written in the cli at the end of
  │             tw 1                 tw 2                  │
 
 ```
+
+
+---
+
+# FAQ
+
+- When given a PCAP with 24hs of flows, why are the sum of the ByTimewindow comparison not equal 24?
+Because each IP seen in the traffic, will have a label in each of the timewindows. Check the labels_per_tw table in the generated db.sqlite
+and sort by IPs for verification.
+
+
+
+
 ---
 
 
