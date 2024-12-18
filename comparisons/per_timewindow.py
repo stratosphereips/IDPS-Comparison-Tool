@@ -14,7 +14,7 @@ class PerTimewindow(ComparisonMethod):
         self.supported_tools: Tuple[str] = args[0]
         self.last_registered_tw: int = self.db.get_last_registered_timewindow()
 
-    def handle_per_tw_comparison(self):
+    def compare(self):
         self.log('', "-" * 30)
         self.log("Comparison method: ", self.name)
         self.log(' ', ' ')

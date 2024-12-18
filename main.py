@@ -253,10 +253,10 @@ class Main(IObservable):
             
             FlowByFlow(self.output_dir,
                        self.supported_tools
-                       ).handle_flow_by_flow_comparison()
+                       ).compare()
             PerTimewindow(self.output_dir,
                           self.supported_tools
-                          ).handle_per_tw_comparison()
+                          ).compare()
 
         self.db.close()
 

@@ -16,16 +16,15 @@ class FlowByFlow(ComparisonMethod):
     def init(self, args: list):
         self.supported_tools: Tuple[str] = args[0]
 
-    def handle_flow_by_flow_comparison(self):
+    def compare(self):
         self.log('', "-" * 30)
         self.log("Comparison method: ", self.name)
         self.log(' ', ' ')
 
-        # now apply this method to all supported tools
+        # apply this method to all supported tools
         for tool in self.supported_tools:
-            # get the actual and predicted labels by the tool
             calc = Calculator(tool, self.output_dir)
-
+            # get the actual and predicted labels by the tool
             labels: Iterator = self.get_labels(tool)
             cm: dict = calc.get_confusion_matrix(labels)
             self.db.store_performance_errors_flow_by_flow(tool, cm)
