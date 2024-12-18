@@ -90,7 +90,24 @@ for example
 3. labels are stored per flow and per timewindow
 4. the tool then retrieves the actual and predicted value of each of the given tools and passes them to the calculator for calculating the metrics
 
-## Comparison Method 1: Comparison per timewindow
+
+## Parsers
+
+The below diagram shows how we parse each tool and the ground truth given file. 
+
+![image](https://github.com/user-attachments/assets/80a955a6-f384-4bfb-8b87-c837e8579be0)
+
+
+Parsers result in the following tables
+
+![image](https://github.com/user-attachments/assets/fc5e0eb0-a19b-4f41-8901-278f19d307fe)
+
+## Comparison
+![image](https://github.com/user-attachments/assets/4b82f601-e8ca-486d-8711-acad350219d4)
+
+
+
+### Comparison Method 1: Comparison per timewindow
 
 ##### How labels per timewindow are calculated
 Timewindow labels are detected in the following way:
@@ -114,7 +131,7 @@ If a timewindow was detected by one of the tools, and not detected by the ground
 we consider the gt label of it as "benign"
 
 
-## Comparison Method2: labels flow by flow
+### Comparison Method2: labels flow by flow
 
 #### for slips
 
