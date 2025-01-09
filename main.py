@@ -259,8 +259,12 @@ class Main(IObservable):
                           ).compare()
 
         self.db.close()
-
-        analysis_time = time() - self.starttime
+        end_time: str = self.metadata_handler.add_end_time()
+        dt_object = datetime.datetime.strptime(
+            end_time, "%A, %B %d, %Y %H:%M:%S")
+        epoch_end_time = dt_object.timestamp()
+        analysis_time = epoch_end_time - self.starttime
+        self.metadata_handler.add_analysis_time(analysis_time)
         self.log(f"Analysis time: ",f"{analysis_time/60} mins")
 
 
