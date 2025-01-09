@@ -95,7 +95,7 @@ for example
 
 The below diagram shows how we parse each tool and the ground truth given file. 
 
-![image](https://github.com/user-attachments/assets/80a955a6-f384-4bfb-8b87-c837e8579be0)
+<img src="docs/images/how_parsers_work.jpg">
 
 
 Parsers result in the following tables
